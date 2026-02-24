@@ -1,4 +1,4 @@
-image: ubuntu:25.10
+image: debian:13
 
 variables:
   ANDROID_COMPILE_SDK: "36"
@@ -9,7 +9,7 @@ variables:
 
 before_script:
   - apt-get --quiet update --yes
-  - apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1 openjdk-17-jre openjdk-17-jdk
+  - apt-get --quiet install --yes wget tar unzip lib32stdc++6 lib32z1 openjdk-21-jre openjdk-21-jdk
   #- wget --quiet --output-document=android-sdk.zip https://dl.google.com/android/repository/sdk-tools-linux-${ANDROID_SDK_TOOLS}.zip
   - wget --quiet --output-document=android-sdk.zip https://dl.google.com/android/repository/commandlinetools-linux-${ANDROID_CMDLINE_TOOLS}_latest.zip
   - unzip -q -d android-sdk-linux android-sdk.zip
