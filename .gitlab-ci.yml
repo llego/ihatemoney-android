@@ -69,7 +69,6 @@ assembleNormalRelease:
     paths:
     - ./*.apk
     - CHANGELOG.md
-    expire_in: 2 month
 
 debugTests:
   stage: build
