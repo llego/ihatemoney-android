@@ -11,6 +11,7 @@ import androidx.core.app.NavUtils;
 
 import net.eneiluj.moneybuster.R;
 import net.eneiluj.moneybuster.android.fragment.PreferencesFragment;
+import net.eneiluj.moneybuster.util.EdgeToEdge;
 
 /**
  * Allows to change application settings.
@@ -22,11 +23,14 @@ public class PreferencesActivity extends AppCompatActivity {
         setResult(RESULT_CANCELED);
         View view = LayoutInflater.from(this).inflate(R.layout.activity_preferences, null);
         setContentView(view);
+        EdgeToEdge.apply(this, view);
         Toolbar toolbar = view.findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
-        getSupportFragmentManager().beginTransaction()
-                .replace(R.id.fragment_container_view, new PreferencesFragment())
-                .commit();
+        if (savedInstanceState == null) {
+            getSupportFragmentManager().beginTransaction()
+                    .replace(R.id.fragment_container_view, new PreferencesFragment())
+                    .commit();
+        }
     }
 
     @Override

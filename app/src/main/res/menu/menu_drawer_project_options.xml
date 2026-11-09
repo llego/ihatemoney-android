@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <menu xmlns:android="http://schemas.android.com/apk/res/android">
     <item
-        android:id="@+id/opt_manage_project"
+        android:id="@+id/opt_edit_project"
         android:icon="@drawable/ic_edit_black_24dp_daynight"
         android:orderInCategory="10"
-        android:title="@string/action_manage_project" />
+        android:title="@string/action_edit_project" />
     <item
         android:id="@+id/opt_manage_members"
         android:icon="@drawable/ic_account_circle_black_24dp_daynight"
@@ -35,4 +35,9 @@
         android:icon="@drawable/ic_save_black_24dp_daynight"
         android:orderInCategory="70"
         android:title="@string/fab_export_project" />
+    <item
+        android:id="@+id/opt_remove_project"
+        android:icon="@drawable/ic_baseline_delete_grey_24"
+        android:orderInCategory="80"
+        android:title="@string/project_remove_from_device" />
 </menu>

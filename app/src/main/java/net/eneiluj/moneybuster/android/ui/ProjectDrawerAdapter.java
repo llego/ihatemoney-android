@@ -103,7 +103,9 @@ public class ProjectDrawerAdapter extends RecyclerView.Adapter<ProjectDrawerAdap
     public interface IOnProjectMenuClick {
         void onProjectClick(long projectId);
 
-        void onManageProjectClick(long projectId);
+        void onEditProjectClick(long projectId);
+
+        void onRemoveProjectClick(long projectId);
 
         void onManageMembersClick(long projectId);
 
@@ -176,11 +178,18 @@ public class ProjectDrawerAdapter extends RecyclerView.Adapter<ProjectDrawerAdap
             popup.setForceShowIcon(true);
 
             long projectId = projectItem.project.getId();
+            popup.getMenu().findItem(R.id.opt_edit_project).setVisible(!projectItem.project.isLocal());
+            if (projectItem.project.isLocal()) {
+                popup.getMenu().findItem(R.id.opt_remove_project).setTitle(R.string.project_remove_local);
+            }
 
             popup.setOnMenuItemClickListener((MenuItem menuItem) -> {
                 int itemId = menuItem.getItemId();
-                if (itemId == R.id.opt_manage_project) {
-                    callback.onManageProjectClick(projectId);
+                if (itemId == R.id.opt_edit_project) {
+                    callback.onEditProjectClick(projectId);
+                    return true;
+                } else if (itemId == R.id.opt_remove_project) {
+                    callback.onRemoveProjectClick(projectId);
                     return true;
                 } else if (itemId == R.id.opt_manage_members) {
                     callback.onManageMembersClick(projectId);

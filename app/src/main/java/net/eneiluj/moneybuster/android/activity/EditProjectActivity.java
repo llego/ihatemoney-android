@@ -17,6 +17,7 @@ import androidx.fragment.app.Fragment;
 import net.eneiluj.moneybuster.R;
 import net.eneiluj.moneybuster.android.fragment.EditProjectFragment;
 import net.eneiluj.moneybuster.model.DBProject;
+import net.eneiluj.moneybuster.util.EdgeToEdge;
 
 public class EditProjectActivity extends AppCompatActivity implements EditProjectFragment.EditProjectFragmentListener {
 
@@ -28,10 +29,16 @@ public class EditProjectActivity extends AppCompatActivity implements EditProjec
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
+        View view = LayoutInflater.from(this).inflate(R.layout.activity_edit_project, null);
+        setContentView(view);
+        EdgeToEdge.apply(this, view);
+        Toolbar toolbar = view.findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+
         if (savedInstanceState == null) {
             launchEditProjectFragment();
         } else {
-            fragment = (EditProjectFragment) getSupportFragmentManager().findFragmentById(android.R.id.content);
+            fragment = (EditProjectFragment) getSupportFragmentManager().findFragmentById(R.id.fragment_container_view);
         }
     }
 
@@ -61,12 +68,6 @@ public class EditProjectActivity extends AppCompatActivity implements EditProjec
         if (savedState != null) {
             fragment.setInitialSavedState(savedState);
         }
-        //getSupportFragmentManager().beginTransaction().replace(android.R.id.content, fragment).commit();
-
-        View view = LayoutInflater.from(this).inflate(R.layout.activity_edit_project, null);
-        setContentView(view);
-        Toolbar toolbar = view.findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
         getSupportFragmentManager().beginTransaction()
                 .replace(R.id.fragment_container_view, fragment)
                 .commit();

@@ -37,8 +37,9 @@
                     android:id="@+id/statsDateMin"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="text|date"
-                    android:selectAllOnFocus="true"
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:clickable="true"
                     android:importantForAutofill="no"/>
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>
@@ -70,8 +71,9 @@
                     android:id="@+id/statsDateMax"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:inputType="text|date"
-                    android:selectAllOnFocus="true"
+                    android:inputType="none"
+                    android:focusable="false"
+                    android:clickable="true"
                     android:importantForAutofill="no"/>
             </com.google.android.material.textfield.TextInputLayout>
         </LinearLayout>

@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="project_remove_from_device">Remove from this device</string>
+    <string name="project_remove_local">Remove local project</string>
+    <string name="stats_any_date">Any date</string>
     <string name="expense_description">Description</string>
     <string name="expense_save">Save expense</string>
     <string name="expense_add">Add expense</string>

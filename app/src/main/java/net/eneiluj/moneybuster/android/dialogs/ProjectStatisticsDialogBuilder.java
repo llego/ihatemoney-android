@@ -9,10 +9,8 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.widget.AdapterView;
-import android.widget.DatePicker;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.SimpleAdapter;
@@ -37,7 +35,6 @@ import net.eneiluj.moneybuster.util.SupportUtil;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -58,6 +55,8 @@ public class ProjectStatisticsDialogBuilder {
     private final Calendar calendarMin = Calendar.getInstance();
     private final Calendar calendarMax = Calendar.getInstance();
     private final SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
+    private String selectedDateMin;
+    private String selectedDateMax;
 
     private View view;
     private EditText editDateMin;
@@ -83,6 +82,7 @@ public class ProjectStatisticsDialogBuilder {
         editDateMin = view.findViewById(R.id.statsDateMin);
         editDateMax = view.findViewById(R.id.statsDateMax);
         totalPaidText = view.findViewById(R.id.totalPayedText);
+        setupDatePickers();
 
         if (!ProjectType.IHATEMONEY.equals(proj.getType())) {
             setupCategories();
@@ -93,7 +93,6 @@ public class ProjectStatisticsDialogBuilder {
             LinearLayout statsPaymentModeLayout = view.findViewById(R.id.statsPaymentModeLayout);
             statsPaymentModeLayout.setVisibility(GONE);
         }
-        setupDatePickers();
 
         builder.setView(view);
         builder.setTitle(context.getString(R.string.statistic_dialog_title));
@@ -115,7 +114,7 @@ public class ProjectStatisticsDialogBuilder {
             }
         });
 
-        updateStatsView(null, null);
+        updateStatsView();
 
         return builder.show();
     }
@@ -204,15 +203,7 @@ public class ProjectStatisticsDialogBuilder {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 Log.d(TAG, "CATEGORY");
-                String isoDateMin = null;
-                if (editDateMin.getText() != null && !editDateMin.getText().toString().equals("")) {
-                    isoDateMin = sdf.format(calendarMin.getTime());
-                }
-                String isoDateMax = null;
-                if (editDateMax.getText() != null && !editDateMax.getText().toString().equals("")) {
-                    isoDateMax = sdf.format(calendarMax.getTime());
-                }
-                updateStatsView(isoDateMin, isoDateMax);
+                updateStatsView();
             }
 
             @Override
@@ -273,15 +264,7 @@ public class ProjectStatisticsDialogBuilder {
             @Override
             public void onItemSelected(AdapterView<?> parentView, View selectedItemView, int position, long id) {
                 Log.d(TAG, "PAYMODE");
-                String isoDateMin = null;
-                if (editDateMin.getText() != null && !editDateMin.getText().toString().equals("")) {
-                    isoDateMin = sdf.format(calendarMin.getTime());
-                }
-                String isoDateMax = null;
-                if (editDateMax.getText() != null && !editDateMax.getText().toString().equals("")) {
-                    isoDateMax = sdf.format(calendarMax.getTime());
-                }
-                updateStatsView(isoDateMin, isoDateMax);
+                updateStatsView();
             }
 
             @Override
@@ -292,148 +275,77 @@ public class ProjectStatisticsDialogBuilder {
     }
 
     private void setupDatePickers() {
-        // DATE MIN and MAX
-        final DatePickerDialog.OnDateSetListener date = new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker view, int year, int monthOfYear,
-                                  int dayOfMonth) {
-                calendarMin.set(Calendar.YEAR, year);
-                calendarMin.set(Calendar.MONTH, monthOfYear);
-                calendarMin.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-                //updateStatsView(tView, selectedProjectId, calendarMin, calendarMax);
-            }
-        };
-
-        DatePickerDialog dateMinPickerDialog = new DatePickerDialog(context, date, calendarMin
-                .get(Calendar.YEAR), calendarMin.get(Calendar.MONTH),
-                calendarMin.get(Calendar.DAY_OF_MONTH)) {
-
-            @Override
-            public void onDateChanged(DatePicker view,
-                                      int year,
-                                      int month,
-                                      int dayOfMonth) {
-                calendarMin.set(Calendar.YEAR, year);
-                calendarMin.set(Calendar.MONTH, month);
-                calendarMin.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-
-                String isoDate = sdf.format(calendarMin.getTime());
-                try {
-                    Date date = sdf.parse(isoDate);
-                    java.text.DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
-                    editDateMin.setText(dateFormat.format(date));
-                } catch (Exception e) {
-                    editDateMin.setText(isoDate);
-                }
-
-                String isoDateMin = null;
-                if (editDateMin.getText() != null && !editDateMin.getText().toString().equals("")) {
-                    isoDateMin = sdf.format(calendarMin.getTime());
-                }
-                String isoDateMax = null;
-                if (editDateMax.getText() != null && !editDateMax.getText().toString().equals("")) {
-                    isoDateMax = sdf.format(calendarMax.getTime());
-                }
-                updateStatsView(isoDateMin, isoDateMax);
-                this.dismiss();
-            }
-        };
-
-        editDateMin.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    dateMinPickerDialog.show();
-                    return true;
-                }
-                return false;
-            }
-        });
-                    /*editDateMin.setOnClickListener(new View.OnClickListener() {
-
-                        @Override
-                        public void onClick(View v) {
-                            datePickerDialog.show();
-                        }
-                    });*/
-
-        final DatePickerDialog.OnDateSetListener dateMaxSetListener = new DatePickerDialog.OnDateSetListener() {
-            @Override
-            public void onDateSet(DatePicker view, int year, int monthOfYear,
-                                  int dayOfMonth) {
-                calendarMax.set(Calendar.YEAR, year);
-                calendarMax.set(Calendar.MONTH, monthOfYear);
-                calendarMax.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-            }
-        };
-
-        DatePickerDialog dateMaxPickerDialog = new DatePickerDialog(context, dateMaxSetListener, calendarMax
-                .get(Calendar.YEAR), calendarMax.get(Calendar.MONTH),
-                calendarMax.get(Calendar.DAY_OF_MONTH)) {
-
-            @Override
-            public void onDateChanged(DatePicker view,
-                                      int year,
-                                      int month,
-                                      int dayOfMonth) {
-                calendarMax.set(Calendar.YEAR, year);
-                calendarMax.set(Calendar.MONTH, month);
-                calendarMax.set(Calendar.DAY_OF_MONTH, dayOfMonth);
-
-                String isoDate = sdf.format(calendarMax.getTime());
-                try {
-                    Date date = sdf.parse(isoDate);
-                    java.text.DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(context);
-                    editDateMax.setText(dateFormat.format(date));
-                } catch (Exception e) {
-                    editDateMax.setText(isoDate);
-                }
-
-                String isoDateMin = null;
-                if (editDateMin.getText() != null && !editDateMin.getText().toString().equals("")) {
-                    isoDateMin = sdf.format(calendarMin.getTime());
-                }
-                String isoDateMax = null;
-                if (editDateMax.getText() != null && !editDateMax.getText().toString().equals("")) {
-                    isoDateMax = sdf.format(calendarMax.getTime());
-                }
-                updateStatsView(isoDateMin, isoDateMax);
-                this.dismiss();
-            }
-        };
-
-        editDateMax.setOnTouchListener(new View.OnTouchListener() {
-            @Override
-            public boolean onTouch(View v, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_UP) {
-                    dateMaxPickerDialog.show();
-                    return true;
-                }
-                return false;
-            }
-        });
+        long[] range = db.getBillDateRange(selectedProjectId);
+        selectedDateMin = null;
+        selectedDateMax = null;
+        if (range != null) {
+            calendarMin.setTimeInMillis(range[0] * 1000);
+            calendarMax.setTimeInMillis(range[1] * 1000);
+            selectedDateMin = sdf.format(calendarMin.getTime());
+            selectedDateMax = sdf.format(calendarMax.getTime());
+        }
+        updateDateLabels();
+        editDateMin.setOnClickListener(v -> showDatePicker(true));
+        editDateMax.setOnClickListener(v -> showDatePicker(false));
     }
 
-    // TODO find a way to avoid date if not already set but initialize picker to today
-    // and add max date
-    private void updateStatsView(String dateMin, String dateMax) {
+    private void updateDateLabels() {
+        java.text.DateFormat dateFormat = android.text.format.DateFormat.getMediumDateFormat(context);
+        editDateMin.setText(selectedDateMin == null ? context.getString(R.string.stats_any_date)
+                : dateFormat.format(calendarMin.getTime()));
+        editDateMax.setText(selectedDateMax == null ? context.getString(R.string.stats_any_date)
+                : dateFormat.format(calendarMax.getTime()));
+    }
+
+    private void showDatePicker(boolean minimum) {
+        Calendar calendar = minimum ? calendarMin : calendarMax;
+        DatePickerDialog picker = new DatePickerDialog(context, (datePicker, year, month, day) -> {
+            calendar.set(year, month, day, 12, 0, 0);
+            String isoDate = sdf.format(calendar.getTime());
+            if (minimum) {
+                selectedDateMin = isoDate;
+            } else {
+                selectedDateMax = isoDate;
+            }
+            updateDateLabels();
+            updateStatsView();
+        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH));
+        if (minimum && selectedDateMax != null) {
+            picker.getDatePicker().setMaxDate(calendarMax.getTimeInMillis());
+        } else if (!minimum && selectedDateMin != null) {
+            picker.getDatePicker().setMinDate(calendarMin.getTimeInMillis());
+        }
+        picker.setButton(DialogInterface.BUTTON_NEUTRAL, context.getString(R.string.stats_any_date),
+                (dialog, which) -> {
+                    if (minimum) {
+                        selectedDateMin = null;
+                    } else {
+                        selectedDateMax = null;
+                    }
+                    updateDateLabels();
+                    updateStatsView();
+                });
+        picker.show();
+    }
+
+    private void updateStatsView() {
         // get filter values
         int categoryId;
         int paymentModeId;
         if (!proj.getType().equals(ProjectType.IHATEMONEY)) {
             Spinner statsCategorySpinner = view.findViewById(R.id.statsCategorySpinner);
             Map<String, String> item = (Map<String, String>) statsCategorySpinner.getSelectedItem();
-            categoryId = Integer.parseInt(item.get("id"));
+            categoryId = item == null ? -1000 : Integer.parseInt(item.get("id"));
 
             Spinner statsPaymentModeSpinner = view.findViewById(R.id.statsPaymentModeSpinner);
             Map<String, String> itemP = (Map<String, String>) statsPaymentModeSpinner.getSelectedItem();
-            paymentModeId = Integer.parseInt(itemP.get("id"));
+            paymentModeId = itemP == null ? -1000 : Integer.parseInt(itemP.get("id"));
         } else {
             categoryId = -1;
             paymentModeId = -1;
         }
 
-        Log.v(TAG, "DATESSSS " + dateMin + " and " + dateMax);
+        Log.v(TAG, "DATESSSS " + selectedDateMin + " and " + selectedDateMax);
         Log.v(TAG, "CATGFIL " + categoryId + " and PAYMODEFIL " + paymentModeId);
 
         // get stats
@@ -445,7 +357,7 @@ public class ProjectStatisticsDialogBuilder {
         int nbBills = SupportUtil.getStatsOfProject(
                 selectedProjectId, db,
                 membersNbBills, membersBalance, membersPaid, membersSpent,
-                categoryId, paymentModeId, dateMin, dateMax
+                categoryId, paymentModeId, selectedDateMin, selectedDateMax
         );
 
         List<DBMember> membersSortedByName = db.getMembersOfProject(selectedProjectId, null);

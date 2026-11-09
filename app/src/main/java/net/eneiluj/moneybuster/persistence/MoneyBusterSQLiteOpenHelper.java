@@ -1471,6 +1471,18 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
         return bills;
     }
 
+    /** Earliest/latest active expense timestamps, or null for a project without expenses. */
+    @Nullable
+    public long[] getBillDateRange(long projectId) {
+        try (Cursor cursor = getReadableDatabase().rawQuery(BillQueries.DATE_RANGE,
+                new String[]{String.valueOf(projectId), String.valueOf(DBBill.STATE_DELETED)})) {
+            if (!cursor.moveToFirst() || cursor.isNull(0) || cursor.isNull(1)) {
+                return null;
+            }
+            return new long[]{cursor.getLong(0), cursor.getLong(1)};
+        }
+    }
+
     public List<DBBill> getBillsOfProjectWithState(long projId, int state) {
         List<DBBill> bills = getBillsCustom(
                 key_projectid + " = ? AND " + key_state + " = ?",

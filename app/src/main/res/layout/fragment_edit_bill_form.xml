@@ -32,6 +32,7 @@
                     android:imeOptions="actionNext"
                     android:nextFocusForward="@id/editAmount"
                     android:inputType="textCapSentences"
+                    android:textAppearance="?attr/textAppearanceBodyLarge"
                     android:maxLines="1"
                     android:importantForAutofill="no" />
             </com.google.android.material.textfield.TextInputLayout>
@@ -58,7 +59,7 @@
                         android:imeOptions="actionDone"
                         android:inputType="numberDecimal|numberSigned"
                         android:selectAllOnFocus="true"
-                        android:textSize="28sp"
+                        android:textAppearance="?attr/textAppearanceBodyLarge"
                         android:maxLines="1"
                         android:importantForAutofill="no" />
                 </com.google.android.material.textfield.TextInputLayout>

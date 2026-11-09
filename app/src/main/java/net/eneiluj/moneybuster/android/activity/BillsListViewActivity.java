@@ -529,9 +529,6 @@ public class BillsListViewActivity
 
     @SuppressLint("PrivateResource")
     private void updateToolbars(boolean disableSearch) {
-        if (!disableSearch) {
-            displaySearchHelp();
-        }
         homeToolbar.setVisibility(disableSearch ? VISIBLE : GONE);
         toolbar.setVisibility(disableSearch ? GONE : VISIBLE);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -681,30 +678,7 @@ public class BillsListViewActivity
     }
 
     @Override
-    public void onManageProjectClick(long projectId) {
-        CharSequence[] choices = new CharSequence[]{
-                getString(R.string.action_edit_project),
-                getString(R.string.fab_rm_project)
-        };
-
-        AlertDialog.Builder selectBuilder = new ThemedMaterialAlertDialogBuilder(this);
-        selectBuilder.setTitle(getString(R.string.choose_project_management_action));
-        selectBuilder.setSingleChoiceItems(choices, -1, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == 0) {
-                    onEditProjectClick(projectId);
-                } else {
-                    onRemoveProjectClick(projectId);
-                }
-                dialog.dismiss();
-            }
-        });
-        selectBuilder.setNegativeButton(getString(R.string.simple_cancel), null);
-        selectBuilder.show();
-    }
-
-    private void onEditProjectClick(long projectId) {
+    public void onEditProjectClick(long projectId) {
         if (projectId == 0) return;
 
         DBProject proj = db.getProject(projectId);
@@ -719,7 +693,8 @@ public class BillsListViewActivity
         }
     }
 
-    private void onRemoveProjectClick(long projectId) {
+    @Override
+    public void onRemoveProjectClick(long projectId) {
         if (projectId == 0) return;
         DBProject proj = db.getProject(projectId);
 
@@ -1558,45 +1533,6 @@ public class BillsListViewActivity
 
     public SwipeRefreshLayout getSwipeRefreshLayout() {
         return swipeRefreshLayout;
-    }
-
-    private void displaySearchHelp() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean noMoreSearchHelp = preferences.getBoolean(AccountActivity.SETTINGS_NO_MORE_SEARCH_HELP, false);
-
-        if (!noMoreSearchHelp) {
-            AlertDialog.Builder helpBuilder = new ThemedMaterialAlertDialogBuilder(this);
-            helpBuilder.setTitle(getString(R.string.search_help_dialog_title));
-            helpBuilder.setMessage(getString(R.string.search_help_dialog_content));
-
-            // add OK and Cancel buttons
-            helpBuilder.setPositiveButton(getString(R.string.simple_ok), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                }
-            });
-            helpBuilder.setNeutralButton(getString(R.string.simple_ok_no_more), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    preferences.edit().putBoolean(AccountActivity.SETTINGS_NO_MORE_SEARCH_HELP, true).apply();
-                }
-            });
-
-            AlertDialog selectDialog = helpBuilder.create();
-            selectDialog.show();
-        }
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle item selection
-        switch (item.getItemId()) {
-            /*case R.id.search:
-                displaySearchHelp();
-                return true;*/
-            default:
-                return super.onOptionsItemSelected(item);
-        }
     }
 
     @Override
