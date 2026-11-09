@@ -5,19 +5,17 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.net.Uri;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.MenuItem;
-import android.view.View;
 import android.widget.Toast;
 
 import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 
 import net.eneiluj.moneybuster.R;
+import net.eneiluj.moneybuster.databinding.ActivityEditProjectBinding;
 import net.eneiluj.moneybuster.android.fragment.EditProjectFragment;
 import net.eneiluj.moneybuster.android.dialogs.ProjectShareDialogBuilder;
 import net.eneiluj.moneybuster.persistence.MoneyBusterSQLiteOpenHelper;
@@ -90,11 +88,10 @@ public class EditProjectActivity extends AppCompatActivity implements EditProjec
     protected void onCreate(final Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-        View view = LayoutInflater.from(this).inflate(R.layout.activity_edit_project, null);
-        setContentView(view);
-        EdgeToEdge.apply(this, view);
-        Toolbar toolbar = view.findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
+        ActivityEditProjectBinding binding = ActivityEditProjectBinding.inflate(getLayoutInflater());
+        setContentView(binding.getRoot());
+        EdgeToEdge.apply(this, binding.getRoot());
+        setSupportActionBar(binding.toolbar);
 
         if (savedInstanceState == null) {
             launchEditProjectFragment();

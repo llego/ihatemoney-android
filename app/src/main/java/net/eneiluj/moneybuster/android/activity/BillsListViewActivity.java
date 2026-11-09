@@ -21,21 +21,15 @@ import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
-import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
@@ -47,7 +41,6 @@ import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.view.ActionMode;
-import androidx.appcompat.view.ContextThemeWrapper;
 import androidx.appcompat.widget.ActionBarContextView;
 import androidx.appcompat.widget.AppCompatImageButton;
 import androidx.appcompat.widget.AppCompatImageView;
@@ -67,25 +60,23 @@ import androidx.recyclerview.widget.RecyclerView;
 import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.google.android.material.appbar.AppBarLayout;
-import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textview.MaterialTextView;
-import com.larswerkman.lobsterpicker.LobsterPicker;
-import com.larswerkman.lobsterpicker.sliders.LobsterShadeSlider;
 import com.nextcloud.android.sso.exceptions.NextcloudFilesAppAccountNotFoundException;
 import com.nextcloud.android.sso.exceptions.NoCurrentAccountSelectedException;
 import com.nextcloud.android.sso.helper.SingleAccountHelper;
 import com.nextcloud.android.sso.model.SingleSignOnAccount;
 
 import net.eneiluj.moneybuster.R;
+import net.eneiluj.moneybuster.android.dialogs.MemberDialogs;
 import net.eneiluj.moneybuster.android.dialogs.ProjectSettlementDialogBuilder;
 import net.eneiluj.moneybuster.android.dialogs.ProjectStatisticsDialogBuilder;
 import net.eneiluj.moneybuster.android.fragment.NewProjectFragment;
 import net.eneiluj.moneybuster.android.ui.ProjectDrawerAdapter;
-import net.eneiluj.moneybuster.android.ui.TextDrawable;
 import net.eneiluj.moneybuster.databinding.DrawerLayoutBinding;
+import net.eneiluj.moneybuster.databinding.SyncSuccessToastBinding;
 import net.eneiluj.moneybuster.model.Category;
 import net.eneiluj.moneybuster.model.DBBill;
 import net.eneiluj.moneybuster.model.DBMember;
@@ -187,7 +178,7 @@ public class BillsListViewActivity
     private NavigationAdapter.NavigationItem itemAll;
     private Category navigationSelection = new Category(null, null);
     private String navigationOpen = "";
-    private int newMemberColor = 0;
+    private MemberDialogs memberDialogs;
 
     private ActionMode mActionMode;
     private MoneyBusterSQLiteOpenHelper db = null;
@@ -229,30 +220,47 @@ public class BillsListViewActivity
         View view  = binding.getRoot();
         setContentView(view);
 
-        toolbar = findViewById(R.id.billsListActivityActionBar);
-        drawerLayout = findViewById(R.id.drawerLayout);
-        configuredAccount = findViewById(R.id.configuredAccount);
-        swipeRefreshLayout = findViewById(R.id.swipe_refresh_layout);
-        fabAddBill = findViewById(R.id.fab_add_bill);
-        listBillItems = findViewById(R.id.list_bill_items);
-        listDrawerProjects = findViewById(R.id.list_drawer_projects);
-        listDrawerMembers = findViewById(R.id.list_drawer_project_members);
-        avatarView = findViewById(R.id.drawer_nc_logo);
-        lastSyncLayout = findViewById(R.id.drawer_last_sync_layout);
-        lastSyncText = findViewById(R.id.last_sync_text);
-        menuButton = findViewById(R.id.menu_button);
-        accountButton = findViewById(R.id.launchAccountSwitcher);
-        searchView = findViewById(R.id.search_view);
-        searchText = findViewById(R.id.search_text);
-        homeToolbar = findViewById(R.id.home_toolbar);
-        appBar = findViewById(R.id.appBar);
-        noProjectsView = findViewById(R.id.layout_no_projects);
-        noMembersView = findViewById(R.id.layout_no_project_members);
-        noBillsView = findViewById(R.id.layout_no_bills);
+        toolbar = binding.mainContentView.billsListActivityActionBar;
+        drawerLayout = binding.getRoot();
+        configuredAccount = binding.configuredAccount;
+        swipeRefreshLayout = binding.mainContentView.swipeRefreshLayout;
+        fabAddBill = binding.mainContentView.fabAddBill;
+        listBillItems = binding.mainContentView.listBillItems;
+        listDrawerProjects = binding.listDrawerProjects;
+        listDrawerMembers = binding.listDrawerProjectMembers;
+        avatarView = binding.drawerNcLogo;
+        lastSyncLayout = binding.drawerLastSyncLayout;
+        lastSyncText = binding.lastSyncText;
+        menuButton = binding.mainContentView.menuButton;
+        accountButton = binding.mainContentView.launchAccountSwitcher;
+        searchView = binding.mainContentView.searchView;
+        searchText = binding.mainContentView.searchText;
+        homeToolbar = binding.mainContentView.homeToolbar;
+        appBar = binding.mainContentView.appBar;
+        noProjectsView = binding.mainContentView.layoutNoProjects;
+        noMembersView = binding.mainContentView.layoutNoProjectMembers;
+        noBillsView = binding.mainContentView.layoutNoBills;
 
         lastSyncLayout.setVisibility(GONE);
 
         db = MoneyBusterSQLiteOpenHelper.getInstance(this);
+        memberDialogs = new MemberDialogs(this, db, new MemberDialogs.Listener() {
+            @Override
+            public void onMemberAdded(long projectId, String name) {
+                showMemberAdded(projectId, name);
+            }
+
+            @Override
+            public void onMemberUpdated() {
+                refreshLists();
+            }
+
+            @Override
+            public void onMemberDeleted() {
+                new LoadMembersTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
+                refreshLists();
+            }
+        });
 
         setupToolBar();
         setupBillsList();
@@ -441,8 +449,8 @@ public class BillsListViewActivity
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         boolean showNextcloudSettings = preferences.getBoolean(getString(R.string.pref_key_show_nextcloud_settings), false);
         if (!showNextcloudSettings) {
-            drawerLayout.findViewById(R.id.configuredAccountLayout).setVisibility(GONE);
-            drawerLayout.findViewById(R.id.launchAccountSwitcher).setVisibility(GONE);
+            binding.configuredAccountLayout.setVisibility(GONE);
+            binding.mainContentView.launchAccountSwitcher.setVisibility(GONE);
         }
 
         menuButton.setOnClickListener((v) -> drawerLayout.openDrawer(GravityCompat.START));
@@ -577,22 +585,22 @@ public class BillsListViewActivity
     }
 
     private void setupBillsListCornerCases() {
-        findViewById(R.id.button_no_projects_configure_nextcloud).setOnClickListener((view) -> {
+        binding.mainContentView.buttonNoProjectsConfigureNextcloud.setOnClickListener((view) -> {
             Intent newProjectIntent = new Intent(getApplicationContext(), AccountActivity.class);
             serverSettingsLauncher.launch(newProjectIntent);
         });
 
-        findViewById(R.id.button_no_projects_configure_manually).setOnClickListener((view) -> {
+        binding.mainContentView.buttonNoProjectsConfigureManually.setOnClickListener((view) -> {
             Intent newProjectIntent = new Intent(getApplicationContext(), NewProjectActivity.class);
             newProjectIntent.putExtra(NewProjectFragment.PARAM_DEFAULT_IHM_URL, "https://ihatemoney.org");
             newProjectIntent.putExtra(NewProjectFragment.PARAM_DEFAULT_NC_URL, "https://mynextcloud.org");
             addProjectLauncher.launch(newProjectIntent);
         });
 
-        findViewById(R.id.button_no_members_add_member).setOnClickListener((view) -> {
+        binding.mainContentView.buttonNoMembersAddMember.setOnClickListener((view) -> {
             final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             final long selectedProjectId = preferences.getLong("selected_project", 0);
-            onAddMemberClick(selectedProjectId);
+            memberDialogs.showAdd(selectedProjectId);
         });
     }
 
@@ -602,12 +610,12 @@ public class BillsListViewActivity
             serverSettingsLauncher.launch(intent);
         });
 
-        findViewById(R.id.button_add_project).setOnClickListener((View view) -> {
+        binding.buttonAddProject.setOnClickListener((View view) -> {
             addProject();
             drawerLayout.closeDrawers();
         });
 
-        findViewById(R.id.button_app_settings).setOnClickListener((View view) -> {
+        binding.buttonAppSettings.setOnClickListener((View view) -> {
             Intent settingsIntent = new Intent(getApplicationContext(), PreferencesActivity.class);
             serverSettingsLauncher.launch(settingsIntent);
         });
@@ -671,120 +679,19 @@ public class BillsListViewActivity
 
     @Override
     public void onManageMembersClick(long projectId) {
-        if (projectId == 0) return;
-
-        // check if we are allowed
-        DBProject project = db.getProject(projectId);
-        int myAccessLevel = project.getMyAccessLevel();
-        if (myAccessLevel != DBProject.ACCESS_LEVEL_UNKNOWN && myAccessLevel < DBProject.ACCESS_LEVEL_MAINTAINER) {
-            showToast(getString(R.string.insufficient_access_level));
-            return;
-        }
-
-        final List<DBMember> members = db.getMembersOfProject(projectId, null);
-        List<String> memberNames = new ArrayList<>();
-        for (DBMember m : members) {
-            memberNames.add(m.getName());
-        }
-        CharSequence[] namescs = memberNames.toArray(new CharSequence[memberNames.size()]);
-
-        AlertDialog.Builder selectBuilder = new ThemedMaterialAlertDialogBuilder(this);
-        selectBuilder.setTitle(getString(R.string.fab_manage_members));
-        selectBuilder.setItems(namescs, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                // user checked an item
-                editMember(project, members.get(which).getId());
-                dialog.dismiss();
-            }
-        });
-        selectBuilder.setNeutralButton(getString(R.string.fab_add_member),
-                (dialog, which) -> onAddMemberClick(projectId));
-        selectBuilder.setNegativeButton(getString(R.string.simple_cancel), null);
-        selectBuilder.show();
+        memberDialogs.showMembers(projectId);
     }
 
-    private void onAddMemberClick(long projectId) {
-        if (projectId == 0) return;
-
-        // check if we are allowed
-        DBProject project = db.getProject(projectId);
-        int myAccessLevel = project.getMyAccessLevel();
-        if (myAccessLevel != DBProject.ACCESS_LEVEL_UNKNOWN && myAccessLevel < DBProject.ACCESS_LEVEL_MAINTAINER) {
-            showToast(getString(R.string.insufficient_access_level));
-            return;
-        }
-
-        AlertDialog.Builder builder = new ThemedMaterialAlertDialogBuilder(this);
-        builder.setTitle(getString(R.string.add_member_dialog_title));
-
-        // Set up the input
-        final EditText input = new EditText(new ContextThemeWrapper(
-                BillsListViewActivity.this,
-                R.style.AppTheme
-        ));
-        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-        input.setTextColor(ContextCompat.getColor(BillsListViewActivity.this, R.color.fg_default));
-        builder.setView(input);
-
-        // Set up the buttons
-        builder.setPositiveButton(getString(R.string.simple_ok), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                String memberName = input.getText().toString();
-
-                if (!memberName.equals("")) {
-                    List<DBMember> members = db.getMembersOfProject(projectId, null);
-                    List<String> memberNames = new ArrayList<>();
-                    for (DBMember m : members) {
-                        memberNames.add(m.getName());
-                    }
-                    if (!memberNames.contains(memberName)) {
-                        db.addMemberAndSync(
-                                new DBMember(0, 0, projectId, memberName,
-                                        true, 1, DBBill.STATE_ADDED,
-                                        null, null, null, null, null)
-                        );
-                        refreshLists();
-                        drawerLayout.closeDrawers();
-
-                        View parent = binding.mainContentView.rootView;
-                        String titleText = getString(R.string.snackbar_member_added, memberName);
-                        String actionText = getString(R.string.snackbar_member_added_add_another);
-                        Snackbar snackbar = Snackbar.make(parent, titleText, 6000)
-                                .setAction(actionText, (view) -> {
-                                    onAddMemberClick(projectId);
-                                });
-                        final var utils = ThemeUtils.of(ColorUtils.primaryColor(parent.getContext()), parent.getContext());
-                        utils.material.themeSnackbar(snackbar);
-                        snackbar.show();
-                    } else {
-                        showToast(getString(R.string.member_already_exists));
-                    }
-                } else {
-                    showToast(getString(R.string.member_edit_empty_name));
-                }
-
-                //new LoadCategoryListTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                InputMethodManager inputMethodManager = (InputMethodManager) input.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-            }
-        });
-        builder.setNegativeButton(getString(R.string.simple_cancel), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-                InputMethodManager inputMethodManager = (InputMethodManager) input.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-            }
-        });
-
-        builder.show();
-        input.setSelectAllOnFocus(true);
-        input.requestFocus();
-        // show keyboard
-        InputMethodManager inputMethodManager = (InputMethodManager) BillsListViewActivity.this.getSystemService(Context.INPUT_METHOD_SERVICE);
-        inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
+    private void showMemberAdded(long projectId, String name) {
+        refreshLists();
+        drawerLayout.closeDrawers();
+        View parent = binding.mainContentView.rootView;
+        Snackbar snackbar = Snackbar.make(parent, getString(R.string.snackbar_member_added, name), 6000)
+                .setAction(getString(R.string.snackbar_member_added_add_another),
+                        view -> memberDialogs.showAdd(projectId));
+        final var utils = ThemeUtils.of(ColorUtils.primaryColor(parent.getContext()), parent.getContext());
+        utils.material.themeSnackbar(snackbar);
+        snackbar.show();
     }
 
     @Override
@@ -888,172 +795,6 @@ public class BillsListViewActivity
                 lastSyncLayout.setVisibility(VISIBLE);
             }
         }
-    }
-
-    private void editMember(DBProject project, long memberId) {
-        final DBMember memberToEdit = db.getMember(memberId);
-        Integer r = memberToEdit.getR();
-        Integer g = memberToEdit.getG();
-        Integer b = memberToEdit.getB();
-
-        int color;
-        if (r != null && g != null && b != null) {
-            color = Color.rgb(r, g, b);
-        } else {
-            color = TextDrawable.getColorFromName(memberToEdit.getName());
-        }
-        newMemberColor = color;
-
-        AlertDialog.Builder builder = new ThemedMaterialAlertDialogBuilder(
-                new ContextThemeWrapper(
-                        BillsListViewActivity.this,
-                        R.style.AppThemeDialog
-                )
-        );
-        builder.setTitle(getString(R.string.edit_member_dialog_title));
-
-        // Set up the inputs
-        final View iView = LayoutInflater.from(this).inflate(R.layout.dialog_edit_member, null);
-        EditText nv = iView.findViewById(R.id.editMemberName);
-        nv.setText(memberToEdit.getName());
-        nv.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
-        nv.setTextColor(ContextCompat.getColor(BillsListViewActivity.this, R.color.fg_default));
-        EditText we = iView.findViewById(R.id.editMemberWeight);
-        we.setText(String.valueOf(memberToEdit.getWeight()));
-        we.setTextColor(ContextCompat.getColor(BillsListViewActivity.this, R.color.fg_default));
-
-        CheckBox ch = iView.findViewById(R.id.editMemberActivated);
-        ch.setChecked(memberToEdit.isActivated());
-
-        Button buttonColor = iView.findViewById(R.id.editMemberColor);
-        buttonColor.setBackgroundColor(color);
-
-        buttonColor.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View buview) {
-                LayoutInflater inflater = getLayoutInflater();
-                View colorView = inflater.inflate(R.layout.dialog_color, new LinearLayout(BillsListViewActivity.this));
-
-                final LobsterPicker lobsterPicker = colorView.findViewById(R.id.lobsterPicker);
-                LobsterShadeSlider shadeSlider = colorView.findViewById(R.id.shadeSlider);
-
-                lobsterPicker.addDecorator(shadeSlider);
-                lobsterPicker.setColorHistoryEnabled(true);
-                lobsterPicker.setHistory(color);
-                lobsterPicker.setColor(color);
-
-                new ThemedMaterialAlertDialogBuilder(BillsListViewActivity.this)
-                        .setView(colorView)
-                        .setTitle(getString(R.string.settings_colorpicker_title))
-                        .setPositiveButton(getString(R.string.simple_ok), new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                int newColor = lobsterPicker.getColor();
-                                buttonColor.setBackgroundColor(newColor);
-                                newMemberColor = newColor;
-                            }
-                        })
-                        .setNegativeButton(getString(R.string.simple_cancel), null)
-                        .show();
-
-            }
-        });
-
-        builder.setView(iView);
-
-        // Set up the buttons
-        builder.setPositiveButton(getString(R.string.simple_ok), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                EditText nvi = iView.findViewById(R.id.editMemberName);
-                String newMemberName = nvi.getText().toString();
-
-                EditText wvi = iView.findViewById(R.id.editMemberWeight);
-                double newMemberWeight = 1.0;
-                try {
-                    newMemberWeight = Double.parseDouble(wvi.getText().toString().replace(',', '.'));
-                }
-                catch (Exception e) {
-                    showToast(getString(R.string.member_edit_weight_error));
-                    return;
-                }
-
-                CheckBox cvi = iView.findViewById(R.id.editMemberActivated);
-                boolean newActivated = cvi.isChecked();
-
-                int red = Color.red(newMemberColor);
-                int green = Color.green(newMemberColor);
-                int blue = Color.blue(newMemberColor);
-
-                SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                long selectedProjectId = preferences.getLong("selected_project", 0);
-
-                if (selectedProjectId != 0) {
-                    if (!newMemberName.isEmpty()) {
-                        db.updateMemberAndSync(
-                            memberToEdit, newMemberName, newMemberWeight, newActivated,
-                            red, green, blue, "", ""
-                        );
-                        refreshLists();
-                        // this was used to programmatically select member
-                        //navigationSelection = new Category(newMemberName, memberToEdit.getId());
-                    } else {
-                        showToast(getString(R.string.member_edit_empty_name));
-                    }
-                }
-                // restore keyboard auto hide behaviour
-                InputMethodManager inputMethodManager = (InputMethodManager) iView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-            }
-        });
-        builder.setNegativeButton(getString(R.string.simple_cancel), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-                // restore keyboard auto hide behaviour
-                InputMethodManager inputMethodManager = (InputMethodManager) iView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-                inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
-            }
-        });
-
-        AlertDialog dialog = builder.show();
-
-        MaterialButton buttonDelete = iView.findViewById(R.id.editMemberDelete);
-        TextView deleteHelpText = iView.findViewById(R.id.editMemberDeleteHelp);
-        boolean isPresentInBills = !db.getBillsOfMember(memberId).isEmpty();
-
-        // Setup deletion. This needs the created dialog to be able to dismiss it.
-        if (project.getType() != ProjectType.LOCAL) { // TODO: implement deletion for Cospend and iHateMoney
-            buttonDelete.setEnabled(false);
-            deleteHelpText.setVisibility(View.VISIBLE);
-            deleteHelpText.setText(getString(R.string.member_edit_delete_only_local_project_supported));
-        } else if (isPresentInBills) {
-            buttonDelete.setEnabled(false);
-            deleteHelpText.setVisibility(View.VISIBLE);
-            deleteHelpText.setText(getString(R.string.member_edit_delete_cannot_delete));
-        } else {
-            buttonDelete.setEnabled(true);
-            buttonDelete.setOnClickListener((view) -> {
-                db.deleteMember(memberId);
-                // refresh the member list in the drawer
-                new LoadMembersTask().executeOnExecutor(AsyncTask.THREAD_POOL_EXECUTOR);
-                refreshLists(); // in case this was the last member -> show the No Members screen
-                dialog.dismiss();
-            });
-            deleteHelpText.setVisibility(View.GONE);
-        }
-
-        var utils = ThemeUtils.of(this);
-        utils.material.colorTextInputLayout(iView.findViewById(R.id.editMemberNameWrapper));
-        utils.material.colorTextInputLayout(iView.findViewById(R.id.editMemberWeightWrapper));
-        utils.material.colorMaterialButtonPrimaryFilled(buttonDelete);
-        utils.platform.themeCheckbox(iView.findViewById(R.id.editMemberActivated));
-
-        nv.setSelectAllOnFocus(true);
-        nv.requestFocus();
-        // show keyboard
-        InputMethodManager inputMethodManager = (InputMethodManager) iView.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
     }
 
     private void setupDrawerProjectMembers(final String selectedItem) {
@@ -1899,21 +1640,15 @@ public class BillsListViewActivity
                     break;
                 case BROADCAST_ACCOUNT_PROJECTS_SYNCED:
                     // show account projects sync success toast
-                    LayoutInflater inflater2 = getLayoutInflater();
-                    View layout2 = inflater2.inflate(R.layout.sync_success_toast,
-                            (ViewGroup) findViewById(R.id.custom_toast_container));
-
-                    LinearLayout ll2 = layout2.findViewById(R.id.custom_toast_container);
-                    ll2.setBackgroundColor(Color.TRANSPARENT);
-                    TextView text2 = (TextView) layout2.findViewById(R.id.text);
-                    text2.setText("");
-                    ImageView im = layout2.findViewById(R.id.toast_icon);
-                    im.setImageResource(R.drawable.ic_nextcloud_logo_white);
+                    SyncSuccessToastBinding toastBinding = SyncSuccessToastBinding.inflate(getLayoutInflater());
+                    toastBinding.getRoot().setBackgroundColor(Color.TRANSPARENT);
+                    toastBinding.text.setText("");
+                    toastBinding.toastIcon.setImageResource(R.drawable.ic_nextcloud_logo_white);
 
                     Toast toast2 = new Toast(getApplicationContext());
                     toast2.setGravity(Gravity.TOP | Gravity.END, 55, 62);
                     toast2.setDuration(Toast.LENGTH_SHORT);
-                    toast2.setView(layout2);
+                    toast2.setView(toastBinding.getRoot());
                     toast2.show();
 
                     // select a project if there are some and none is selected
