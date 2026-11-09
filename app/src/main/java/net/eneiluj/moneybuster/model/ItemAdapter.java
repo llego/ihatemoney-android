@@ -1,7 +1,6 @@
 package net.eneiluj.moneybuster.model;
 
 import android.content.SharedPreferences;
-import android.text.Html;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -18,15 +17,13 @@ import net.eneiluj.moneybuster.R;
 import net.eneiluj.moneybuster.android.activity.BillsListViewActivity;
 import net.eneiluj.moneybuster.android.ui.TextDrawable;
 import net.eneiluj.moneybuster.persistence.MoneyBusterSQLiteOpenHelper;
+import net.eneiluj.moneybuster.util.BillDateFormatter;
 import net.eneiluj.moneybuster.util.SupportUtil;
 import net.eneiluj.moneybuster.util.ColorUtils;
 
 import java.security.NoSuchAlgorithmException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
 
 import static androidx.recyclerview.widget.RecyclerView.NO_POSITION;
 
@@ -36,8 +33,6 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
     private static final int section_type = 0;
     private static final int bill_type = 1;
-
-    private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
 
     private final BillClickListener billClickListener;
     private List<Item> itemList;
@@ -239,20 +234,8 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
     }
 
     private void setFormattedDatetime(TextView billDate, TextView billTime, DBBill bill) {
-        String stringDate = bill.getDate();
-        try {
-            Date date = sdf.parse(stringDate);
-            java.text.DateFormat dateFormat = android.text.format.DateFormat.getDateFormat(db.getContext());
-            Log.v(TAG, "set formatted date item orig "+stringDate+" transformed to "+dateFormat.format(date));
-            billDate.setText(Html.fromHtml(dateFormat.format(date)));
-        } catch (Exception e) {
-            billDate.setText(Html.fromHtml(stringDate));
-        }
-        /*if (!projectType.equals(ProjectType.IHATEMONEY)) {
-            billTime.setText(bill.getTime());
-        } else {*/
-            billTime.setText("");
-        //}
+        billDate.setText(BillDateFormatter.format(bill.getDate()));
+        billTime.setText("");
     }
 
     public boolean select(Integer position) {

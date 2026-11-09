@@ -131,7 +131,7 @@
                     android:layout_height="wrap_content"
                     android:textAppearance="?attr/textAppearanceBodySmall"
                     android:textColor="@color/fg_default_low"
-                    tools:text="09/11/2026" />
+                    tools:text="6th July" />
 
                 <TextView
                     android:id="@+id/billTime"
