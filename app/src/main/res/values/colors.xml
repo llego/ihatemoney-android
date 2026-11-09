@@ -2,26 +2,26 @@
 <resources>
     <!-- Colors -->
 
-    <color name="default_brand">#0082C9</color>
+    <color name="default_brand">#32618D</color>
 
-    <color name="primary">#0082C9</color>
-    <color name="primary_dark">#286090</color>
-    <color name="primary_light">#5AABFC</color>
+    <color name="primary">#32618D</color>
+    <color name="primary_dark">#24496C</color>
+    <color name="primary_light">#B2CBE5</color>
     <color name="accent">#121212</color>
 
-    <color name="separator">#d2d2d2</color>
+    <color name="separator">#DFE3E8</color>
 
     <color name="bg_transparent">#aa000000</color>
-    <color name="bg_highlighted">#e1e1e1</color>
-    <color name="bg_normal">#ffffff</color>
+    <color name="bg_highlighted">#DCE8F4</color>
+    <color name="bg_normal">#FAFBFD</color>
     <color name="bg_normal_transparent">#bbffffff</color>
     <color name="bg_fab_transparent">#ddffffff</color>
     <color name="bg_warning_transparent">#55FF0000</color>
     <color name="bg_attention">#d40000</color>
     <color name="bg_warning">#0082C9</color>
-    <color name="fg_default">#000000</color>
+    <color name="fg_default">#1A1C20</color>
     <color name="fg_default_selection">#333333</color>
-    <color name="fg_default_low">#666666</color>
+    <color name="fg_default_low">#555E69</color>
     <color name="fg_default_high">#cccccc</color>
     <color name="fg_contrast">#ffffff</color>
     <color name="ic_black_daynight">#000000</color>
@@ -29,7 +29,7 @@
     <color name="green">#00CC00</color>
     <color name="red">#CC0000</color>
 
-    <color name="appbar">@android:color/white</color>
+    <color name="appbar">#EBEFF5</color>
 
     <!-- Dark Theme -->
     <!-- Defined here until appwidgets can use night/colors -->

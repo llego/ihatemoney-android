@@ -55,7 +55,10 @@ public class NewProjectActivity extends AppCompatActivity implements NewProjectF
         String defaultNcUrl = getDefaultNcUrl();
         String defaultProjectId = null;
         String defaultProjectPassword = null;
-        ProjectType defaultProjectType = ProjectType.LOCAL;
+        ProjectType defaultProjectType = ProjectType.IHATEMONEY;
+        if (defaultIhmUrl == null) {
+            defaultIhmUrl = "https://ihatemoney.org";
+        }
 
         Boolean shouldCloseActivity = false;
 

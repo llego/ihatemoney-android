@@ -7,19 +7,19 @@
 
     <color name="separator">#444</color>
 
-    <color name="bg_highlighted">#222</color>
-    <color name="bg_normal">#000000</color>
+    <color name="bg_highlighted">#263B50</color>
+    <color name="bg_normal">#121418</color>
     <color name="bg_normal_transparent">#bb000000</color>
     <color name="bg_fab_transparent">#dd222222</color>
     <color name="bg_attention">#ff3333</color>
-    <color name="fg_default">#eeeeee</color>
+    <color name="fg_default">#E2E5EB</color>
     <color name="fg_default_selection">#cccccc</color>
-    <color name="fg_default_low">#aaaaaa</color>
+    <color name="fg_default_low">#B7BFCB</color>
     <color name="fg_default_high">#666666</color>
     <color name="fg_contrast">#000000</color>
     <color name="ic_black_daynight">#ffffff</color>
     <color name="primary_text">#FFFFFF</color>
 
-    <color name="appbar">#212121</color>
+    <color name="appbar">#20262F</color>
 
 </resources>

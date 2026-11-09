@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="expense_description">Description</string>
+    <string name="expense_save">Save expense</string>
+    <string name="expense_add">Add expense</string>
+    <string name="expense_split_everyone">Split between everyone</string>
+    <plurals name="expense_split_selected">
+        <item quantity="one">Split between %d person</item>
+        <item quantity="other">Split between %d people</item>
+    </plurals>
+    <string name="expense_convert_currency">Convert currency</string>
+    <string name="expense_invalid_amount">Enter a valid amount</string>
+    <string name="expense_paid_by">Paid by %1$s</string>
+    <string name="expense_pending_sync">Waiting to sync</string>
+    <string name="expense_expanded">Expanded</string>
+    <string name="expense_collapsed">Collapsed</string>
+    <string name="expense_open_navigation">Open navigation</string>
+    <string name="ihm_setup_summary">Connect to IHateMoney to share expenses. Changes are saved on this device, even when offline.</string>
+    <string name="ihm_no_projects">Add your IHateMoney project to start sharing expenses.</string>
+</resources>

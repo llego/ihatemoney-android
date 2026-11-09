@@ -189,7 +189,7 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             } else if (categoryRemoteId == DBBill.CATEGORY_SPORT) {
                 whatPrefix += "\uD83C\uDFBE ";
             }
-            nvHolder.billTitle.setText(Html.fromHtml(whatPrefix + bill.getWhat()));
+            nvHolder.billTitle.setText(whatPrefix + bill.getWhat());
 
             if (selected.contains(position)) {
                 nvHolder.avatar.setImageDrawable(ContextCompat.getDrawable(db.getContext(), R.drawable.ic_check_circle_gray_24dp));
@@ -220,17 +220,9 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
 
             Log.d(TAG, "[get member of project " + bill.getProjectId() + " with remoteid : "+bill.getPayerId()+"]");
             double rAmount = Math.round(bill.getAmount() * 100.0 ) / 100.0;
-            String subtitle = SupportUtil.normalNumberFormat.format(rAmount);
-            subtitle += " (" + db.getMember(bill.getPayerId()).getName();
-            subtitle += " → ";
-            for (long boRId : bill.getBillOwersIds()) {
-                String name = db.getMember(boRId).getName();
-                subtitle += name + ", ";
-            }
-            subtitle = subtitle.replaceAll(", $", "");
-            subtitle += ")";
-
-            nvHolder.billSubtitle.setText(Html.fromHtml(subtitle));
+            nvHolder.billAmount.setText(SupportUtil.normalNumberFormat.format(rAmount));
+            nvHolder.billSubtitle.setText(db.getContext().getString(R.string.expense_paid_by,
+                    db.getMember(bill.getPayerId()).getName()));
 
             boolean isProjectLocal = ProjectType.LOCAL.equals(projectType);
             nvHolder.syncIcon.setVisibility((isProjectLocal || bill.getState() == DBBill.STATE_OK) ? View.INVISIBLE : View.VISIBLE);
@@ -328,6 +320,7 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
         TextView billDate;
         TextView billTime;
         TextView billSubtitle;
+        TextView billAmount;
         ImageView syncIcon;
         ImageView repeatIcon;
 
@@ -342,6 +335,7 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             this.billDate = v.findViewById(R.id.billDate);
             this.billTime = v.findViewById(R.id.billTime);
             this.billSubtitle = v.findViewById(R.id.billExcerpt);
+            this.billAmount = v.findViewById(R.id.billAmount);
             this.syncIcon = v.findViewById(R.id.syncIcon);
             this.repeatIcon = v.findViewById(R.id.repeatIcon);
             v.setOnClickListener(this);

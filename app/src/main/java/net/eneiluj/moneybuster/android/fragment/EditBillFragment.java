@@ -8,8 +8,6 @@ import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.content.res.ColorStateList;
-import android.graphics.Color;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -24,6 +22,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.view.WindowManager;
 import android.view.inputmethod.InputMethodManager;
+import android.view.inputmethod.EditorInfo;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.CheckBox;
@@ -48,7 +47,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.content.ContextCompat;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.button.MaterialButton;
 
 import net.eneiluj.moneybuster.R;
 import net.eneiluj.moneybuster.android.activity.QrCodeScannerActivity;
@@ -71,12 +70,10 @@ import net.eneiluj.moneybuster.theme.ThemeUtils;
 import net.eneiluj.moneybuster.theme.ThemedFragment;
 import net.eneiluj.moneybuster.theme.ThemedMaterialAlertDialogBuilder;
 import net.eneiluj.moneybuster.util.BillParser;
+import net.eneiluj.moneybuster.util.BillAmountParser;
+import net.eneiluj.moneybuster.util.EdgeToEdge;
 import net.eneiluj.moneybuster.util.ICallback;
-import net.eneiluj.moneybuster.util.MoneyBuster;
-import net.eneiluj.moneybuster.util.SupportUtil;
 import net.eneiluj.moneybuster.util.ColorUtils;
-import net.objecthunter.exp4j.Expression;
-import net.objecthunter.exp4j.ExpressionBuilder;
 
 import java.security.NoSuchAlgorithmException;
 import java.text.ParseException;
@@ -111,6 +108,7 @@ public class EditBillFragment extends ThemedFragment {
     private static final String PARAM_PROJECT_TYPE = "projectType";
     private static final String SAVEDKEY_BILL = "bill";
     private static final String SAVEDKEY_PROJECT_TYPE = "type";
+    private static final String SAVEDKEY_DRAFT = "draft";
 
     protected DBBill bill;
     protected boolean billIsDuplicated = false;
@@ -133,7 +131,7 @@ public class EditBillFragment extends ThemedFragment {
     private Spinner editPaymentMode;
     private Spinner editCategory;
     private LinearLayout owersLayout;
-    private FloatingActionButton fabSaveBill;
+    private MaterialButton fabSaveBill;
     private Button bAll;
     private Button bNone;
     private Button duplicateButton;
@@ -148,7 +146,7 @@ public class EditBillFragment extends ThemedFragment {
     private DatePickerDialog datePickerDialog;
     private TimePickerDialog timePickerDialog;
 
-    private Map<Long, CheckBox> owerCheckboxes;
+    private Map<Long, CheckBox> owerCheckboxes = new HashMap<>();
 
     private DialogInterface.OnClickListener deleteDialogClickListener;
     private AlertDialog.Builder confirmDeleteAlertBuilder;
@@ -167,6 +165,7 @@ public class EditBillFragment extends ThemedFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = FragmentEditBillBinding.inflate(inflater, container, false);
         View view = binding.getRoot();
+        EdgeToEdge.apply(requireActivity(), view);
 
         Toolbar toolbar = view.findViewById(R.id.toolbar);
         ((AppCompatActivity) getActivity()).setSupportActionBar(toolbar);
@@ -193,15 +192,19 @@ public class EditBillFragment extends ThemedFragment {
         editCategoryLayout = view.findViewById(R.id.editCategoryLayout);
         fabSaveBill = view.findViewById(R.id.fab_edit_ok);
 
-        // color
-        boolean darkTheme = MoneyBuster.isDarkTheme(getContext());
-        // if dark theme and main color is black, make fab button lighter/gray
-        if (darkTheme && ColorUtils.primaryColor(getContext()) == Color.BLACK) {
-            fabSaveBill.setBackgroundTintList(ColorStateList.valueOf(Color.DKGRAY));
-        } else {
-            fabSaveBill.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.primaryColor(getContext())));
-        }
-        fabSaveBill.setRippleColor(ColorUtils.primaryDarkColor(getContext()));
+        binding.editBillForm.splitButton.setOnClickListener(v -> {
+            boolean expanded = owersLayout.getVisibility() == View.VISIBLE;
+            owersLayout.setVisibility(expanded ? View.GONE : View.VISIBLE);
+            androidx.core.view.ViewCompat.setStateDescription(v,
+                    getString(expanded ? R.string.expense_collapsed : R.string.expense_expanded));
+        });
+        editAmount.setOnEditorActionListener((textView, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_DONE) {
+                saveBillAsked();
+                return true;
+            }
+            return false;
+        });
 
         fabSaveBill.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -457,13 +460,15 @@ public class EditBillFragment extends ThemedFragment {
     @Override
     public void applyTheme(int color) {
         final var utils = ThemeUtils.of(color, requireContext());
-        utils.material.themeFAB(binding.editBillForm.fabEditOk);
+        utils.material.colorMaterialButtonPrimaryFilled(binding.editBillForm.fabEditOk);
         utils.material.colorTextInputLayout(binding.editBillForm.editWhatWrapper);
         utils.material.colorTextInputLayout(binding.editBillForm.editAmountWrapper);
         utils.material.colorTextInputLayout(binding.editBillForm.editCommentWrapper);
-        utils.material.colorMaterialButtonPrimaryFilled(binding.editBillForm.owerAllButton);
-        utils.material.colorMaterialButtonPrimaryFilled(binding.editBillForm.owerNoneButton);
-        utils.material.colorMaterialButtonPrimaryFilled(binding.editBillForm.duplicateBillButton);
+        utils.material.colorTextInputLayout(binding.editBillForm.editDateWrapper);
+        utils.material.colorMaterialButtonText(binding.editBillForm.splitButton);
+        utils.material.colorMaterialButtonText(binding.editBillForm.owerAllButton);
+        utils.material.colorMaterialButtonText(binding.editBillForm.owerNoneButton);
+        utils.material.colorMaterialButtonText(binding.editBillForm.duplicateBillButton);
     }
 
     private final ActivityResultLauncher<Intent> scanQRCodeLauncher =
@@ -554,21 +559,18 @@ public class EditBillFragment extends ThemedFragment {
         }
         bAll.setVisibility((nbChecked < nbTot) ? View.VISIBLE : View.GONE);
         bNone.setVisibility((nbChecked > 0) ? View.VISIBLE : View.GONE);
-    }
-
-    private void showHideValidationButtons() {
-        if (hideSaveButton()) {
-            fabSaveBill.hide();
-        } else {
-            fabSaveBill.show();
+        binding.editBillForm.splitButton.setText(nbChecked == nbTot && nbTot > 0
+                ? getString(R.string.expense_split_everyone)
+                : getResources().getQuantityString(R.plurals.expense_split_selected, nbChecked, nbChecked));
+        if (nbChecked > 0) {
+            binding.editBillForm.splitError.setVisibility(View.GONE);
         }
     }
 
-    private boolean hideSaveButton() {
-        return getWhat() == null || getWhat().equals("") ||
-                getTimestamp() == null || getTimestamp() == 0 ||
-                getPayerId() == 0 ||
-                getOwersIds().size() == 0;
+    private void showHideValidationButtons() {
+        // Keep Save in a stable location; explain invalid input instead of hiding it.
+        binding.editBillForm.editWhatWrapper.setError(null);
+        binding.editBillForm.editAmountWrapper.setError(null);
     }
 
     @Override
@@ -596,6 +598,7 @@ public class EditBillFragment extends ThemedFragment {
         } else {
             bill = (DBBill) savedInstanceState.getSerializable(SAVEDKEY_BILL);
             projectType = (ProjectType) savedInstanceState.getSerializable(SAVEDKEY_PROJECT_TYPE);
+            billIsDuplicated = savedInstanceState.getBoolean(PARAM_NEWBILL_IS_DUPLICATED, false);
         }
         setHasOptionsMenu(true);
         Log.d(TAG, "BILL on create : " + bill);
@@ -668,6 +671,20 @@ public class EditBillFragment extends ThemedFragment {
         super.onSaveInstanceState(outState);
         //saveBill(null);
         outState.putSerializable(SAVEDKEY_BILL, bill);
+        outState.putSerializable(SAVEDKEY_PROJECT_TYPE, projectType);
+        outState.putBoolean(PARAM_NEWBILL_IS_DUPLICATED, billIsDuplicated);
+        Bundle draft = new Bundle();
+        draft.putString("what", getWhat());
+        draft.putString("amount", editAmount.getText().toString());
+        draft.putString("comment", getComment());
+        draft.putLong("timestamp", getTimestamp());
+        draft.putLong("payer", getPayerId());
+        draft.putLongArray("owers", getOwersIds().stream().mapToLong(Long::longValue).toArray());
+        draft.putInt("repeat", editRepeat.getSelectedItemPosition());
+        draft.putInt("paymentMode", editPaymentMode.getSelectedItemPosition());
+        draft.putInt("category", editCategory.getSelectedItemPosition());
+        draft.putBoolean("splitExpanded", owersLayout.getVisibility() == View.VISIBLE);
+        outState.putBundle(SAVEDKEY_DRAFT, draft);
     }
 
     @Override
@@ -709,15 +726,23 @@ public class EditBillFragment extends ThemedFragment {
     }
 
     private void saveBillAsked() {
+        binding.editBillForm.editWhatWrapper.setError(null);
+        binding.editBillForm.editAmountWrapper.setError(null);
         if (getWhat() == null || getWhat().equals("") || getWhat().contains(",")) {
-            showToast(getString(R.string.error_invalid_bill_what), Toast.LENGTH_LONG);
+            binding.editBillForm.editWhatWrapper.setError(getString(R.string.error_invalid_bill_what));
+            editWhat.requestFocus();
+        } else if (BillAmountParser.parse(editAmount.getText().toString()) == null) {
+            binding.editBillForm.editAmountWrapper.setError(getString(R.string.expense_invalid_amount));
+            editAmount.requestFocus();
         } else if (getTimestamp() == null || getTimestamp() == 0) {
             showToast(getString(R.string.error_invalid_bill_date), Toast.LENGTH_LONG);
         } else if (getPayerId() == 0) {
             showToast(getString(R.string.error_invalid_bill_payerid), Toast.LENGTH_LONG);
         } else if (getOwersIds().size() == 0) {
-            showToast(getString(R.string.error_invalid_bill_owers), Toast.LENGTH_LONG);
+            binding.editBillForm.splitError.setVisibility(View.VISIBLE);
+            owersLayout.setVisibility(View.VISIBLE);
         } else {
+            fabSaveBill.setEnabled(false);
             long savedBillid = saveBill(null);
             listener.closeOnSave(savedBillid);
         }
@@ -755,7 +780,7 @@ public class EditBillFragment extends ThemedFragment {
     public void onCloseBill() {
         Log.d(getClass().getSimpleName(), "onCLOSE()");
         InputMethodManager inputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+        inputMethodManager.hideSoftInputFromWindow(editWhat.getWindowToken(), 0);
     }
 
     private boolean valuesHaveChanged() {
@@ -949,9 +974,11 @@ public class EditBillFragment extends ThemedFragment {
             // we show a member if he/she's activated OR
             // if it's an existing bill and he/she's an ower
             if (member.isActivated() || (bill.getId() != 0 && owerIndex != -1)) {
-                View row = LayoutInflater.from(getContext()).inflate(R.layout.ower_row, null);
+                View row = LayoutInflater.from(getContext()).inflate(R.layout.ower_row, owersLayout, false);
 
                 final CheckBox cb = row.findViewById(R.id.owerBox);
+                // Rows share a resource ID; the explicit draft restores each member separately.
+                cb.setSaveEnabled(false);
 
                 if ((bill.getId() == 0 && !billIsDuplicated)
                         || owerIndex != -1) {
@@ -1053,15 +1080,13 @@ public class EditBillFragment extends ThemedFragment {
         editComment.setText(bill.getComment());
         editWhat.setText(bill.getWhat());
         InputMethodManager inputMethodManager = (InputMethodManager) getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
-        // if this is a new bill: select amount and show keyboard
-        // see https://gitlab.com/eneiluj/moneybuster/-/issues/126
-        if (bill.getId() == 0 && "".equals(bill.getWhat())) {
-            editAmount.setSelectAllOnFocus(true);
-            editAmount.requestFocus();
-            // show keyboard
-            inputMethodManager.toggleSoftInput(InputMethodManager.SHOW_FORCED, 0);
-        } else {
-            inputMethodManager.toggleSoftInput(InputMethodManager.HIDE_IMPLICIT_ONLY, 0);
+        if (savedInstanceState == null && bill.getId() == 0 && "".equals(bill.getWhat())) {
+            editWhat.requestFocus();
+            editWhat.post(() -> {
+                if (isAdded() && binding != null) {
+                    inputMethodManager.showSoftInput(editWhat, InputMethodManager.SHOW_IMPLICIT);
+                }
+            });
         }
 
         Log.v(TAG, "BEFORE TIME INIT");
@@ -1070,12 +1095,8 @@ public class EditBillFragment extends ThemedFragment {
         updateTimeLabel();
         Log.v(TAG, "AFTER TIME INIT");
 
-        editAmount.setText(String.valueOf(bill.getAmount()));
-
-        // hide the validation button so that it appears if a value changes
-        if (bill.getId() != 0 || "".equals(bill.getWhat())) {
-            fabSaveBill.hide();
-        }
+        editAmount.setText(bill.getId() == 0 && !billIsDuplicated && bill.getAmount() == 0
+                ? "" : String.valueOf(bill.getAmount()));
 
         if (!ProjectType.IHATEMONEY.equals(projectType)) {
             List<String> repeatNameList = new ArrayList<>();
@@ -1267,6 +1288,35 @@ public class EditBillFragment extends ThemedFragment {
         } else if (ProjectType.LOCAL.equals(projectType)) {
             editRepeatLayout.setVisibility(View.GONE);
         }
+
+        if (savedInstanceState != null) {
+            Bundle draft = savedInstanceState.getBundle(SAVEDKEY_DRAFT);
+            if (draft != null) {
+                editWhat.setText(draft.getString("what"));
+                editAmount.setText(draft.getString("amount"));
+                editComment.setText(draft.getString("comment"));
+                calendar.setTimeInMillis(draft.getLong("timestamp") * 1000);
+                updateDateLabel();
+                updateTimeLabel();
+                int payerIndex = payerIdList.indexOf(String.valueOf(draft.getLong("payer")));
+                if (payerIndex >= 0) editPayer.setSelection(payerIndex);
+                long[] selectedOwers = draft.getLongArray("owers");
+                if (selectedOwers != null) {
+                    for (Map.Entry<Long, CheckBox> entry : owerCheckboxes.entrySet()) {
+                        entry.getValue().setChecked(Arrays.stream(selectedOwers)
+                                .anyMatch(id -> id == entry.getKey()));
+                    }
+                }
+                if (draft.getInt("repeat") >= 0) editRepeat.setSelection(draft.getInt("repeat"));
+                if (draft.getInt("paymentMode") >= 0) editPaymentMode.setSelection(draft.getInt("paymentMode"));
+                if (draft.getInt("category") >= 0) editCategory.setSelection(draft.getInt("category"));
+                owersLayout.setVisibility(draft.getBoolean("splitExpanded") ? View.VISIBLE : View.GONE);
+            }
+        }
+        showHideAllNoneButtons();
+        androidx.core.view.ViewCompat.setStateDescription(binding.editBillForm.splitButton,
+                getString(owersLayout.getVisibility() == View.VISIBLE
+                        ? R.string.expense_expanded : R.string.expense_collapsed));
     }
 
     private boolean usesOldPaymentModes() {
@@ -1278,7 +1328,7 @@ public class EditBillFragment extends ThemedFragment {
     }
 
     protected String getWhat() {
-        return editWhat.getText().toString();
+        return editWhat.getText().toString().trim();
     }
 
     protected String getComment() {
@@ -1302,28 +1352,8 @@ public class EditBillFragment extends ThemedFragment {
     }
 
     protected double getAmount() {
-        String amount = editAmount.getText().toString();
-        amount = amount.replace(',', '.');
-        // formula or simple number
-        boolean isSimpleNumber = amount.matches("[0-9.]+");
-        if (isSimpleNumber) {
-            try {
-                return Double.parseDouble(amount);
-            } catch (Exception e) {
-                return 0.0;
-            }
-        } else {
-            boolean isFormula = amount.matches("[0-9.()\\-+/*]+");
-            if (isFormula) {
-                try {
-                    Expression calc = new ExpressionBuilder(amount).build();
-                    return calc.evaluate();
-                } catch (Exception e) {
-                    return 0.0;
-                }
-            }
-        }
-        return 0.0;
+        Double amount = BillAmountParser.parse(editAmount.getText().toString());
+        return amount == null ? 0.0 : amount;
     }
 
     protected long getPayerId() {

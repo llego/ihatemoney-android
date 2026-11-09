@@ -76,7 +76,7 @@
             android:name="net.eneiluj.moneybuster.android.activity.NewProjectActivity"
             android:label="@string/simple_add_project"
             android:parentActivityName="net.eneiluj.moneybuster.android.activity.BillsListViewActivity"
-            android:windowSoftInputMode="stateHidden"
+            android:windowSoftInputMode="stateHidden|adjustResize"
             android:launchMode="standard"
             android:exported="true">
             <intent-filter>
@@ -117,7 +117,7 @@
             android:name="net.eneiluj.moneybuster.android.activity.EditBillActivity"
             android:label="@string/simple_edit_bill"
             android:parentActivityName="net.eneiluj.moneybuster.android.activity.BillsListViewActivity"
-            android:windowSoftInputMode="stateHidden"
+            android:windowSoftInputMode="stateHidden|adjustResize"
             android:launchMode="standard">
         </activity>
 

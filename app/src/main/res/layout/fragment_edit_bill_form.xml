@@ -1,491 +1,280 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/bg_normal"
+    android:orientation="vertical">
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/bg_normal"
-        android:fadeScrollbars="false">
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:gravity="top"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
-            <LinearLayout
-                android:id="@+id/editWhatLayout"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/editWhatWrapper"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:hint="@string/expense_description">
 
-                <ImageView
-                    android:id="@+id/editWhatIcon"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editWhat"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginRight="32dp"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_title_grey_24dp" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:id="@+id/editWhatWrapper"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/setting_what">
-
-                    <EditText
-                        android:id="@+id/editWhat"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:ems="10"
-                        android:selectAllOnFocus="true"
-                        android:inputType="textCapSentences"
-                        android:importantForAutofill="no" />
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
+                    android:imeOptions="actionNext"
+                    android:nextFocusForward="@id/editAmount"
+                    android:inputType="textCapSentences"
+                    android:maxLines="1"
+                    android:importantForAutofill="no" />
+            </com.google.android.material.textfield.TextInputLayout>
 
             <LinearLayout
-                android:id="@+id/editAmountLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
+                android:layout_marginTop="16dp"
+                android:gravity="center_vertical"
                 android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/amountIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="32dp"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_dollar_grey_24dp" />
 
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/editAmountWrapper"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:hint="@string/setting_amount">
 
-                    <EditText
+                    <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editAmount"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:ems="10"
-                        android:inputType="text|numberDecimal"
+                        android:layout_height="wrap_content"
+                        android:imeOptions="actionDone"
+                        android:inputType="numberDecimal|numberSigned"
                         android:selectAllOnFocus="true"
-                        android:importantForAutofill="no"/>
+                        android:textSize="28sp"
+                        android:maxLines="1"
+                        android:importantForAutofill="no" />
                 </com.google.android.material.textfield.TextInputLayout>
 
                 <ImageView
                     android:id="@+id/currencyIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="15dp"
-                    android:layout_marginLeft="15dp"
-                    android:layout_marginEnd="10dp"
-                    android:layout_marginRight="10dp"
-                    android:paddingTop="8dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
+                    android:layout_marginStart="8dp"
+                    android:padding="12dp"
+                    android:background="?attr/selectableItemBackgroundBorderless"
+                    android:contentDescription="@string/expense_convert_currency"
                     android:src="@drawable/ic_currency_black_24dp"
-                    android:tint="@color/icon_grey" />
-
+                    android:tint="@color/fg_default_low" />
             </LinearLayout>
 
-            <LinearLayout
-                android:id="@+id/editDateLayout"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:layout_marginTop="24dp"
+                android:labelFor="@id/editPayerSpinner"
+                android:text="@string/setting_payer"
+                android:textAppearance="?attr/textAppearanceLabelLarge"
+                android:textColor="@color/fg_default_low" />
 
-                <ImageView
-                    android:id="@+id/editDateIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="32dp"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_today_grey_24dp" />
+            <Spinner
+                android:id="@+id/editPayerSpinner"
+                android:layout_width="match_parent"
+                android:layout_height="56dp"
+                android:spinnerMode="dropdown" />
 
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/setting_date">
-
-                    <EditText
-                        android:id="@+id/editDate"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:ems="10"
-                        android:inputType="text|date"
-                        android:selectAllOnFocus="true"
-                        android:importantForAutofill="no"/>
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
-
-            <LinearLayout
-                android:id="@+id/editTimeLayout"
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/splitButton"
+                style="@style/Widget.Material3.Button.TextButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/editTimeIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="32dp"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_access_time_grey_24dp" />
-
-                <com.google.android.material.textfield.TextInputLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/setting_time">
-
-                    <EditText
-                        android:id="@+id/editTime"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:ems="10"
-                        android:inputType="text"
-                        android:selectAllOnFocus="true"
-                        android:importantForAutofill="no"/>
-                </com.google.android.material.textfield.TextInputLayout>
-
-            </LinearLayout>
+                android:minHeight="48dp"
+                android:gravity="start|center_vertical"
+                android:text="@string/expense_split_everyone"
+                app:icon="@drawable/ic_people_grey_24dp" />
 
             <LinearLayout
-                android:id="@+id/editPayerLayout"
+                android:id="@+id/owerListLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/payerIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="32dp"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_person_grey_24dp" />
+                android:orientation="vertical"
+                android:visibility="gone">
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:orientation="horizontal">
 
-                    <TextView
-                        android:id="@+id/editPayerLabel"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="top"
-                        android:paddingStart="2dp"
-                        android:paddingLeft="2dp"
-                        android:paddingEnd="0dp"
-                        android:paddingRight="0dp"
-                        android:text="@string/setting_payer"
-                        android:textColor="#9E9E9E"
-                        android:textSize="12sp" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/owerAllButton"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/setting_all" />
 
-                    <Spinner
-                        android:id="@+id/editPayerSpinner"
-                        style="@style/Widget.AppCompat.Spinner.Underlined"
-                        android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:layout_weight=".60"
-                        android:spinnerMode="dropdown" />
+                    <com.google.android.material.button.MaterialButton
+                        android:id="@+id/owerNoneButton"
+                        style="@style/Widget.Material3.Button.TextButton"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/setting_none" />
                 </LinearLayout>
-
             </LinearLayout>
 
-
-            <LinearLayout
-                android:id="@+id/editOwnerLayout"
+            <TextView
+                android:id="@+id/splitError"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:accessibilityLiveRegion="polite"
+                android:text="@string/error_invalid_bill_owers"
+                android:textColor="?attr/colorError"
+                android:visibility="gone" />
 
-                <ImageView
-                    android:id="@+id/owersIcon"
-                    android:layout_width="wrap_content"
+            <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/editDateWrapper"
+                style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:hint="@string/setting_date">
+
+                <com.google.android.material.textfield.TextInputEditText
+                    android:id="@+id/editDate"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_gravity="top"
-                    android:layout_marginRight="32dp"
-                    android:src="@drawable/ic_people_grey_24dp" />
+                    android:focusable="false"
+                    android:clickable="true"
+                    android:inputType="none"
+                    android:importantForAutofill="no" />
+            </com.google.android.material.textfield.TextInputLayout>
 
-                <LinearLayout
-                    android:id="@+id/owerListLayout"
-                    android:layout_width="0dp"
+            <!-- Retained for existing local/Cospend projects, not shown for IHateMoney. -->
+            <LinearLayout
+                android:id="@+id/editTimeLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+                <com.google.android.material.textfield.TextInputLayout
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginBottom="8dp"
-                    android:layout_weight=".60"
-                    android:gravity="center"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/editOwersLabel"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="top"
-                        android:layout_marginTop="8dp"
-                        android:paddingStart="2dp"
-                        android:paddingLeft="2dp"
-                        android:paddingEnd="0dp"
-                        android:paddingRight="0dp"
-                        android:text="@string/setting_owers"
-                        android:textColor="#9E9E9E"
-                        android:textSize="12sp" />
-
-                    <LinearLayout
-                        android:id="@+id/editOwersAllNone"
+                    android:hint="@string/setting_time">
+                    <com.google.android.material.textfield.TextInputEditText
+                        android:id="@+id/editTime"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_marginTop="8dp"
-                        android:layout_marginBottom="8dp"
-                        android:gravity="start"
-                        android:orientation="horizontal">
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/owerAllButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/setting_all"
-                            app:icon="@drawable/ic_all" />
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/owerNoneButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginStart="@dimen/spacer_1x"
-                            android:text="@string/setting_none"
-                            app:icon="@drawable/ic_none" />
-
-                    </LinearLayout>
-                </LinearLayout>
+                        android:inputType="none"
+                        android:importantForAutofill="no" />
+                </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/editCategoryLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/categoryIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="32dp"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_apps_grey_24dp" />
-
-                <LinearLayout
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/editCategoryLabel"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="top"
-                        android:paddingStart="2dp"
-                        android:paddingLeft="2dp"
-                        android:paddingEnd="0dp"
-                        android:paddingRight="0dp"
-                        android:text="@string/setting_category"
-                        android:textColor="#9E9E9E"
-                        android:textSize="12sp" />
-
-                    <Spinner
-                        android:id="@+id/editCategorySpinner"
-                        style="@style/Widget.AppCompat.Spinner.Underlined"
-                        android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:layout_weight=".60"
-                        android:spinnerMode="dropdown" />
-                </LinearLayout>
-
+                    android:text="@string/setting_category"
+                    android:labelFor="@id/editCategorySpinner" />
+                <Spinner
+                    android:id="@+id/editCategorySpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/editPaymentModeLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/paymentModeIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="32dp"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_credit_card_grey_24dp" />
-
-                <LinearLayout
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/editPaymentModeLabel"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="top"
-                        android:paddingStart="2dp"
-                        android:paddingLeft="2dp"
-                        android:paddingEnd="0dp"
-                        android:paddingRight="0dp"
-                        android:text="@string/setting_payment_mode"
-                        android:textColor="#9E9E9E"
-                        android:textSize="12sp" />
-
-                    <Spinner
-                        android:id="@+id/editPaymentModeSpinner"
-                        style="@style/Widget.AppCompat.Spinner.Underlined"
-                        android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:layout_weight=".60"
-                        android:spinnerMode="dropdown" />
-                </LinearLayout>
-
+                    android:text="@string/setting_payment_mode"
+                    android:labelFor="@id/editPaymentModeSpinner" />
+                <Spinner
+                    android:id="@+id/editPaymentModeSpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/editRepeatLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/repeatIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginRight="32dp"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_calendar_repeat_grey_24dp" />
-
-                <LinearLayout
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
-
-                    <TextView
-                        android:id="@+id/editRepeatLabel"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="top"
-                        android:paddingStart="2dp"
-                        android:paddingLeft="2dp"
-                        android:paddingEnd="0dp"
-                        android:paddingRight="0dp"
-                        android:text="@string/setting_project_repetition"
-                        android:textColor="#9E9E9E"
-                        android:textSize="12sp" />
-
-                    <Spinner
-                        android:id="@+id/editRepeatSpinner"
-                        style="@style/Widget.AppCompat.Spinner.Underlined"
-                        android:layout_width="match_parent"
-                        android:layout_height="52dp"
-                        android:layout_weight=".60"
-                        android:spinnerMode="dropdown" />
-                </LinearLayout>
-
+                    android:text="@string/setting_project_repetition"
+                    android:labelFor="@id/editRepeatSpinner" />
+                <Spinner
+                    android:id="@+id/editRepeatSpinner"
+                    android:layout_width="match_parent"
+                    android:layout_height="56dp" />
             </LinearLayout>
 
             <LinearLayout
                 android:id="@+id/editCommentLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/editCommentIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="32dp"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_baseline_comment_24" />
-
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/editCommentWrapper"
-                    android:layout_width="0dp"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:hint="@string/setting_comment">
-
-                    <EditText
+                    <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editComment"
                         android:layout_width="match_parent"
-                        android:layout_height="100dp"
-                        android:ems="10"
-                        android:inputType="text|textMultiLine|textCapSentences"
-                        android:selectAllOnFocus="true"
-                        android:importantForAutofill="no"/>
+                        android:layout_height="wrap_content"
+                        android:minLines="2"
+                        android:inputType="textMultiLine|textCapSentences"
+                        android:importantForAutofill="no" />
                 </com.google.android.material.textfield.TextInputLayout>
-
             </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/duplicateBillLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            android:layout_marginBottom="8dp"
-            android:gravity="center"
-            android:orientation="horizontal">
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/duplicateBillButton"
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:id="@+id/duplicateBillLayout"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="@string/duplicate_bill"
-                app:icon="@drawable/ic_content_copy_white_24" />
-        </LinearLayout>
-
+                android:layout_marginTop="16dp"
+                android:orientation="vertical">
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/duplicateBillButton"
+                    style="@style/Widget.Material3.Button.TextButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/duplicate_bill"
+                    app:icon="@drawable/ic_content_copy_white_24" />
+            </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/fab_edit_ok"
-        style="@style/Fab"
-        android:src="@drawable/ic_done_white_24dp"
-        android:tint="#ffffff"
-        android:title="@string/action_save_bill"
-        android:contentDescription="@string/action_save_bill"
-        app:backgroundTint="@color/primary" />
-</FrameLayout>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="12dp"
+        android:minHeight="56dp"
+        android:text="@string/expense_save"
+        app:icon="@drawable/ic_done_white_24dp" />
+</LinearLayout>

@@ -46,7 +46,7 @@
             android:title="@string/settings_offline_mode_title" />
 
         <net.eneiluj.moneybuster.theme.ThemedSwitchPreference
-            android:defaultValue="true"
+            android:defaultValue="false"
             android:icon="@drawable/ic_nextcloud_logo_grey"
             android:key="@string/pref_key_show_nextcloud_settings"
             android:summary="@string/settings_show_nextcloud_settings_summary"

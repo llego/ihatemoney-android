@@ -1,4 +1,17 @@
-# MoneyBuster for Android
+# MoneyBuster2 for Android
+
+A simplicity-first, Material-style fork of [MoneyBuster](https://gitlab.com/eneiluj/moneybuster), focused on fast expense entry and IHateMoney syncing.
+
+Source and development: [llego/moneybuster2](https://github.com/llego/moneybuster2).
+The original history, authorship, and GPL license are preserved. Existing local and Cospend project compatibility remains, but new development focuses on IHateMoney.
+
+## Fork status
+
+The redesigned expense entry, expense list, and project setup are implemented. No MoneyBuster2 APK release is available yet. Full builds are currently blocked by the upstream dependency `com.github.bitfireAT:cert4android:7814052`, whose artifacts return 404 from JitPack. Device testing is still pending.
+
+The documentation and installation links below describe the original MoneyBuster app, not MoneyBuster2 releases.
+
+## Original project
 
 Shared budget manager able to sync with [IHateMoney](https://github.com/spiral-project/ihatemoney/) and [Nextcloud Cospend](https://github.com/julien-nc/cospend-nc).
 As an iOS client you can use [PayForMe](https://github.com/mayflower/PayForMe).

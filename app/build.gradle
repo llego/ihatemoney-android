@@ -34,14 +34,14 @@ android {
     productFlavors {
         normal {
             dimension "default"
-            resValue "string", "app_name", "MoneyBuster"
+            resValue "string", "app_name", "MoneyBuster2"
         }
         dev {
             dimension "default"
             applicationId 'net.eneiluj.moneybuster.dev'
             resValue "string", "applicationId", applicationId
             // applicationIdSuffix '.dev'
-            resValue "string", "app_name", "MoneyDevBuster"
+            resValue "string", "app_name", "MoneyBuster2 Dev"
         }
     }
     // solves cert4android crash
@@ -88,6 +88,7 @@ dependencies {
     implementation 'net.objecthunter:exp4j:0.4.8'
 
     // Testing
+    testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'junit:junit:4.13.2'
 }
 

@@ -1,385 +1,245 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/bg_normal"
+    android:orientation="vertical">
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@color/bg_normal"
-        android:fadeScrollbars="false">
+        android:layout_height="0dp"
+        android:layout_weight="1">
 
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="16dp">
+            android:padding="20dp">
 
-            <!-- Join/create -->
-            <LinearLayout
-                android:id="@+id/whatToDoLayout"
+            <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:layout_marginBottom="20dp"
+                android:text="@string/ihm_setup_summary"
+                android:textAppearance="?attr/textAppearanceBodyLarge"
+                android:textColor="@color/fg_default_low" />
 
-                <ImageView
-                    android:id="@+id/whatTodoIcon"
-                    android:layout_width="wrap_content"
+            <com.google.android.material.button.MaterialButtonToggleGroup
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="16dp"
+                app:checkedButton="@id/whatTodoJoin"
+                app:selectionRequired="true"
+                app:singleSelection="true">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/whatTodoJoin"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/spacer_3x"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_group_work_grey_24dp" />
+                    android:layout_weight="1"
+                    android:minHeight="48dp"
+                    android:text="@string/todo_join_label" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/whatTodoCreate"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_weight="1"
+                    android:minHeight="48dp"
+                    android:text="@string/todo_create_label" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
-                    <TextView
-                        android:id="@+id/whatToDoLabel"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_gravity="top"
-                        android:paddingStart="2dp"
-                        android:paddingEnd="0dp"
-                        android:text="@string/new_project_what_todo"
-                        android:textColor="#9E9E9E"
-                        android:textSize="12sp" />
+            <!-- Local creation/import and explicit legacy links remain supported. -->
+            <ImageView
+                android:id="@+id/whereIcon"
+                android:layout_width="24dp"
+                android:layout_height="24dp"
+                android:visibility="gone" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <RadioGroup
-                            android:id="@+id/whatTodoRadiogroup"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_gravity="center"
-                            android:layout_marginTop="0dp"
-                            android:orientation="horizontal">
-
-                            <ToggleButton
-                                android:id="@+id/whatTodoJoin"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:checked="true"
-                                android:text="@string/todo_join_label"
-                                android:textOff="@string/todo_join_label"
-                                android:textOn="@string/todo_join_label"
-                                android:textSize="12sp"
-                                android:tooltipText="@string/todo_join" />
-
-                            <ToggleButton
-                                android:id="@+id/whatTodoCreate"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/todo_create_label"
-                                android:textOff="@string/todo_create_label"
-                                android:textOn="@string/todo_create_label"
-                                android:textSize="12sp"
-                                android:tooltipText="@string/todo_create" />
-                        </RadioGroup>
-
-                        <com.google.android.material.button.MaterialButton
-                            android:id="@+id/scanButton"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:layout_marginHorizontal="@dimen/spacer_1hx"
-                            android:text="@string/scan_qrcode"
-                            app:icon="@drawable/ic_qrcode" />
-                    </LinearLayout>
-
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <!-- Location -->
-            <LinearLayout
+            <com.google.android.material.button.MaterialButtonToggleGroup
                 android:id="@+id/whereLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
+                android:layout_marginBottom="16dp"
+                app:checkedButton="@id/whereIhm"
+                app:selectionRequired="true"
+                app:singleSelection="true">
 
-                <ImageView
-                    android:id="@+id/whereIcon"
-                    android:layout_width="wrap_content"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/whereIhm"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/spacer_3x"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_cloud_grey_24dp" />
+                    android:layout_weight="1"
+                    android:text="@string/where_ihm_short" />
 
-                <LinearLayout
-                    android:layout_width="match_parent"
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/whereLocal"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical">
+                    android:layout_weight="1"
+                    android:text="@string/where_local_short" />
 
-                    <TextView
-                        android:id="@+id/whereLabel"
-                        android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:layout_gravity="top"
-                        android:paddingStart="2dp"
-                        android:paddingEnd="0dp"
-                        android:text="@string/new_project_where"
-                        android:textColor="#9E9E9E"
-                        android:textSize="12sp" />
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/whereCospend"
+                    style="@style/Widget.Material3.Button.OutlinedButton"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:visibility="gone"
+                    android:text="@string/where_cospend_short" />
+            </com.google.android.material.button.MaterialButtonToggleGroup>
 
-                    <RadioGroup android:id="@+id/whereRadiogroup"
-                        android:layout_width="fill_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <ToggleButton
-                            android:id="@+id/whereLocal"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/where_local_short"
-                            android:textOff="@string/where_local_short"
-                            android:textOn="@string/where_local_short"
-                            android:checked="true"
-                            android:textSize="12sp"
-                            android:tooltipText="@string/where_local"
-                            android:onClick="onToggle" />
-
-                        <ToggleButton
-                            android:id="@+id/whereIhm"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/where_ihm_short"
-                            android:textOff="@string/where_ihm_short"
-                            android:textOn="@string/where_ihm_short"
-                            android:textSize="12sp"
-                            android:tooltipText="@string/where_ihm"
-                            android:onClick="onToggle" />
-
-                        <ToggleButton
-                            android:id="@+id/whereCospend"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="@string/where_cospend_short"
-                            android:textOff="@string/where_cospend_short"
-                            android:textOn="@string/where_cospend_short"
-                            android:textSize="12sp"
-                            android:tooltipText="@string/where_cospend" />
-                    </RadioGroup>
-                </LinearLayout>
-
-            </LinearLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/chooseFromNextcloudButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="52dp"
-                android:text="@string/new_project_from_nextcloud_tooltip"
-                app:icon="@drawable/ic_nextcloud_logo_white" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/importButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_marginStart="52dp"
-                android:text="@string/import_tooltip"
-                app:icon="@drawable/ic_folder_open_grey600_24dp" />
-
-            <!-- Project URL -->
             <LinearLayout
                 android:id="@+id/editProjectUrlLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/editProjectUrlIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/spacer_3x"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_link_grey_24dp" />
-
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical">
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/editProjectUrlInputLayout"
-                    android:layout_width="0dp"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:hint="@string/setting_ihm_project_url">
-
-                    <EditText
+                    <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editProjectUrl"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:ems="10"
+                        android:layout_height="wrap_content"
                         android:inputType="textUri"
+                        android:imeOptions="actionNext"
                         android:selectAllOnFocus="true"
                         android:importantForAutofill="no" />
                 </com.google.android.material.textfield.TextInputLayout>
-
             </LinearLayout>
 
-            <!-- Project ID -->
             <LinearLayout
                 android:id="@+id/editProjectIdLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/editProjectIdIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/spacer_3x"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_library_books_white_24dp" />
-
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical">
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/editProjectIdInputLayout"
-                    android:layout_width="0dp"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:hint="@string/setting_project_id">
-
-                    <EditText
+                    <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editProjectId"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:ems="10"
-                        android:selectAllOnFocus="true"
+                        android:layout_height="wrap_content"
+                        android:inputType="textVisiblePassword"
+                        android:imeOptions="actionNext"
                         android:importantForAutofill="no" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
-            <!-- Password-->
             <LinearLayout
                 android:id="@+id/editProjectPasswordLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/editProjectPasswordIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/spacer_3x"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_lock_grey_24dp" />
-
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical">
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/editProjectPasswordInputLayout"
-                    android:layout_width="0dp"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:hint="@string/setting_new_project_password">
-
-                    <EditText
+                    android:hint="@string/setting_new_project_password"
+                    app:endIconMode="password_toggle">
+                    <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editProjectPassword"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:ems="10"
+                        android:layout_height="wrap_content"
                         android:inputType="textPassword"
-                        android:selectAllOnFocus="true"
+                        android:imeOptions="actionNext"
                         android:autofillHints="password" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
-            <!-- Project name -->
             <LinearLayout
                 android:id="@+id/editProjectNameLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/editProjectNameIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/spacer_3x"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_title_grey_24dp" />
-
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical">
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/editProjectNameInputLayout"
-                    android:layout_width="0dp"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:hint="@string/setting_new_project_name">
-
-                    <EditText
+                    <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editProjectName"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:ems="10"
-                        android:selectAllOnFocus="true"
+                        android:layout_height="wrap_content"
                         android:inputType="textCapSentences"
+                        android:imeOptions="actionNext"
                         android:importantForAutofill="no" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
-            <!-- Email -->
             <LinearLayout
                 android:id="@+id/editProjectEmailLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:gravity="center"
-                android:orientation="horizontal">
-
-                <ImageView
-                    android:id="@+id/editProjectEmailIcon"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/spacer_3x"
-                    android:paddingTop="8dp"
-                    android:src="@drawable/ic_email_grey_24dp" />
-
+                android:layout_marginBottom="16dp"
+                android:orientation="vertical">
                 <com.google.android.material.textfield.TextInputLayout
                     android:id="@+id/editProjectEmailInputLayout"
-                    android:layout_width="0dp"
+                    style="@style/Widget.Material3.TextInputLayout.OutlinedBox"
+                    android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_weight="1"
                     android:hint="@string/setting_new_project_email">
-
-                    <EditText
+                    <com.google.android.material.textfield.TextInputEditText
                         android:id="@+id/editProjectEmail"
                         android:layout_width="match_parent"
-                        android:layout_height="match_parent"
-                        android:ems="10"
+                        android:layout_height="wrap_content"
                         android:inputType="textEmailAddress"
-                        android:selectAllOnFocus="true"
+                        android:imeOptions="actionDone"
                         android:autofillHints="emailAddress" />
                 </com.google.android.material.textfield.TextInputLayout>
             </LinearLayout>
 
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/scanButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/scan_qrcode"
+                app:icon="@drawable/ic_qrcode" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/chooseFromNextcloudButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:text="@string/new_project_from_nextcloud_tooltip" />
+
+            <com.google.android.material.button.MaterialButton
+                android:id="@+id/importButton"
+                style="@style/Widget.Material3.Button.TextButton"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/import_tooltip"
+                app:icon="@drawable/ic_folder_open_grey600_24dp" />
         </LinearLayout>
     </ScrollView>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/fab_new_ok"
-        style="@style/Fab"
-        android:contentDescription="@string/action_save_bill"
-        android:src="@drawable/ic_done_white_24dp"
-        android:tint="#ffffff"
-        android:title="@string/action_save_bill"
-        app:backgroundTint="@color/primary"
-        app:rippleColor="@color/primary_dark" />
-</FrameLayout>
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginHorizontal="20dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="12dp"
+        android:minHeight="56dp"
+        android:text="@string/todo_join_label"
+        app:icon="@drawable/ic_done_white_24dp" />
+</LinearLayout>

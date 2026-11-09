@@ -14,7 +14,8 @@
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/appBar"
             android:layout_width="match_parent"
-            android:layout_height="?attr/actionBarSize"
+            android:layout_height="wrap_content"
+            android:minHeight="?attr/actionBarSize"
             android:background="@color/bg_normal"
             app:elevation="0dp">
 
@@ -44,7 +45,7 @@
                 android:layout_marginBottom="@dimen/spacer_1hx"
                 app:cardBackgroundColor="@color/appbar"
                 app:cardCornerRadius="@dimen/spacer_6x"
-                app:cardElevation="2dp"
+                app:cardElevation="0dp"
                 app:strokeWidth="0dp">
 
                 <LinearLayout
@@ -53,7 +54,10 @@
                     android:orientation="horizontal">
 
                     <androidx.appcompat.widget.AppCompatImageButton
-                        android:id="@+id/menu_button"
+                         android:id="@+id/menu_button"
+                         android:contentDescription="@string/expense_open_navigation"
+                         android:minWidth="48dp"
+                         android:minHeight="48dp"
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:background="?attr/selectableItemBackgroundBorderless"
@@ -108,6 +112,8 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:background="@color/bg_normal"
+                    android:clipToPadding="false"
+                    android:paddingBottom="104dp"
                     android:scrollbars="vertical"
                     tools:listitem="@layout/fragment_bills_list_bill_item" />
 
@@ -134,10 +140,11 @@
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacer_1x"
-                    android:text="@string/no_projects_text" />
+                    android:text="@string/ihm_no_projects" />
 
                 <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_no_projects_configure_nextcloud"
+                    android:visibility="gone"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="@dimen/spacer_1x"
@@ -211,14 +218,12 @@
 
     </LinearLayout>
 
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
+    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
         android:id="@+id/fab_add_bill"
         style="@style/Fab"
-        android:src="@drawable/ic_add_dollar_24dp"
-        android:tint="#ffffff"
+        android:text="@string/expense_add"
         android:tooltipText="@string/action_create_bill"
         android:contentDescription="@string/action_create_bill"
-        app:backgroundTint="@color/primary"
-        app:rippleColor="@color/primary_dark" />
+        app:icon="@drawable/ic_add_white_24dp" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

@@ -72,7 +72,7 @@ import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 import com.google.android.material.appbar.AppBarLayout;
 import com.google.android.material.button.MaterialButton;
 import com.google.android.material.card.MaterialCardView;
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textview.MaterialTextView;
 import com.larswerkman.lobsterpicker.LobsterPicker;
@@ -171,7 +171,7 @@ public class BillsListViewActivity
     DrawerLayout drawerLayout;
     TextView configuredAccount;
     SwipeRefreshLayout swipeRefreshLayout;
-    FloatingActionButton fabAddBill;
+    ExtendedFloatingActionButton fabAddBill;
     RecyclerView listBillItems;
     RecyclerView listDrawerProjects;
     RecyclerView listDrawerMembers;
@@ -452,7 +452,7 @@ public class BillsListViewActivity
 
         // hide nextcloud related stuff if needed
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showNextcloudSettings = preferences.getBoolean(getString(R.string.pref_key_show_nextcloud_settings), true);
+        boolean showNextcloudSettings = preferences.getBoolean(getString(R.string.pref_key_show_nextcloud_settings), false);
         if (!showNextcloudSettings) {
             drawerLayout.findViewById(R.id.configuredAccountLayout).setVisibility(GONE);
             drawerLayout.findViewById(R.id.launchAccountSwitcher).setVisibility(GONE);
@@ -598,18 +598,6 @@ public class BillsListViewActivity
             }
         });
 
-        // color
-        boolean darkTheme = MoneyBuster.isDarkTheme(this);
-        // if dark theme and main color is black, make fab button lighter/gray
-        if (darkTheme && ColorUtils.primaryColor(this) == Color.BLACK) {
-            fabAddBill.setBackgroundTintList(ColorStateList.valueOf(Color.DKGRAY));
-            //fabBillListAddProject.setBackgroundTintList(ColorStateList.valueOf(Color.DKGRAY));
-        } else {
-            fabAddBill.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.primaryColor(this)));
-            //fabBillListAddProject.setBackgroundTintList(ColorStateList.valueOf(ThemeUtils.primaryColor(this)));
-        }
-        fabAddBill.setRippleColor(ColorUtils.primaryDarkColor(this));
-        //fabBillListAddProject.setRippleColor(ThemeUtils.primaryDarkColor(this));
     }
 
     private void setupBillsListCornerCases() {
@@ -665,7 +653,7 @@ public class BillsListViewActivity
     @Override
     public void applyTheme(int color) {
         final var utils = ThemeUtils.of(color, this);
-        utils.material.themeFAB(binding.mainContentView.fabAddBill);
+        utils.material.colorMaterialButtonPrimaryFilled(binding.mainContentView.fabAddBill);
         utils.material.colorMaterialButtonPrimaryFilled(binding.mainContentView.buttonNoProjectsConfigureNextcloud);
         utils.material.colorMaterialButtonPrimaryFilled(binding.mainContentView.buttonNoProjectsConfigureManually);
         utils.material.colorMaterialButtonPrimaryFilled(binding.mainContentView.buttonNoMembersAddMember);
@@ -2106,27 +2094,7 @@ public class BillsListViewActivity
                     }
                     break;
                 case MoneyBusterServerSyncHelper.BROADCAST_PROJECT_SYNCED:
-                    String projName = intent.getStringExtra(BROADCAST_EXTRA_PARAM);
                     refreshLists();
-                    //showToast(getString(R.string.project_sync_success, projName));
-
-                    // show sync success toast
-                    LayoutInflater inflater = getLayoutInflater();
-                    View layout = inflater.inflate(R.layout.sync_success_toast,
-                            (ViewGroup) findViewById(R.id.custom_toast_container));
-
-                    LinearLayout ll = layout.findViewById(R.id.custom_toast_container);
-                    ll.setBackgroundColor(Color.TRANSPARENT);
-                    TextView text = (TextView) layout.findViewById(R.id.text);
-                    //text.setText(getString(R.string.project_sync_success, projName));
-                    text.setText("");
-
-                    Toast toast = new Toast(getApplicationContext());
-                    toast.setGravity(Gravity.TOP | Gravity.END, 55, 6);
-                    toast.setDuration(Toast.LENGTH_SHORT);
-                    toast.setView(layout);
-                    toast.show();
-
                     break;
                 case MoneyBusterServerSyncHelper.BROADCAST_SYNC_PROJECT:
                     SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());

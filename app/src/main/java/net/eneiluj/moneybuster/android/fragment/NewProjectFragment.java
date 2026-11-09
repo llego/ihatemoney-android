@@ -7,10 +7,7 @@ import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.content.res.ColorStateList;
 import android.database.Cursor;
-import android.graphics.Color;
-import android.graphics.Typeface;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -34,13 +31,11 @@ import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.Toast;
-import android.widget.ToggleButton;
 
 import androidx.activity.result.ActivityResult;
 import androidx.activity.result.ActivityResultCallback;
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
-import androidx.annotation.ColorInt;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -49,7 +44,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.FragmentActivity;
 import androidx.preference.PreferenceManager;
 
-import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.textfield.TextInputLayout;
 import com.opencsv.CSVReader;
 import com.opencsv.exceptions.CsvValidationException;
@@ -72,10 +67,9 @@ import net.eneiluj.moneybuster.theme.ThemedFragment;
 import net.eneiluj.moneybuster.theme.ThemedMaterialAlertDialogBuilder;
 import net.eneiluj.moneybuster.theme.ThemedProgressDialogBuilder;
 import net.eneiluj.moneybuster.util.ICallback;
+import net.eneiluj.moneybuster.util.EdgeToEdge;
 import net.eneiluj.moneybuster.util.IProjectCreationCallback;
-import net.eneiluj.moneybuster.util.MoneyBuster;
 import net.eneiluj.moneybuster.util.SupportUtil;
-import net.eneiluj.moneybuster.util.ColorUtils;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -115,11 +109,11 @@ public class NewProjectFragment extends ThemedFragment {
     protected EditText newProjectId;
     protected EditText newProjectUrl;
     protected EditText newProjectPassword;
-    protected ToggleButton whatTodoJoin;
-    protected ToggleButton whatTodoCreate;
-    protected ToggleButton whereLocal;
-    protected ToggleButton whereIhm;
-    protected ToggleButton whereCospend;
+    protected MaterialButton whatTodoJoin;
+    protected MaterialButton whatTodoCreate;
+    protected MaterialButton whereLocal;
+    protected MaterialButton whereIhm;
+    protected MaterialButton whereCospend;
     protected EditText newProjectEmail;
     protected EditText newProjectName;
 
@@ -140,7 +134,7 @@ public class NewProjectFragment extends ThemedFragment {
     protected Button chooseFromNextcloudButton;
     protected Button importButton;
 
-    protected FloatingActionButton fabOk;
+    protected MaterialButton fabOk;
 
     protected String defaultIhmUrl;
     protected String defaultNcUrl;
@@ -168,6 +162,7 @@ public class NewProjectFragment extends ThemedFragment {
     public View onCreateView(@NonNull LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         binding = ActivityNewProjectBinding.inflate(inflater, container, false);
         View view = binding.getRoot();
+        EdgeToEdge.apply(requireActivity(), view);
 
         Toolbar toolbar = view.findViewById(R.id.toolbar);
         FragmentActivity activity = getActivity();
@@ -207,7 +202,7 @@ public class NewProjectFragment extends ThemedFragment {
         whatTodoJoin.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean isChecked = ((ToggleButton)view).isChecked();
+                boolean isChecked = ((MaterialButton)view).isChecked();
                 if (isChecked) {
                     whatTodoCreate.setChecked(false);
                     showHideInputFields(true);
@@ -220,7 +215,7 @@ public class NewProjectFragment extends ThemedFragment {
         whatTodoCreate.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean isChecked = ((ToggleButton)view).isChecked();
+                boolean isChecked = ((MaterialButton)view).isChecked();
                 if (isChecked) {
                     whatTodoJoin.setChecked(false);
                     showHideInputFields(true);
@@ -234,7 +229,7 @@ public class NewProjectFragment extends ThemedFragment {
         whereLocal.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean isChecked = ((ToggleButton)view).isChecked();
+                boolean isChecked = ((MaterialButton)view).isChecked();
                 if (isChecked) {
                     whereCospend.setChecked(false);
                     whereIhm.setChecked(false);
@@ -248,7 +243,7 @@ public class NewProjectFragment extends ThemedFragment {
         whereIhm.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean isChecked = ((ToggleButton)view).isChecked();
+                boolean isChecked = ((MaterialButton)view).isChecked();
                 if (isChecked) {
                     whereCospend.setChecked(false);
                     whereLocal.setChecked(false);
@@ -262,7 +257,7 @@ public class NewProjectFragment extends ThemedFragment {
         whereCospend.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                boolean isChecked = ((ToggleButton)view).isChecked();
+                boolean isChecked = ((MaterialButton)view).isChecked();
                 if (isChecked) {
                     whereLocal.setChecked(false);
                     whereIhm.setChecked(false);
@@ -280,15 +275,6 @@ public class NewProjectFragment extends ThemedFragment {
                 onPressOk();
             }
         });
-
-        boolean darkTheme = MoneyBuster.isDarkTheme(getContext());
-        // if dark theme and main color is black, make fab button lighter/gray
-        if (darkTheme && ColorUtils.primaryColor(getContext()) == Color.BLACK) {
-            fabOk.setBackgroundTintList(ColorStateList.valueOf(Color.DKGRAY));
-        } else {
-            fabOk.setBackgroundTintList(ColorStateList.valueOf(ColorUtils.primaryColor(getContext())));
-        }
-        fabOk.setRippleColor(ColorUtils.primaryDarkColor(getContext()));
 
         scanButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -417,23 +403,19 @@ public class NewProjectFragment extends ThemedFragment {
     @Override
     public void applyTheme(int color) {
         final var utils = ThemeUtils.of(color, requireContext());
-        utils.material.themeFAB(binding.newProjectForm.fabNewOk);
+        utils.material.colorMaterialButtonPrimaryFilled(binding.newProjectForm.fabNewOk);
         utils.material.colorTextInputLayout(binding.newProjectForm.editProjectUrlInputLayout);
         utils.material.colorTextInputLayout(binding.newProjectForm.editProjectIdInputLayout);
         utils.material.colorTextInputLayout(binding.newProjectForm.editProjectPasswordInputLayout);
         utils.material.colorTextInputLayout(binding.newProjectForm.editProjectNameInputLayout);
         utils.material.colorTextInputLayout(binding.newProjectForm.editProjectEmailInputLayout);
-        utils.material.colorMaterialButtonPrimaryFilled(binding.newProjectForm.scanButton);
-        utils.material.colorMaterialButtonPrimaryFilled(binding.newProjectForm.importButton);
-        utils.material.colorMaterialButtonPrimaryFilled(binding.newProjectForm.chooseFromNextcloudButton);
+        utils.material.colorMaterialButtonText(binding.newProjectForm.scanButton);
+        utils.material.colorMaterialButtonText(binding.newProjectForm.importButton);
+        utils.material.colorMaterialButtonText(binding.newProjectForm.chooseFromNextcloudButton);
     }
 
     private void showHideValidationButtons() {
-        if (isFormValid()) {
-            fabOk.show();
-        } else {
-            fabOk.hide();
-        }
+        fabOk.setEnabled(isFormValid());
     }
 
     private boolean isFormValid() {
@@ -447,9 +429,6 @@ public class NewProjectFragment extends ThemedFragment {
         String projectName = getName();
         String projectEmail = getEmail();
 
-        @ColorInt int warningColor = getResources().getColor(R.color.bg_warning_transparent, requireContext().getTheme());
-        @ColorInt int defaultColor = getResources().getColor(android.R.color.transparent, requireContext().getTheme());
-
         boolean isIhmInvitationLink = type.equals(ProjectType.IHATEMONEY)
                 && isValidUrl(projectUrl)
                 && isInvitationLink(projectUrl);
@@ -460,24 +439,19 @@ public class NewProjectFragment extends ThemedFragment {
             newProjectPasswordLayout.setVisibility(View.GONE);
             newProjectIdLayout.setVisibility(View.GONE);
         } else {
-            newProjectPasswordLayout.setVisibility((type.equals(ProjectType.COSPEND) && todoCreate) ? View.GONE : View.VISIBLE);
+            newProjectPasswordLayout.setVisibility(type.equals(ProjectType.LOCAL)
+                    || (type.equals(ProjectType.COSPEND) && todoCreate) ? View.GONE : View.VISIBLE);
             newProjectIdLayout.setVisibility(View.VISIBLE);
         }
 
         // always check project ID
         if (todoCreate) {
             if (projectId.equals("")) {
-                newProjectIdInputLayout.setBackgroundColor(warningColor);
                 valid = false;
-            } else {
-                newProjectIdInputLayout.setBackgroundColor(defaultColor);
             }
         } else {
             if (projectId.equals("") && !isIhmInvitationLink && !isCospendScheme) {
-                newProjectIdInputLayout.setBackgroundColor(warningColor);
                 valid = false;
-            } else {
-                newProjectIdInputLayout.setBackgroundColor(defaultColor);
             }
         }
 
@@ -486,24 +460,15 @@ public class NewProjectFragment extends ThemedFragment {
                     !isCospendScheme
                     && (projectUrl.equals("") || !isValidUrl(projectUrl))
             ) {
-                newProjectUrlInputLayout.setBackgroundColor(warningColor);
                 valid = false;
-            } else {
-                newProjectUrlInputLayout.setBackgroundColor(defaultColor);
             }
             if (todoCreate) {
                 if (type.equals(ProjectType.IHATEMONEY) && projectPassword.equals("")) {
-                    newProjectPasswordInputLayout.setBackgroundColor(warningColor);
                     valid = false;
-                } else {
-                    newProjectPasswordInputLayout.setBackgroundColor(defaultColor);
                 }
             } else {
                 if (projectPassword.equals("") && !isIhmInvitationLink && !isCospendScheme) {
-                    newProjectPasswordInputLayout.setBackgroundColor(warningColor);
                     valid = false;
-                } else {
-                    newProjectPasswordInputLayout.setBackgroundColor(defaultColor);
                 }
             }
         }
@@ -512,16 +477,10 @@ public class NewProjectFragment extends ThemedFragment {
         if (todoCreate) {
             if (!type.equals(ProjectType.LOCAL)) {
                 if (projectName.equals("")) {
-                    newProjectNameInputLayout.setBackgroundColor(warningColor);
                     valid = false;
-                } else {
-                    newProjectNameInputLayout.setBackgroundColor(defaultColor);
                 }
                 if (!SupportUtil.isValidEmail(projectEmail)) {
-                    newProjectEmailInputLayout.setBackgroundColor(warningColor);
                     valid = false;
-                } else {
-                    newProjectEmailInputLayout.setBackgroundColor(defaultColor);
                 }
             }
         } else {
@@ -545,6 +504,10 @@ public class NewProjectFragment extends ThemedFragment {
             type = getProjectType();
         }
         whereLocal.setVisibility(todoCreate ? View.VISIBLE : View.GONE);
+        whereCospend.setVisibility(type.equals(ProjectType.COSPEND) ? View.VISIBLE : View.GONE);
+        binding.newProjectForm.whereLayout.setVisibility(todoCreate || type.equals(ProjectType.COSPEND)
+                ? View.VISIBLE : View.GONE);
+        fabOk.setText(todoCreate ? R.string.todo_create_label : R.string.todo_join_label);
 
         newProjectUrlLayout.setVisibility(!type.equals(ProjectType.LOCAL) ? View.VISIBLE : View.GONE);
         newProjectPasswordLayout.setVisibility(!type.equals(ProjectType.LOCAL) ? View.VISIBLE : View.GONE);
@@ -555,42 +518,12 @@ public class NewProjectFragment extends ThemedFragment {
 
         scanButton.setVisibility(todoCreate ? View.GONE : View.VISIBLE);
 
-        if (todoCreate) {
-            whatTodoCreate.setTypeface(Typeface.DEFAULT_BOLD);
-            whatTodoJoin.setTypeface(Typeface.DEFAULT);
-            whatTodoCreate.setTextSize(12);
-            whatTodoJoin.setTextSize(10);
-        } else {
-            whatTodoCreate.setTypeface(Typeface.DEFAULT);
-            whatTodoJoin.setTypeface(Typeface.DEFAULT_BOLD);
-            whatTodoCreate.setTextSize(10);
-            whatTodoJoin.setTextSize(12);
-        }
-
-        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT);
-        //params.weight = 1.0f;
-        params.rightMargin = 65;
-
         if (type.equals(ProjectType.LOCAL)) {
-            whereLocal.setTextSize(12);
-            whereIhm.setTextSize(10);
-            whereCospend.setTextSize(10);
-            whereLocal.setTypeface(Typeface.DEFAULT_BOLD);
-            whereIhm.setTypeface(Typeface.DEFAULT);
-            whereCospend.setTypeface(Typeface.DEFAULT);
-
             whereIcon.setImageResource(R.drawable.ic_cellphone_grey_24dp);
 
             chooseFromNextcloudButton.setVisibility(View.GONE);
             importButton.setVisibility(View.VISIBLE);
         } else if (type.equals(ProjectType.IHATEMONEY)) {
-            whereLocal.setTextSize(10);
-            whereIhm.setTextSize(12);
-            whereCospend.setTextSize(10);
-            whereLocal.setTypeface(Typeface.DEFAULT);
-            whereIhm.setTypeface(Typeface.DEFAULT_BOLD);
-            whereCospend.setTypeface(Typeface.DEFAULT);
-
             whereIcon.setImageResource(R.drawable.ic_ihm_grey_24dp);
 
             if (setDefaultUrl) {
@@ -600,13 +533,6 @@ public class NewProjectFragment extends ThemedFragment {
             chooseFromNextcloudButton.setVisibility(View.GONE);
             importButton.setVisibility(View.GONE);
         } else if (type.equals(ProjectType.COSPEND)) {
-            whereLocal.setTextSize(10);
-            whereIhm.setTextSize(10);
-            whereCospend.setTextSize(12);
-            whereLocal.setTypeface(Typeface.DEFAULT);
-            whereIhm.setTypeface(Typeface.DEFAULT);
-            whereCospend.setTypeface(Typeface.DEFAULT_BOLD);
-
             whereIcon.setImageResource(R.drawable.ic_cospend_grey_24dp);
 
             if (setDefaultUrl) {
@@ -665,6 +591,13 @@ public class NewProjectFragment extends ThemedFragment {
     public void onDetach() {
         super.onDetach();
         listener = null;
+    }
+
+    @Override
+    public void onViewStateRestored(@Nullable Bundle savedInstanceState) {
+        super.onViewStateRestored(savedInstanceState);
+        showHideInputFields(false);
+        showHideValidationButtons();
     }
 
     @Override
@@ -970,8 +903,12 @@ public class NewProjectFragment extends ThemedFragment {
             Uri data = Uri.parse(url);
             bearerToken = data.getPathSegments().get(data.getPathSegments().size() - 1);
             remoteId = data.getPathSegments().get(data.getPathSegments().size() - 3);
-            url = "https://" +
-                    data.getHost() + data.getPath().replaceAll("/" + remoteId + "/join/" + bearerToken + "$", "");
+            Uri.Builder server = new Uri.Builder().scheme(data.getScheme())
+                    .encodedAuthority(data.getEncodedAuthority());
+            for (int i = 0; i < data.getPathSegments().size() - 3; i++) {
+                server.appendPath(data.getPathSegments().get(i));
+            }
+            url = server.build().toString();
             Log.e(TAG, "IHM invitation link, url: " + url + " , token: " + bearerToken + " , remoteId: " + remoteId);
         }
         // handle Cospend scheme links
@@ -1021,6 +958,12 @@ public class NewProjectFragment extends ThemedFragment {
         // hide the keyboard when this window gets the focus
         getActivity().getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_ALWAYS_HIDDEN);
 
+        defaultIhmUrl = getArguments().getString(PARAM_DEFAULT_IHM_URL);
+        defaultNcUrl = getArguments().getString(PARAM_DEFAULT_NC_URL);
+        if (savedInstanceState != null) {
+            return; // Let Android restore the form instead of reapplying link credentials.
+        }
+
         String defaultTypeId = getArguments().getString(PARAM_DEFAULT_PROJECT_TYPE);
         if (defaultTypeId != null) {
             if (defaultTypeId.equals(ProjectType.COSPEND.getId())) {
@@ -1037,9 +980,6 @@ public class NewProjectFragment extends ThemedFragment {
                 whereCospend.setChecked(false);
             }
         }
-
-        defaultIhmUrl = getArguments().getString(PARAM_DEFAULT_IHM_URL);
-        defaultNcUrl = getArguments().getString(PARAM_DEFAULT_NC_URL);
 
         showHideInputFields(true);
 
@@ -1059,8 +999,7 @@ public class NewProjectFragment extends ThemedFragment {
             }
         }
 
-        //showHideInputFields(false);
-        //showHideValidationButtons();
+        showHideValidationButtons();
     }
 
     protected ProjectType getProjectType() {
