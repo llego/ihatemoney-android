@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Remove expense receipt QR scanning and its Austrian/Croatian receipt parsers. Preserve QR scanning for joining projects.
 - Use expense/expenses consistently throughout the English interface, including new/edit headings, confirmations, empty states, and notification settings. Keep database/API identifiers and existing expense data unchanged.
 - Replace the app theme color wheel with ten named, one-tap color choices, and use a list icon for All expenses.
 - Rename Edit project to Manage project and move Share, Export, and Remove from this device into that screen. Keep removal confirmation and support local-project management actions.

@@ -1,13 +1,10 @@
 package net.eneiluj.moneybuster.android.fragment;
 
-import static android.app.Activity.RESULT_OK;
-
 import androidx.appcompat.app.ActionBar;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Context;
 import android.content.DialogInterface;
-import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
@@ -36,10 +33,6 @@ import android.widget.Spinner;
 import android.widget.TimePicker;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResult;
-import androidx.activity.result.ActivityResultCallback;
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AlertDialog;
@@ -50,7 +43,6 @@ import androidx.core.content.ContextCompat;
 import com.google.android.material.button.MaterialButton;
 
 import net.eneiluj.moneybuster.R;
-import net.eneiluj.moneybuster.android.activity.QrCodeScannerActivity;
 import net.eneiluj.moneybuster.android.ui.TextDrawable;
 import net.eneiluj.moneybuster.android.ui.UserAdapter;
 import net.eneiluj.moneybuster.android.ui.UserItem;
@@ -63,22 +55,17 @@ import net.eneiluj.moneybuster.model.DBMember;
 import net.eneiluj.moneybuster.model.DBPaymentMode;
 import net.eneiluj.moneybuster.model.DBProject;
 import net.eneiluj.moneybuster.model.ProjectType;
-import net.eneiluj.moneybuster.model.parsed.AustrianBillQrCode;
-import net.eneiluj.moneybuster.model.parsed.CroatianBillQrCode;
 import net.eneiluj.moneybuster.persistence.MoneyBusterSQLiteOpenHelper;
 import net.eneiluj.moneybuster.theme.ThemeUtils;
 import net.eneiluj.moneybuster.theme.ThemedFragment;
 import net.eneiluj.moneybuster.theme.ThemedMaterialAlertDialogBuilder;
-import net.eneiluj.moneybuster.util.BillParser;
 import net.eneiluj.moneybuster.util.BillAmountParser;
 import net.eneiluj.moneybuster.util.EdgeToEdge;
 import net.eneiluj.moneybuster.util.ICallback;
 import net.eneiluj.moneybuster.util.ColorUtils;
 
 import java.security.NoSuchAlgorithmException;
-import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -471,46 +458,6 @@ public class EditBillFragment extends ThemedFragment {
         utils.material.colorMaterialButtonText(binding.editBillForm.duplicateBillButton);
     }
 
-    private final ActivityResultLauncher<Intent> scanQRCodeLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-                    new ActivityResultCallback<ActivityResult>() {
-                        @Override
-                        public void onActivityResult(ActivityResult result) {
-                            Intent data = result.getData();
-                            if (result.getResultCode() == RESULT_OK) {
-                                if (data != null) {
-                                    String scannedBill = data.getStringExtra(QrCodeScannerActivity.KEY_QR_CODE);
-                                    Log.d(TAG, "onActivityResult SCANNED BILL : " + scannedBill);
-
-                                    try {
-                                        AustrianBillQrCode bill = BillParser.parseAustrianBillFromQrCode(scannedBill);
-                                        calendar.setTimeInMillis(bill.getDate().getTime());
-                                        updateDateLabel();
-                                        updateTimeLabel();
-                                        editAmount.setText(String.valueOf(bill.getAmount()));
-                                        return;
-                                    } catch (ParseException e) {
-                                    }
-
-                                    try {
-                                        CroatianBillQrCode bill = BillParser.parseCroatianBillFromQrCode(scannedBill);
-                                        if (bill.getDate() != null) {
-                                            calendar.setTimeInMillis(bill.getDate().atZone(ZoneId.systemDefault()).toInstant().toEpochMilli());
-                                            updateDateLabel();
-                                            updateTimeLabel();
-                                        }
-                                        editAmount.setText(String.valueOf(bill.getAmount()));
-                                        return;
-                                    } catch (ParseException e) {
-                                    }
-
-                                    Log.d(TAG, "Could not parse scanned bill : " + scannedBill);
-                                    showToast(getString(R.string.error_scanning_bill_qr_code), Toast.LENGTH_LONG);
-                                }
-                            }
-                        }
-                    });
-
     private void convertToCurrency(long currencyId) {
         DBCurrency currency = db.getCurrency(currencyId);
         double initAmount = getAmount();
@@ -766,11 +713,6 @@ public class EditBillFragment extends ThemedFragment {
                 } else {
                     listener.close();
                 }
-                return true;
-            case R.id.menu_scan:
-                Log.d(TAG, "Scan button pressed");
-                Intent createIntent = new Intent(getContext(), QrCodeScannerActivity.class);
-                scanQRCodeLauncher.launch(createIntent);
                 return true;
             default:
                 return super.onOptionsItemSelected(item);
