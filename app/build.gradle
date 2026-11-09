@@ -1,6 +1,12 @@
 apply plugin: 'com.android.application'
 apply plugin: 'org.jetbrains.kotlin.android'
 
+// Force 16 KB page-size aligned transitive native libraries.
+configurations.all {
+    resolutionStrategy.force 'org.conscrypt:conscrypt-android:2.9.0',
+            'androidx.graphics:graphics-path:1.1.0'
+}
+
 android {
     compileSdkVersion 36
     // buildToolsVersion '31.0.0'
@@ -60,6 +66,11 @@ android {
 
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
+
+    // Pin transitive native libs to 16 KB page-size aligned releases.
+    // conscrypt is pulled by cert4android; graphics-path by Nextcloud's Compose UI.
+    implementation 'org.conscrypt:conscrypt-android:2.9.0'
+    implementation 'androidx.graphics:graphics-path:1.1.0'
 
     // Pinned, published revision compatible with this app's Kotlin/Android toolchain.
     implementation 'com.github.bitfireAT:cert4android:b67ba86d313ceb622d7717ad7b587abc74a2caa9'
