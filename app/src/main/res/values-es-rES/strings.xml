@@ -149,7 +149,6 @@
   <string name="action_select_project">seleccionar proyecto actual</string>
   <string name="menu_select_all">Seleccionar todo</string>
   <string name="menu_delete">Eliminar</string>
-  <string name="menu_scan">Escanear código QR fiscal austriaco</string>
   <string name="menu_delete_project_remote">Eliminar proyecto en el servidor</string>
   <string name="menu_save_project">Guardar proyecto</string>
   <string name="menu_save_bill">Guardar factura</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Eliminar proyecto actual</string>
   <string name="remove_project_confirmation">El proyecto %1$s ha sido eliminado</string>
   <string name="fab_edit_member">Editar un miembro</string>
-  <string name="choose_member_management_action">Gestionar miembros</string>
-  <string name="choose_project_management_action">Gestionar proyecto</string>
   <string name="fab_manage_members">Gestionar miembros</string>
   <string name="fab_export_project">Exportar proyecto</string>
   <string name="drawer_last_sync_text">Última sincronización: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">Total pagado por todos los miembros: %s</string>
   <string name="stats_table_title">Tabla de estadísticas</string>
-  <string name="stats_date_min">Fecha mínima</string>
-  <string name="stats_date_max">Fecha máxima</string>
   <string name="stats_who">Quien</string>
   <string name="stats_paid">Pagado</string>
   <string name="stats_spent">Gastado</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Volver al antiguo método de inicio de sesión</string>
   <string name="fallback_weblogin_back">Atrás</string>
   <string name="use_sso_toggle">Usar una cuenta de la aplicación Nextcloud Files</string>
-  <string name="error_scanning_bill_qr_code">No se ha podido escanear el código QR.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d seleccionado</item>
     <item quantity="other">%d seleccionados</item>

@@ -149,7 +149,6 @@
   <string name="action_select_project">vybrat stávající projekt</string>
   <string name="menu_select_all">Vybrat vše</string>
   <string name="menu_delete">Smazat</string>
-  <string name="menu_scan">Naskenovat QR kód rakouské daně</string>
   <string name="menu_delete_project_remote">Smazat projekt na serveru</string>
   <string name="menu_save_project">Uložit projekt</string>
   <string name="menu_save_bill">Uložit účet</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Odebrat stávající projekt</string>
   <string name="remove_project_confirmation">Projekt %1$s byl odebrán</string>
   <string name="fab_edit_member">Upravit člena</string>
-  <string name="choose_member_management_action">Spravovat členy</string>
-  <string name="choose_project_management_action">Spravovat projekt</string>
   <string name="fab_manage_members">Spravovat členy</string>
   <string name="fab_export_project">Exportovat projekt</string>
   <string name="drawer_last_sync_text">Naposledy synchronizováno: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">Celkem zaplaceno všemi členy: %.2f</string>
   <string name="stats_table_title">Tabulka statistik</string>
-  <string name="stats_date_min">Minimální datum</string>
-  <string name="stats_date_max">Maximální datum</string>
   <string name="stats_who">Kdo</string>
   <string name="stats_paid">Zaplaceno</string>
   <string name="stats_spent">Utraceno</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Vrátit se ke staré metodě přihlašování</string>
   <string name="fallback_weblogin_back">Zpět</string>
   <string name="use_sso_toggle">Použít účet z aplikace Nextcloud Soubory</string>
-  <string name="error_scanning_bill_qr_code">QR kód se nepodařilo naskenovat.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d vybráno</item>
     <item quantity="few">%d vybrány</item>

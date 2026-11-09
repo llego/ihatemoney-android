@@ -149,7 +149,6 @@
   <string name="action_select_project">избери проект</string>
   <string name="menu_select_all">Избери сè</string>
   <string name="menu_delete">Избриши</string>
-  <string name="menu_scan">Scan Austrian tax QRCode</string>
   <string name="menu_delete_project_remote">Избриши го проектот на серверот</string>
   <string name="menu_save_project">Зачувај проект</string>
   <string name="menu_save_bill">Зачувај сметка</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Избриши проект</string>
   <string name="remove_project_confirmation">Проектот %1$s е избришан</string>
   <string name="fab_edit_member">Измени член</string>
-  <string name="choose_member_management_action">Управувај со членовите</string>
-  <string name="choose_project_management_action">Менаџирај проект</string>
   <string name="fab_manage_members">Управувај со членовите</string>
   <string name="fab_export_project">Извези проект</string>
   <string name="drawer_last_sync_text">Последна синхронизација: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">Вклупно платено од сите членови: %s</string>
   <string name="stats_table_title">Табела со статистика</string>
-  <string name="stats_date_min">Минимален датум</string>
-  <string name="stats_date_max">Максимален датум</string>
   <string name="stats_who">Кој</string>
   <string name="stats_paid">Платено</string>
   <string name="stats_spent">Потрошено</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Врати се на стариот начин на најавување</string>
   <string name="fallback_weblogin_back">Назад</string>
   <string name="use_sso_toggle">Користи ја сметката од Nеxtcloud апликацијата</string>
-  <string name="error_scanning_bill_qr_code">QR code could not be scanned.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d избран</item>
     <item quantity="other">%d избрани</item>

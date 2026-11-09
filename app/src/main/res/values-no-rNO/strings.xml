@@ -149,7 +149,6 @@
   <string name="action_select_project">velg gjeldende prosjekt</string>
   <string name="menu_select_all">Velg alle</string>
   <string name="menu_delete">Slett</string>
-  <string name="menu_scan">Skann østerriksk skattekoden</string>
   <string name="menu_delete_project_remote">Slett prosjektet på serveren</string>
   <string name="menu_save_project">Lagre prosjekt</string>
   <string name="menu_save_bill">Lagre regningen</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Fjern gjeldende prosjekt</string>
   <string name="remove_project_confirmation">Prosjekt %1$s har blitt fjernet</string>
   <string name="fab_edit_member">Rediger et medlem</string>
-  <string name="choose_member_management_action">Administrere medlemmer</string>
-  <string name="choose_project_management_action">Administrer prosjekt</string>
   <string name="fab_manage_members">Administrere medlemmer</string>
   <string name="fab_export_project">Eksporter prosjekt</string>
   <string name="drawer_last_sync_text">Siste synkronisering: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">Totalt betalt av alle medlemmene: %s</string>
   <string name="stats_table_title">Statistikktabell</string>
-  <string name="stats_date_min">Minimum dato</string>
-  <string name="stats_date_max">Maksimum dato</string>
   <string name="stats_who">Hvem</string>
   <string name="stats_paid">Betalt</string>
   <string name="stats_spent">Brukt</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Gå tilbake til gammel innloggingsmetode</string>
   <string name="fallback_weblogin_back">Tilbake</string>
   <string name="use_sso_toggle">Bruk konto fra Nextcloud Filer</string>
-  <string name="error_scanning_bill_qr_code">QR-kode kunne ikke skannes.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d valgt</item>
     <item quantity="other">%d selected</item>

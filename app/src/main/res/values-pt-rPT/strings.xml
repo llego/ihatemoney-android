@@ -149,7 +149,6 @@
   <string name="action_select_project">escolha o planeamento corrente</string>
   <string name="menu_select_all">Escolher tudo</string>
   <string name="menu_delete">Eliminar</string>
-  <string name="menu_scan">Ler código QR fiscal austríaco</string>
   <string name="menu_delete_project_remote">Eliminar planeamento no servidor</string>
   <string name="menu_save_project">Guardar planeamento</string>
   <string name="menu_save_bill">Guardar despesa</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Remover planeamento corrente</string>
   <string name="remove_project_confirmation">O planeamento %1$s foi removido</string>
   <string name="fab_edit_member">Editar um membro</string>
-  <string name="choose_member_management_action">Gerir membros</string>
-  <string name="choose_project_management_action">Gerir planeamento</string>
   <string name="fab_manage_members">Gerir membros</string>
   <string name="fab_export_project">Exportar planeamento</string>
   <string name="drawer_last_sync_text">Última sincronização: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Modo de liquidação: ideal ou centrada num membro.\nIdeal tem o menor número de transferências. Centrada num membro faz com que todas as transferências passem por esse membro. É útil se tiver um tesoureiro a lidar com o dinheiro centralmente.</string>
   <string name="total_payed">Total pago por todos os membros: %s</string>
   <string name="stats_table_title">Tabela de estatísticas</string>
-  <string name="stats_date_min">Data mínima</string>
-  <string name="stats_date_max">Data máxima</string>
   <string name="stats_who">Quem</string>
   <string name="stats_paid">Pago</string>
   <string name="stats_spent">Gasto</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Reverter para o método antigo de início de sessão</string>
   <string name="fallback_weblogin_back">Voltar</string>
   <string name="use_sso_toggle">Usar conta da aplicação Nextcloud</string>
-  <string name="error_scanning_bill_qr_code">Não foi possível ler o código QR.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d escolhido</item>
     <item quantity="other">%d escolhidos</item>

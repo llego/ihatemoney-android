@@ -149,7 +149,6 @@
   <string name="action_select_project">wybierz bieżący projekt</string>
   <string name="menu_select_all">Zaznacz wszystko</string>
   <string name="menu_delete">Usuń</string>
-  <string name="menu_scan">Scan Austrian tax QRCode</string>
   <string name="menu_delete_project_remote">Usuń projekt na serwerze</string>
   <string name="menu_save_project">Zapisz projekt</string>
   <string name="menu_save_bill">Zapisz rachunek</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Usuń bieżący projekt</string>
   <string name="remove_project_confirmation">Projekt %1$s został usunięty</string>
   <string name="fab_edit_member">Edytuj członka</string>
-  <string name="choose_member_management_action">Zarządzaj użytkownikami</string>
-  <string name="choose_project_management_action">Zarządzaj projektem</string>
   <string name="fab_manage_members">Zarządzaj użytkownikami</string>
   <string name="fab_export_project">Eksportuj projekt</string>
   <string name="drawer_last_sync_text">Ostatnia synchronizacja: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">Razem zapłacone przez wszystkich członków: %s</string>
   <string name="stats_table_title">Tabela statystyk</string>
-  <string name="stats_date_min">Minimalna data</string>
-  <string name="stats_date_max">Maksymalna data</string>
   <string name="stats_who">Kto</string>
   <string name="stats_paid">Zapłacone</string>
   <string name="stats_spent">Wydano</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Przywróć starą metodę logowania</string>
   <string name="fallback_weblogin_back">Wstecz</string>
   <string name="use_sso_toggle">Użyj konta z aplikacji Nextcloud Files</string>
-  <string name="error_scanning_bill_qr_code">QR code could not be scanned.</string>
   <plurals name="ab_selected">
     <item quantity="one">wybrany %d</item>
     <item quantity="few">wybrane %d</item>

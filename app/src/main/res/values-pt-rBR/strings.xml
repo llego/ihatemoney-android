@@ -149,7 +149,6 @@
   <string name="action_select_project">selecionar projeto atual</string>
   <string name="menu_select_all">Selecionar tudo</string>
   <string name="menu_delete">Excluir</string>
-  <string name="menu_scan">Ler QRCode do imposto austríaco</string>
   <string name="menu_delete_project_remote">Excluir projeto no servidor</string>
   <string name="menu_save_project">Salvar projeto</string>
   <string name="menu_save_bill">Salvar despesa</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Remover projeto atual</string>
   <string name="remove_project_confirmation">Projeto %1$s foi removido</string>
   <string name="fab_edit_member">Editar um membro</string>
-  <string name="choose_member_management_action">Gerenciar membros</string>
-  <string name="choose_project_management_action">Editar projeto</string>
   <string name="fab_manage_members">Gerenciar membros</string>
   <string name="fab_export_project">Exportar projeto</string>
   <string name="drawer_last_sync_text">Última sincronização: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">Total pago por todos os membros: %s</string>
   <string name="stats_table_title">Tabela de estatísticas</string>
-  <string name="stats_date_min">Data de início</string>
-  <string name="stats_date_max">Data de fim</string>
   <string name="stats_who">Quem</string>
   <string name="stats_paid">Pago</string>
   <string name="stats_spent">Gasto</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Reverter para o método de login antigo</string>
   <string name="fallback_weblogin_back">Voltar</string>
   <string name="use_sso_toggle">Usar conta da aplicação Nextcloud</string>
-  <string name="error_scanning_bill_qr_code">Erro ao tentar ler o QRCode</string>
   <plurals name="ab_selected">
     <item quantity="one">%d selecionado</item>
     <item quantity="other">%d selecionado</item>

@@ -149,7 +149,6 @@
   <string name="action_select_project">select current project</string>
   <string name="menu_select_all">Select all</string>
   <string name="menu_delete">Delete</string>
-  <string name="menu_scan">Scan Austrian tax QRCode</string>
   <string name="menu_delete_project_remote">Delete project on server</string>
   <string name="menu_save_project">Save project</string>
   <string name="menu_save_bill">Save expense</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Remove current Project</string>
   <string name="remove_project_confirmation">Project %1$s has been removed</string>
   <string name="fab_edit_member">Edit a member</string>
-  <string name="choose_member_management_action">Manage members</string>
-  <string name="choose_project_management_action">Manage project</string>
   <string name="fab_manage_members">Manage members</string>
   <string name="fab_export_project">Export project</string>
   <string name="drawer_last_sync_text">Last sync: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">Total payed by all the members: %s</string>
   <string name="stats_table_title">Statistics table</string>
-  <string name="stats_date_min">Minimum date</string>
-  <string name="stats_date_max">Maximum date</string>
   <string name="stats_who">Who</string>
   <string name="stats_paid">Paid</string>
   <string name="stats_spent">Spent</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Revert to old login method</string>
   <string name="fallback_weblogin_back">Back</string>
   <string name="use_sso_toggle">Use account from Nextcloud Files app</string>
-  <string name="error_scanning_bill_qr_code">QR code could not be scanned.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d selected</item>
     <item quantity="other">%d selected</item>

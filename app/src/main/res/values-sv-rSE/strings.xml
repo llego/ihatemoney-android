@@ -149,7 +149,6 @@
     <string name="action_select_project">Välj aktuellt projekt</string>
     <string name="menu_select_all">Markera alla</string>
     <string name="menu_delete">Ta bort</string>
-    <string name="menu_scan">Skanna österrikisk skattekod</string>
     <string name="menu_delete_project_remote">Ta bort projekt från servern</string>
     <string name="menu_save_project">Spara projekt</string>
     <string name="menu_save_bill">Spara utgift</string>
@@ -160,8 +159,6 @@
     <string name="fab_rm_project">Ta bort aktuellt projekt</string>
     <string name="remove_project_confirmation">Projektet %1$s har tagits bort</string>
     <string name="fab_edit_member">Redigera medlem</string>
-    <string name="choose_member_management_action">Hantera medlemmar</string>
-    <string name="choose_project_management_action">Hantera projekt</string>
     <string name="fab_manage_members">Hantera medlemmar</string>
     <string name="fab_export_project">Exportera projekt</string>
     <string name="drawer_last_sync_text">Senast synkroniserat: %1$02d:%2$02d</string>
@@ -251,8 +248,6 @@
     <string name="settle_member_center_explanation">Avräkning: optimalt eller via en medlem.\nOptimalt ger så få överföringar som möjligt. Om du väljer en medlem går alla överföringar via den personen. Det är användbart om en kassör sköter betalningarna.</string>
     <string name="total_payed">Totalt betalat av alla medlemmar: %s</string>
     <string name="stats_table_title">Statistik</string>
-    <string name="stats_date_min">Från datum</string>
-    <string name="stats_date_max">Till datum</string>
     <string name="stats_who">Vem</string>
     <string name="stats_paid">Betalat</string>
     <string name="stats_spent">Förbrukat</string>
@@ -355,7 +350,6 @@
     <string name="fallback_weblogin_text">Använd den äldre inloggningsmetoden</string>
     <string name="fallback_weblogin_back">Tillbaka</string>
     <string name="use_sso_toggle">Använd konto från Nextcloud Files-appen</string>
-    <string name="error_scanning_bill_qr_code">QR-koden kunde inte läsas.</string>
     <plurals name="ab_selected">
         <item quantity="one">%d markerad</item>
         <item quantity="other">%d markerade</item>

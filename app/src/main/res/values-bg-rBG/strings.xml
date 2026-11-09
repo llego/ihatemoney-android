@@ -149,7 +149,6 @@
   <string name="action_select_project">изберете текущия проект</string>
   <string name="menu_select_all">Избиране на всичко</string>
   <string name="menu_delete">Изтриване</string>
-  <string name="menu_scan">Scan Austrian tax QRCode</string>
   <string name="menu_delete_project_remote">Изтриване на проекта в сървъра</string>
   <string name="menu_save_project">Запазване на проекта</string>
   <string name="menu_save_bill">Записване на сметката</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Премахване на текущия проект</string>
   <string name="remove_project_confirmation">Проектът %1$s е бил преименован</string>
   <string name="fab_edit_member">Редактиране на участник</string>
-  <string name="choose_member_management_action">Управляване на участниците</string>
-  <string name="choose_project_management_action">Управляване на проекта</string>
   <string name="fab_manage_members">Управление на участниците</string>
   <string name="fab_export_project">Изнасяне на проекта</string>
   <string name="drawer_last_sync_text">Последно синхронизиране: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">Общо платено от всички участници: %s</string>
   <string name="stats_table_title">Таблица статистика</string>
-  <string name="stats_date_min">Минимална дата</string>
-  <string name="stats_date_max">Максимална дата</string>
   <string name="stats_who">Кой</string>
   <string name="stats_paid">Платено</string>
   <string name="stats_spent">Изразходвано</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Обратно към стария метод за влизане</string>
   <string name="fallback_weblogin_back">Назад</string>
   <string name="use_sso_toggle">Употребявайте акаунта от приложението Nextcloud Files</string>
-  <string name="error_scanning_bill_qr_code">QR code could not be scanned.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d избрано</item>
     <item quantity="other">%d избрани</item>

@@ -149,7 +149,6 @@
   <string name="action_select_project">انتخاب پروژه کنونی</string>
   <string name="menu_select_all">انتخاب همه</string>
   <string name="menu_delete">حذف</string>
-  <string name="menu_scan">Scan Austrian tax QRCode</string>
   <string name="menu_delete_project_remote">حذف پروژه روی سرور</string>
   <string name="menu_save_project">ذخیره پروژه</string>
   <string name="menu_save_bill">ذخیره رسید</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">حذف پروژه کنونی</string>
   <string name="remove_project_confirmation">پروژه %1$s حذف شد</string>
   <string name="fab_edit_member">ویرایش عضو</string>
-  <string name="choose_member_management_action">مدیریت عضوها</string>
-  <string name="choose_project_management_action">مدیریت پروژه</string>
   <string name="fab_manage_members">مدیریت عضوها</string>
   <string name="fab_export_project">برون‌بری پروژه</string>
   <string name="drawer_last_sync_text">آخرین هم‌رسانی: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">کل پرداخت شده توسط همه اعضا: %s</string>
   <string name="stats_table_title">جدول آمار</string>
-  <string name="stats_date_min">کمترین تاریخ</string>
-  <string name="stats_date_max">بیشینۀ تاریخ</string>
   <string name="stats_who">چه کسی</string>
   <string name="stats_paid">پرداخت شده</string>
   <string name="stats_spent">خرج شده</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">برگشت به شیوه ورود به حساب قبلی</string>
   <string name="fallback_weblogin_back">برگشت</string>
   <string name="use_sso_toggle">استفاده از حساب برنامه پرونده‌های Nextcloud</string>
-  <string name="error_scanning_bill_qr_code">QR code could not be scanned.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d انتخاب شد</item>
     <item quantity="other">%d انتخاب شد</item>

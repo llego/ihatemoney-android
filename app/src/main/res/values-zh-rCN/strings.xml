@@ -149,7 +149,6 @@
   <string name="action_select_project">选择当前项目</string>
   <string name="menu_select_all">选择所有</string>
   <string name="menu_delete">删除</string>
-  <string name="menu_scan">扫描奥地利税务二维码 QRCode</string>
   <string name="menu_delete_project_remote">删除服务器上的项目</string>
   <string name="menu_save_project">保存项目</string>
   <string name="menu_save_bill">保存账单</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">移除当前项目</string>
   <string name="remove_project_confirmation">项目 %1$s 已被删除</string>
   <string name="fab_edit_member">编辑成员</string>
-  <string name="choose_member_management_action">管理成员</string>
-  <string name="choose_project_management_action">管理项目</string>
   <string name="fab_manage_members">管理成员</string>
   <string name="fab_export_project">导出项目</string>
   <string name="drawer_last_sync_text">上次同步： %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">所有成员的总付款: %s</string>
   <string name="stats_table_title">统计表</string>
-  <string name="stats_date_min">最小日期</string>
-  <string name="stats_date_max">最大日期</string>
   <string name="stats_who">谁</string>
   <string name="stats_paid">购买了</string>
   <string name="stats_spent">支出</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">恢复到旧登录方法</string>
   <string name="fallback_weblogin_back">返回</string>
   <string name="use_sso_toggle">使用 Nextcloud 实例的帐户</string>
-  <string name="error_scanning_bill_qr_code">无法扫描二维码。</string>
   <plurals name="ab_selected">
     <item quantity="other">已选择 %d 个</item>
   </plurals>

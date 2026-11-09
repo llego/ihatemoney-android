@@ -149,7 +149,6 @@
   <string name="action_select_project">seleccionar projecte actual</string>
   <string name="menu_select_all">Seleccionar tot</string>
   <string name="menu_delete">Esborrar</string>
-  <string name="menu_scan">Escaneja el codi QRC d\'impostos austríacs</string>
   <string name="menu_delete_project_remote">Esborrar projecte al servidor</string>
   <string name="menu_save_project">Guardar projecte</string>
   <string name="menu_save_bill">Guardar factura</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Eliminar Projecte actual</string>
   <string name="remove_project_confirmation">S\'ha eliminat el projecte %1$s</string>
   <string name="fab_edit_member">Edita un membre</string>
-  <string name="choose_member_management_action">Gestionar els membres</string>
-  <string name="choose_project_management_action">Gestionar projecte</string>
   <string name="fab_manage_members">Gestionar els membres</string>
   <string name="fab_export_project">Exporta el projecte</string>
   <string name="drawer_last_sync_text">Darrera sincronització: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">Total pagat per tots els membres: %s</string>
   <string name="stats_table_title">Taula d\'estadístiques</string>
-  <string name="stats_date_min">Data mínima</string>
-  <string name="stats_date_max">Data màxima</string>
   <string name="stats_who">Qui</string>
   <string name="stats_paid">Pagat</string>
   <string name="stats_spent">Gastat</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Tornar a l\'anterior mètode d\'accés</string>
   <string name="fallback_weblogin_back">Endarrere</string>
   <string name="use_sso_toggle">Fer servir un compte d\'aplicacions d\'arxius Nextcloud</string>
-  <string name="error_scanning_bill_qr_code">El codi QR no pot ser escanejat.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d seleccionat</item>
     <item quantity="other">%d seleccionats</item>

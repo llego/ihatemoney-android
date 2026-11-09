@@ -149,7 +149,6 @@
   <string name="action_select_project">επιλογή τρέχοντος έργου</string>
   <string name="menu_select_all">Επιλογή Όλων</string>
   <string name="menu_delete">Διαγραφή</string>
-  <string name="menu_scan">Σάρωση QRCode για Αυστριακό φόρο</string>
   <string name="menu_delete_project_remote">Διαγραφή έργου στο διακομιστή</string>
   <string name="menu_save_project">Αποθήκευση έργου</string>
   <string name="menu_save_bill">Αποθήκευση λογαριασμού</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Αφαίρεση τρέχοντος έργου</string>
   <string name="remove_project_confirmation">Το έργο %1$s έχει αφαιρεθεί</string>
   <string name="fab_edit_member">Επεξεργασία μέλους</string>
-  <string name="choose_member_management_action">Διαχείριση μελών</string>
-  <string name="choose_project_management_action">Διαχείριση έργου</string>
   <string name="fab_manage_members">Διαχείριση μελών</string>
   <string name="fab_export_project">Εξαγωγή έργου</string>
   <string name="drawer_last_sync_text">Τελευταίος συγχρονισμός: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">Συνολικό ποσό που καταβλήθηκε από όλα τα μέλη: %s</string>
   <string name="stats_table_title">Πίνακας στατιστικών στοιχείων</string>
-  <string name="stats_date_min">Ελάχιστη ημερομηνία</string>
-  <string name="stats_date_max">Μέγιστη ημερομηνία</string>
   <string name="stats_who">Ποιος</string>
   <string name="stats_paid">Πληρώθηκε</string>
   <string name="stats_spent">Ξοδεύτηκαν</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Επιστροφή σε παλιά μέθοδο σύνδεσης</string>
   <string name="fallback_weblogin_back">Πίσω</string>
   <string name="use_sso_toggle">Χρήση λογαριασμού από την εφαρμογή Nextcloud Files</string>
-  <string name="error_scanning_bill_qr_code">Ο κωδικός QR δεν μπορεί να σαρωθεί.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d επιλέχθηκε</item>
     <item quantity="other">%d επιλέχθηκε</item>

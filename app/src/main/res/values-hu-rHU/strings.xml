@@ -149,7 +149,6 @@
   <string name="action_select_project">aktuális projekt kiválasztása</string>
   <string name="menu_select_all">Összes kijelölése</string>
   <string name="menu_delete">Törlés</string>
-  <string name="menu_scan">Osztrák adó-QR-kód beolvasása</string>
   <string name="menu_delete_project_remote">Projekt törlése a szerverről</string>
   <string name="menu_save_project">Projekt mentése</string>
   <string name="menu_save_bill">Számla mentése</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Aktuális projekt eltávolítása</string>
   <string name="remove_project_confirmation">%1$s projektet eltávolítottuk</string>
   <string name="fab_edit_member">Tag szerkesztése</string>
-  <string name="choose_member_management_action">Tagok kezelése</string>
-  <string name="choose_project_management_action">Projekt kezelése</string>
   <string name="fab_manage_members">Tagok kezelése</string>
   <string name="fab_export_project">Projekt exportálása</string>
   <string name="drawer_last_sync_text">Utolsó szinkronizálás: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">Összes tag által fizetett összeg: %s</string>
   <string name="stats_table_title">Statisztikai táblázat</string>
-  <string name="stats_date_min">Kezdő dátum</string>
-  <string name="stats_date_max">Utolsó dátum</string>
   <string name="stats_who">Ki</string>
   <string name="stats_paid">Fizetve</string>
   <string name="stats_spent">Elköltve</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Visszaállítás a régi bejelentkezési metódusra</string>
   <string name="fallback_weblogin_back">Vissza</string>
   <string name="use_sso_toggle">Fiók használata a Nextcloud Fájlok alkalmazásból</string>
-  <string name="error_scanning_bill_qr_code">Nem lehetett beolvasni a QR-kódot.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d kiválasztva</item>
     <item quantity="other">%d kiválasztva</item>

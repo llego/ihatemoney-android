@@ -149,7 +149,6 @@
   <string name="action_select_project">sélectionner le projet courant</string>
   <string name="menu_select_all">Tout sélectionner</string>
   <string name="menu_delete">Supprimer</string>
-  <string name="menu_scan">Scanner un QRCode fiscal autrichien</string>
   <string name="menu_delete_project_remote">Supprimer le projet sur le serveur</string>
   <string name="menu_save_project">Sauvegarder le projet</string>
   <string name="menu_save_bill">Sauvegarder la facture</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Enlever le projet courant</string>
   <string name="remove_project_confirmation">Le projet %1$s a été enlevé</string>
   <string name="fab_edit_member">Éditer un membre</string>
-  <string name="choose_member_management_action">Gérer les membres</string>
-  <string name="choose_project_management_action">Gérer le projet</string>
   <string name="fab_manage_members">Gérer les membres</string>
   <string name="fab_export_project">Exporter le projet</string>
   <string name="drawer_last_sync_text">Dernière synchro : %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Mode de règlement : optimal ou centré sur un membre.\nOptimal a le moins de transactions. Centrer sur un membre fait passer toutes les transactions par l\'intermédiaire de ce membre. C\'est utile si vous avez un trésorier qui gère centralement l\'argent.</string>
   <string name="total_payed">Total payé par tous les membres : %s</string>
   <string name="stats_table_title">Tableau des statistiques</string>
-  <string name="stats_date_min">Date minimum</string>
-  <string name="stats_date_max">Date maximum</string>
   <string name="stats_who">Qui</string>
   <string name="stats_paid">A payé</string>
   <string name="stats_spent">A dépensé</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Revenir à l\'ancienne méthode d\'authentification</string>
   <string name="fallback_weblogin_back">Précédent</string>
   <string name="use_sso_toggle">Utiliser un compte de l\'appli Nextcloud Files</string>
-  <string name="error_scanning_bill_qr_code">Le code QR n\'a pas pu être scanné.</string>
   <plurals name="ab_selected">
     <item quantity="one">%d sélectionné</item>
     <item quantity="other">%d sélectionnés</item>

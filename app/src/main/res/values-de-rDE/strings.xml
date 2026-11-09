@@ -149,7 +149,6 @@
   <string name="action_select_project">Aktuelles Projekt auswählen</string>
   <string name="menu_select_all">Alle auswählen</string>
   <string name="menu_delete">Löschen</string>
-  <string name="menu_scan">Scanne QRCode aus Österreich</string>
   <string name="menu_delete_project_remote">Projekt auf dem Server löschen</string>
   <string name="menu_save_project">Projekt speichern</string>
   <string name="menu_save_bill">Ausgabe speichern</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">Aktuelles Projekt entfernen</string>
   <string name="remove_project_confirmation">Projekt %1$s wurde entfernt</string>
   <string name="fab_edit_member">Mitglied bearbeiten</string>
-  <string name="choose_member_management_action">Mitglieder verwalten</string>
-  <string name="choose_project_management_action">Projekt verwalten</string>
   <string name="fab_manage_members">Mitglieder verwalten</string>
   <string name="fab_export_project">Projekt exportieren</string>
   <string name="drawer_last_sync_text">Letzter Sync: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Abrechnungsmodus: optimal oder zentriert auf ein Mitglied.\nOptimal hat die geringste Anzahl an Transaktionen. Das Zentrieren auf ein Mitglied lässt alle Transaktionen via dieses Mitglied gehen. Dies ist nützlich, wenn ein Kassenwart zentral das Geld verwaltet.</string>
   <string name="total_payed">Gesamt von allen Mitgliedern bezahlt: %s</string>
   <string name="stats_table_title">Statistiktabelle</string>
-  <string name="stats_date_min">Anfangsdatum</string>
-  <string name="stats_date_max">Enddatum</string>
   <string name="stats_who">Wer</string>
   <string name="stats_paid">Gezahlt</string>
   <string name="stats_spent">Ausgegeben</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">Zur alten Login-Methode zurückkehren</string>
   <string name="fallback_weblogin_back">Zurück</string>
   <string name="use_sso_toggle">Konto der Nextcloud Dateien-App verwenden</string>
-  <string name="error_scanning_bill_qr_code">QR Code konnte nicht gescannt werden</string>
   <plurals name="ab_selected">
     <item quantity="one">%d ausgewählt</item>
     <item quantity="other">%d ausgewählt</item>

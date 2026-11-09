@@ -149,7 +149,6 @@
   <string name="action_select_project">現在のプロジェクトを選択</string>
   <string name="menu_select_all">すべて選択</string>
   <string name="menu_delete">削除</string>
-  <string name="menu_scan">オーストリアの税金QRコードをスキャン</string>
   <string name="menu_delete_project_remote">サーバー上のプロジェクトを削除</string>
   <string name="menu_save_project">プロジェクトを保存</string>
   <string name="menu_save_bill">請求書を保存</string>
@@ -160,8 +159,6 @@
   <string name="fab_rm_project">現在のプロジェクトを削除</string>
   <string name="remove_project_confirmation">プロジェクト %1$s が削除されました</string>
   <string name="fab_edit_member">メンバーを編集</string>
-  <string name="choose_member_management_action">メンバーを管理</string>
-  <string name="choose_project_management_action">プロジェクトの管理</string>
   <string name="fab_manage_members">メンバーを管理</string>
   <string name="fab_export_project">プロジェクトのエクスポート</string>
   <string name="drawer_last_sync_text">最終同期: %1$02d:%2$02d</string>
@@ -252,8 +249,6 @@
   <string name="settle_member_center_explanation">Settlement mode: optimal or centered on a member.\nOptimal has the least number of transactions. Centering on a member makes all transactions go through this member. This is useful if you have a treasurer centrally handling money.</string>
   <string name="total_payed">全てのメンバーが支払った合計: %s</string>
   <string name="stats_table_title">集計表</string>
-  <string name="stats_date_min">最小日付</string>
-  <string name="stats_date_max">最大日付</string>
   <string name="stats_who">誰が</string>
   <string name="stats_paid">支払済</string>
   <string name="stats_spent">支出</string>
@@ -384,7 +379,6 @@
   <string name="fallback_weblogin_text">古いログイン方法に戻す</string>
   <string name="fallback_weblogin_back">戻る</string>
   <string name="use_sso_toggle">Nextcloudファイルアプリからアカウントを使用</string>
-  <string name="error_scanning_bill_qr_code">QRコードをスキャンできませんでした。</string>
   <plurals name="ab_selected">
     <item quantity="other">%d件選択済み</item>
   </plurals>
