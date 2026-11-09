@@ -16,8 +16,6 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.PorterDuff;
-import android.graphics.drawable.GradientDrawable;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -260,7 +258,6 @@ public class BillsListViewActivity
         noBillsView = findViewById(R.id.layout_no_bills);
 
         lastSyncLayout.setVisibility(GONE);
-        lastSyncLayout.setBackgroundColor(ColorUtils.primaryDarkColor(this));
 
         db = MoneyBusterSQLiteOpenHelper.getInstance(this);
 
@@ -446,10 +443,6 @@ public class BillsListViewActivity
 
     private void setupToolBar() {
         setSupportActionBar(toolbar);
-        int colors[] = {ColorUtils.primaryColor(this), ColorUtils.primaryLightColor(this)};
-        GradientDrawable gradientDrawable = new GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT, colors);
-        drawerLayout.findViewById(R.id.drawer_top_layout).setBackground(gradientDrawable);
 
         // hide nextcloud related stuff if needed
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -458,14 +451,6 @@ public class BillsListViewActivity
             drawerLayout.findViewById(R.id.configuredAccountLayout).setVisibility(GONE);
             drawerLayout.findViewById(R.id.launchAccountSwitcher).setVisibility(GONE);
         }
-
-        ImageView logoView = drawerLayout.findViewById(R.id.drawer_logo);
-        logoView.setColorFilter(ColorUtils.primaryColor(this), PorterDuff.Mode.OVERLAY);
-
-        int colorsLastSync[] = {ColorUtils.primaryDarkColor(this), ColorUtils.primaryColor(this)};
-        GradientDrawable gradientDrawable2 = new GradientDrawable(
-                GradientDrawable.Orientation.LEFT_RIGHT, colorsLastSync);
-        lastSyncLayout.setBackground(gradientDrawable2);
 
         menuButton.setOnClickListener((v) -> drawerLayout.openDrawer(GravityCompat.START));
 
@@ -877,18 +862,6 @@ public class BillsListViewActivity
     }
 
     @Override
-    public void onManageCurrenciesClick(long projectId) {
-        final DBProject proj = db.getProject(projectId);
-        if (proj != null && proj.getType().equals(ProjectType.COSPEND)) {
-            Intent createIntent = new Intent(getApplicationContext(), ManageCurrenciesActivity.class);
-            createIntent.putExtra(ManageCurrenciesActivity.EXTRA_PROJECT_ID, projectId);
-            startActivity(createIntent);
-        } else {
-            showToast(getString(R.string.currency_management_unavailable));
-        }
-    }
-
-    @Override
     public void onProjectStatisticsClick(long projectId) {
         final DBProject proj = db.getProject(projectId);
         new ProjectStatisticsDialogBuilder(this, db, proj).show();
@@ -1204,7 +1177,7 @@ public class BillsListViewActivity
     }
 
     private void setupDrawerProjectMembers(final String selectedItem) {
-        itemAll = new NavigationAdapter.NavigationItem(ADAPTER_KEY_ALL, getString(R.string.label_all_bills), null, R.drawable.ic_allgrey_24dp, false);
+        itemAll = new NavigationAdapter.NavigationItem(ADAPTER_KEY_ALL, getString(R.string.drawer_all_expenses), null, R.drawable.ic_allgrey_24dp, false);
 
         adapterMembers = new NavigationAdapter(new NavigationAdapter.ClickListener() {
             @Override

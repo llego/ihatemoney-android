@@ -6,11 +6,16 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+
+- Reorganize the sidebar into Projects and Expenses, with Add project beside its heading and Settings fixed at the bottom. Use a calm surface header, compact server labels, distinct project/filter selection styles, and softer accessible balance colors.
+- Remove date filters from project statistics; totals now cover all expense dates.
+- Remove the Manage currencies menu action and screen without changing stored expenses or currency data.
+
 ### Fixed
 
 - Replace the redundant Manage project selection dialog with direct Edit project and Remove from this device menu actions, preserving removal confirmation.
 - Keep the Edit project and App settings toolbars clear of the status bar, respect bottom system insets, and preserve their layouts/fragments on activity recreation.
-- Initialize project statistics date filters to the earliest/latest non-deleted expenses, show an explicit unbounded state for empty projects, and apply picker changes only after confirmation.
 - Speed up synchronization by reconciling expenses in one database transaction, bulk-loading participants, adding lookup indexes, and reusing verified HTTPS connections. Skip redundant member downloads, honor upload-only sync requests, coalesce duplicate queued refreshes, and reduce per-expense logging/string allocations. Preserve local edits made while a remote download is in progress.
 - Replace the unavailable cert4android revision with a pinned published revision and migrate from its obsolete Binder service to the in-process certificate-store API. Preserve custom certificate decisions, hostname validation, and certificate reset; fail closed when TLS initialization fails.
 - Match IHateMoney expense-list ordering by expense date, creation date, and server ID (newest first), including search results. Ignore local time-of-day values for date-only IHateMoney expenses and order pending expenses consistently within each day.

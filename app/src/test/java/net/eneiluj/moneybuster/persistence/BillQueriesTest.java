@@ -14,8 +14,6 @@ import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 public class BillQueriesTest {
@@ -85,34 +83,6 @@ public class BillQueriesTest {
     }
 
     @Test
-    public void dateRangeExcludesDeletedExpensesAndOtherProjects() throws Exception {
-        execute("ALTER TABLE BILLS ADD COLUMN TIMESTAMP INTEGER");
-        execute("UPDATE BILLS SET TIMESTAMP = CASE ID WHEN 1 THEN 100 WHEN 2 THEN 200 "
-                + "WHEN 3 THEN 50 WHEN 4 THEN 300 END");
-        assertArrayEquals(new long[]{100, 200}, dateRange(10));
-    }
-
-    @Test
-    public void dateRangeIsAbsentWhenThereAreNoActiveExpenses() throws Exception {
-        execute("ALTER TABLE BILLS ADD COLUMN TIMESTAMP INTEGER DEFAULT 100");
-        assertNull(dateRange(999));
-        execute("UPDATE BILLS SET STATE = 3 WHERE PROJECTID = 10");
-        assertNull(dateRange(10));
-    }
-
-    @Test
-    public void singleExpenseProvidesBothDateBounds() throws Exception {
-        execute("ALTER TABLE BILLS ADD COLUMN TIMESTAMP INTEGER DEFAULT 100");
-        assertArrayEquals(new long[]{100, 100}, dateRange(20));
-    }
-
-    @Test
-    public void epochTimestampIsNotConfusedWithAnEmptyProject() throws Exception {
-        execute("ALTER TABLE BILLS ADD COLUMN TIMESTAMP INTEGER DEFAULT 0");
-        assertArrayEquals(new long[]{0, 0}, dateRange(10));
-    }
-
-    @Test
     public void migrationIndexesAreIdempotentAndKeepExistingData() throws Exception {
         List<String> before = participants("");
         for (int run = 0; run < 2; run++) {
@@ -136,17 +106,6 @@ public class BillQueriesTest {
             }
         }
         return result;
-    }
-
-    private long[] dateRange(long projectId) throws Exception {
-        try (PreparedStatement statement = db.prepareStatement(BillQueries.DATE_RANGE)) {
-            statement.setLong(1, projectId);
-            statement.setInt(2, 3);
-            try (ResultSet rows = statement.executeQuery()) {
-                if (!rows.next() || rows.getObject(1) == null || rows.getObject(2) == null) return null;
-                return new long[]{rows.getLong(1), rows.getLong(2)};
-            }
-        }
     }
 
     private void execute(String sql) throws Exception {

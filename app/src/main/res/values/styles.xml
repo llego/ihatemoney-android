@@ -49,6 +49,15 @@
         <item name="windowNoTitle">true</item>
     </style>
 
+    <style name="DrawerSectionLabel">
+        <item name="android:textSize">12sp</item>
+        <item name="android:fontFamily">sans-serif-medium</item>
+        <item name="android:textColor">@color/fg_default_low</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:accessibilityHeading">true</item>
+    </style>
+
     <style name="NavigationItem">
         <item name="android:textSize">@dimen/secondary_font_size</item>
         <item name="android:fontFamily">sans-serif-medium</item>

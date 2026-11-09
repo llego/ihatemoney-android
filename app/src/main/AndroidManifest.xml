@@ -27,8 +27,6 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
 
-        <activity android:name=".android.activity.ManageCurrenciesActivity" />
-
         <activity
             android:name="net.eneiluj.moneybuster.android.activity.BillsListViewActivity"
             android:theme="@style/AppTheme.NoActionBar"

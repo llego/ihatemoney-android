@@ -1,5 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="drawer_project_selected">#202830</color>
+    <color name="drawer_balance_positive">#8BD4BF</color>
+    <color name="drawer_balance_negative">#F2A69A</color>
     <!-- Colors -->
 
     <color name="primary_dark">#286090</color>

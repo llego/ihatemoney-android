@@ -7,7 +7,7 @@ import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
 import androidx.recyclerview.widget.RecyclerView;
 
-import android.graphics.Paint;
+import android.graphics.Typeface;
 import android.graphics.drawable.Drawable;
 import android.text.SpannableString;
 import android.text.style.ForegroundColorSpan;
@@ -93,12 +93,12 @@ public class NavigationAdapter extends RecyclerView.Adapter<NavigationAdapter.Vi
                 String sign = "";
                 if (item.count > 0.0) {
                     sign = "+";
-                    count.setTextColor(ContextCompat.getColor(view.getContext(), R.color.green));
+                    count.setTextColor(ContextCompat.getColor(view.getContext(), R.color.drawer_balance_positive));
                 } else if (item.count < 0.0) {
-                    sign = "-";
-                    count.setTextColor(ContextCompat.getColor(view.getContext(), R.color.red));
+                    sign = "−";
+                    count.setTextColor(ContextCompat.getColor(view.getContext(), R.color.drawer_balance_negative));
                 } else {
-                    count.setTextColor(ContextCompat.getColor(view.getContext(), R.color.primary_light));
+                    count.setTextColor(ContextCompat.getColor(view.getContext(), R.color.fg_default_low));
                 }
                 Double absCount = Math.abs(item.count);
                 String balanceStr = SupportUtil.normalNumberFormat.format(absCount);
@@ -180,6 +180,9 @@ public class NavigationAdapter extends RecyclerView.Adapter<NavigationAdapter.Vi
 
             int textColor = ContextCompat.getColor(view.getContext(), R.color.fg_default);
             name.setTextColor(textColor);
+            icon.clearColorFilter();
+            icon.setScaleX(1f);
+            icon.setScaleY(1f);
             // count.setTextColor(textColor);
             if (!item.isMember) {
                 icon.setColorFilter(isSelected ? textColor : Color.GRAY);
@@ -187,10 +190,7 @@ public class NavigationAdapter extends RecyclerView.Adapter<NavigationAdapter.Vi
                 icon.setScaleY(0.6f);
             }
 
-            if (isSelected) {
-                name.setPaintFlags(Paint.FAKE_BOLD_TEXT_FLAG);
-                count.setPaintFlags(Paint.FAKE_BOLD_TEXT_FLAG);
-            }
+            name.setTypeface(Typeface.create(isSelected ? "sans-serif-medium" : "sans-serif", Typeface.NORMAL));
 
             //view.setBackgroundColor(isSelected ? ContextCompat.getColor(view.getContext(), R.color.bg_highlighted) : Color.TRANSPARENT);
             view.setSelected(isSelected);

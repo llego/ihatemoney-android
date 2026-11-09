@@ -2,6 +2,7 @@ package net.eneiluj.moneybuster.android.ui;
 
 import android.content.Context;
 import android.graphics.drawable.Drawable;
+import android.net.Uri;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -109,8 +110,6 @@ public class ProjectDrawerAdapter extends RecyclerView.Adapter<ProjectDrawerAdap
 
         void onManageMembersClick(long projectId);
 
-        void onManageCurrenciesClick(long projectId);
-
         void onProjectStatisticsClick(long projectId);
 
         void onSettleProjectClick(long projectId);
@@ -151,17 +150,19 @@ public class ProjectDrawerAdapter extends RecyclerView.Adapter<ProjectDrawerAdap
             ImageView options = itemView.findViewById(R.id.project_options);
 
             itemView.setSelected(item.isSelected);
+            options.setContentDescription(context.getString(R.string.drawer_project_options,
+                    project.getName() == null ? project.getRemoteId() : project.getName()));
             itemView.setOnClickListener((view -> callback.onProjectClick(project.getId())));
 
             if (project.getName() == null || project.getServerUrl() == null || project.isLocal()) {
                 title.setText(project.getRemoteId());
                 subtitle.setVisibility(View.GONE);
             } else {
-                String prettyUrl = project.getRemoteId() + "@"
-                        + project.getServerUrl()
-                        .replace("https://", "")
-                        .replace("http://", "")
-                        .replace("/index.php/apps/cospend", "");
+                Uri server = Uri.parse(project.getServerUrl());
+                String prettyUrl = server.getAuthority();
+                if (prettyUrl == null) {
+                    prettyUrl = project.getServerUrl();
+                }
                 title.setText(project.getName());
                 subtitle.setText(prettyUrl);
                 subtitle.setVisibility(View.VISIBLE);
@@ -193,9 +194,6 @@ public class ProjectDrawerAdapter extends RecyclerView.Adapter<ProjectDrawerAdap
                     return true;
                 } else if (itemId == R.id.opt_manage_members) {
                     callback.onManageMembersClick(projectId);
-                    return true;
-                } else if (itemId == R.id.opt_manage_currencies) {
-                    callback.onManageCurrenciesClick(projectId);
                     return true;
                 } else if (itemId == R.id.opt_project_statistics) {
                     callback.onProjectStatisticsClick(projectId);

@@ -3,15 +3,20 @@
     android:layout_height="wrap_content"
     xmlns:tools="http://schemas.android.com/tools"
     android:background="@drawable/bg_navdrawer_item"
+    android:minHeight="56dp"
+    android:clickable="true"
+    android:focusable="true"
     android:paddingHorizontal="12dp">
 
     <ImageView
         android:id="@+id/navigationItemIcon"
-        android:layout_width="34dp"
-        android:layout_height="44dp"
+        android:layout_width="40dp"
+        android:layout_height="48dp"
+        android:layout_centerVertical="true"
         android:paddingBottom="0dp"
         android:scaleType="fitCenter"
         android:focusable="false"
+        android:importantForAccessibility="no"
         android:src="@drawable/ic_folder_grey600_24dp" />
 
     <TextView
@@ -22,6 +27,8 @@
         android:layout_centerVertical="true"
         android:padding="8dp"
         android:textAppearance="@style/NavigationItem"
+        android:fontFamily="sans-serif-medium"
+        android:fontFeatureSettings="tnum"
         tools:text="1.0"/>
 
     <TextView
@@ -30,7 +37,9 @@
         android:layout_width="match_parent"
         android:layout_toStartOf="@id/navigationItemCount"
         android:layout_centerVertical="true"
-        android:layout_marginStart="44dp"
+        android:layout_marginStart="48dp"
+        android:maxLines="1"
+        android:fontFamily="sans-serif"
         android:ellipsize="end"
         android:textAppearance="@style/NavigationItem"
         tools:text="Label"/>

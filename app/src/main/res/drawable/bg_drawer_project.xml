@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/colorControlHighlight">
+    <item android:id="@android:id/mask" android:left="8dp" android:right="8dp">
+        <shape>
+            <solid android:color="@color/drawer_project_selected" />
+            <corners android:radius="16dp" />
+        </shape>
+    </item>
+    <item android:left="8dp" android:right="8dp">
+        <selector>
+            <item android:state_selected="true">
+                <shape>
+                    <solid android:color="@color/drawer_project_selected" />
+                    <corners android:radius="16dp" />
+                </shape>
+            </item>
+            <item android:drawable="@android:color/transparent" />
+        </selector>
+    </item>
+</ripple>

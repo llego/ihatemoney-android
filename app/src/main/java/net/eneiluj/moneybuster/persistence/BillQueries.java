@@ -4,9 +4,6 @@ package net.eneiluj.moneybuster.persistence;
 final class BillQueries {
     private BillQueries() {}
 
-    static final String DATE_RANGE = "SELECT MIN(TIMESTAMP), MAX(TIMESTAMP) FROM BILLS "
-            + "WHERE PROJECTID = ? AND STATE != ?";
-
     static final String[] SYNC_INDEXES = {
             "CREATE INDEX IF NOT EXISTS BILLS_PROJECTID_STATE_idx ON BILLS(PROJECTID, STATE)",
             "CREATE INDEX IF NOT EXISTS BILLOWERS_BILLID_idx ON BILLOWERS(BILLID)",

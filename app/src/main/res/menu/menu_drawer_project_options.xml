@@ -11,11 +11,6 @@
         android:orderInCategory="20"
         android:title="@string/fab_manage_members" />
     <item
-        android:id="@+id/opt_manage_currencies"
-        android:icon="@drawable/ic_currency_black_24dp_daynight"
-        android:orderInCategory="30"
-        android:title="@string/fab_manage_currencies" />
-    <item
         android:id="@+id/opt_project_statistics"
         android:icon="@drawable/ic_chart_black_24dp_daynight"
         android:orderInCategory="40"
