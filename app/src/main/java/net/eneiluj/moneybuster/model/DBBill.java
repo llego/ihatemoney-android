@@ -19,6 +19,7 @@ public class DBBill implements Item, Serializable {
     private long payerId;
     private double amount;
     private long timestamp;
+    private String creationDate = "";
     private String what;
     private String comment;
     // OK, ADDED, EDITED, DELETED
@@ -175,6 +176,14 @@ public class DBBill implements Item, Serializable {
 
     public void setTimestamp(long timestamp) {
         this.timestamp = timestamp;
+    }
+
+    public String getCreationDate() {
+        return creationDate == null ? "" : creationDate;
+    }
+
+    public void setCreationDate(String creationDate) {
+        this.creationDate = creationDate == null ? "" : creationDate;
     }
 
     public String getDate() {

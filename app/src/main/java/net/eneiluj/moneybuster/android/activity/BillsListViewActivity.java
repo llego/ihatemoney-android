@@ -135,7 +135,8 @@ public class BillsListViewActivity
 
     private final static int PERMISSION_FOREGROUND = 1;
     private final static int PERMISSION_POST_NOTIFICATIONS = 2;
-    public static boolean DEBUG = true;
+    // Per-row diagnostics are expensive for large projects; sync phase timings remain enabled.
+    public static final boolean DEBUG = false;
     public static final String BROADCAST_EXTRA_PARAM = "net.eneiluj.moneybuster.broadcast_extra_param";
     public static final String BROADCAST_ERROR_MESSAGE = "net.eneiluj.moneybuster.broadcast_error_message";
     public static final String BROADCAST_PROJECT_ID = "net.eneiluj.moneybuster.broadcast_project_id";

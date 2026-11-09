@@ -1,18 +1,14 @@
 package net.eneiluj.moneybuster.persistence;
 
 import android.app.PendingIntent;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
 
 import android.content.SharedPreferences;
 import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
-import android.os.IBinder;
-import android.os.RemoteException;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -60,9 +56,6 @@ import java.util.Map;
 import java.util.Objects;
 
 import at.bitfire.cert4android.CustomCertManager;
-import at.bitfire.cert4android.CustomCertService;
-import at.bitfire.cert4android.ICustomCertService;
-import at.bitfire.cert4android.IOnCertificateDecision;
 
 
 /**
@@ -105,38 +98,9 @@ public class MoneyBusterServerSyncHelper {
     private final MoneyBusterSQLiteOpenHelper dbHelper;
     private final Context appContext;
 
-    private CustomCertManager customCertManager;
-    private ICustomCertService iCustomCertService;
+    private final CustomCertManager customCertManager;
 
     private boolean networkConnected = false;
-
-    private boolean cert4androidReady = false;
-    private final ServiceConnection certService = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName componentName, IBinder iBinder) {
-            iCustomCertService = ICustomCertService.Stub.asInterface(iBinder);
-            cert4androidReady = true;
-            if (isSyncPossible()) {
-                long lastId = PreferenceManager.getDefaultSharedPreferences(dbHelper.getContext()).getLong("selected_project", 0);
-                if (lastId != 0) {
-                    DBProject proj = dbHelper.getProject(lastId);
-                    if (proj != null) {
-                        Intent intent = new Intent(BROADCAST_SYNC_PROJECT);
-                        appContext.sendBroadcast(intent);
-                        Intent intent2 = new Intent(BROADCAST_NETWORK_AVAILABLE);
-                        appContext.sendBroadcast(intent2);
-                        //scheduleSync(false, lastId);
-                    }
-                }
-            }
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName componentName) {
-            cert4androidReady = false;
-            iCustomCertService = null;
-        }
-    };
 
     // current state of the synchronization
     private boolean syncActive = false;
@@ -153,25 +117,9 @@ public class MoneyBusterServerSyncHelper {
         this.dbHelper = db;
         this.appContext = db.getContext().getApplicationContext();
         preferences = PreferenceManager.getDefaultSharedPreferences(dbHelper.getContext());
-        new Thread() {
-            @Override
-            public void run() {
-                customCertManager = SupportUtil.getCertManager(appContext);
-            }
-        }.start();
+        customCertManager = SupportUtil.getCertManager(appContext);
 
         updateNetworkStatus();
-        // bind to certificate service to block sync attempts if service is not ready
-        appContext.bindService(new Intent(appContext, CustomCertService.class), certService, Context.BIND_AUTO_CREATE);
-    }
-
-    @Override
-    protected void finalize() throws Throwable {
-        appContext.unbindService(certService);
-        if (customCertManager != null) {
-            customCertManager.close();
-        }
-        super.finalize();
     }
 
     public static boolean isNextcloudAccountConfigured(Context context) {
@@ -195,8 +143,7 @@ public class MoneyBusterServerSyncHelper {
     }
 
     /**
-     * Synchronization is only possible, if there is an active network connection and
-     * Cert4Android service is available.
+     * Synchronization is only possible if there is an active network connection.
      * MoneyBusterServerSyncHelper observes changes in the network connection.
      * The current state can be retrieved with this method.
      *
@@ -204,15 +151,11 @@ public class MoneyBusterServerSyncHelper {
      */
     public boolean isSyncPossible() {
         updateNetworkStatus();
-        return networkConnected && cert4androidReady;
+        return networkConnected;
     }
 
     public CustomCertManager getCustomCertManager() {
         return customCertManager;
-    }
-
-    public void checkCertificate(byte[] cert, IOnCertificateDecision callback) throws RemoteException {
-        iCustomCertService.checkTrusted(cert, true, false, callback);
     }
 
     /**
@@ -248,7 +191,7 @@ public class MoneyBusterServerSyncHelper {
      */
     public @Nullable SyncTask scheduleSync(boolean onlyLocalChanges, long projId) {
         Log.d(getClass().getSimpleName(), "Sync requested (" + (onlyLocalChanges ? "onlyLocalChanges" : "full") + "; " + (syncActive ? "sync active" : "sync NOT active") + ") ...");
-        Log.d(getClass().getSimpleName(), "(network:" + networkConnected + "; cert4android:" + cert4androidReady + ")");
+        Log.d(getClass().getSimpleName(), "(network:" + networkConnected + ")");
         updateNetworkStatus();
         if (isSyncPossible() && (!syncActive || onlyLocalChanges)) {
             DBProject project = dbHelper.getProject(projId);
@@ -267,7 +210,9 @@ public class MoneyBusterServerSyncHelper {
             }
         } else if (!onlyLocalChanges) {
             Log.d(getClass().getSimpleName(), "... scheduled");
-            projectIdsToSync.add(projId);
+            if (!projectIdsToSync.contains(projId)) {
+                projectIdsToSync.add(projId);
+            }
             for (ICallback callback : callbacksPush) {
                 callback.onScheduled();
             }
@@ -307,9 +252,9 @@ public class MoneyBusterServerSyncHelper {
         private int nbPulledNewBills = 0;
         private int nbPulledUpdatedBills = 0;
         private int nbPulledDeletedBills = 0;
-        private String newBillsDialogText = "";
-        private String updatedBillsDialogText = "";
-        private String deletedBillsDialogText = "";
+        private final StringBuilder newBillsDialogText = new StringBuilder();
+        private final StringBuilder updatedBillsDialogText = new StringBuilder();
+        private final StringBuilder deletedBillsDialogText = new StringBuilder();
 
         public SyncTask(boolean onlyLocalChanges, DBProject project) {
             this.onlyLocalChanges = onlyLocalChanges;
@@ -351,10 +296,15 @@ public class MoneyBusterServerSyncHelper {
             //dbHelper.debugPrintFullDB();
             LoginStatus status = LoginStatus.OK;
 
+            long startedAt = System.nanoTime();
             status = pushLocalChanges();
-            if (status == LoginStatus.OK) {
+            long pushedAt = System.nanoTime();
+            if (status == LoginStatus.OK && !onlyLocalChanges) {
                 status = pullRemoteChanges();
             }
+            Log.i(TAG, "Sync phases (ms): push=" + (pushedAt - startedAt) / 1_000_000
+                    + ", pull=" + (System.nanoTime() - pushedAt) / 1_000_000
+                    + ", uploadOnly=" + onlyLocalChanges);
             //dbHelper.debugPrintFullDB();
             Log.i(getClass().getSimpleName(), "SYNCHRONIZATION FINISHED");
             return status;
@@ -366,16 +316,19 @@ public class MoneyBusterServerSyncHelper {
             Log.d(getClass().getSimpleName(), "PUSH LOCAL CHANGES");
 
             try {
-                // get the remote member list to solve conflict when locally added an existing remote member
-                ServerResponse.MembersResponse membersResponse = client.getMembers(customCertManager, project);
-                List<DBMember> remoteMembers = membersResponse.getMembers(project.getId());
+                List<DBMember> membersToAdd = dbHelper.getMembersOfProjectWithState(project.getId(), DBBill.STATE_ADDED);
+                // Only fetch remote members when resolving a newly added member's name conflict.
+                List<DBMember> remoteMembers = new ArrayList<>();
+                if (!membersToAdd.isEmpty()) {
+                    ServerResponse.MembersResponse membersResponse = client.getMembers(customCertManager, project);
+                    remoteMembers = membersResponse.getMembers(project.getId());
+                }
                 List<String> remoteMembersNames = new ArrayList<>();
                 for (DBMember m : remoteMembers) {
                     remoteMembersNames.add(m.getName());
                 }
                 // push member changes
                 // add members
-                List<DBMember> membersToAdd = dbHelper.getMembersOfProjectWithState(project.getId(), DBBill.STATE_ADDED);
                 for (DBMember mToAdd : membersToAdd) {
                     // it exists remotely, just update it locally to solve conflict
                     int searchIndex = remoteMembersNames.indexOf(mToAdd.getName());
@@ -853,6 +806,40 @@ public class MoneyBusterServerSyncHelper {
                     serverSyncTimestamp = System.currentTimeMillis() / 1000;
                 }
 
+                applyRemoteBills(remoteBills, remoteAllBillIds, remoteMembersByRemoteId, serverSyncTimestamp);
+                status = LoginStatus.OK;
+            } catch (ServerResponse.NotModifiedException e) {
+                Log.d(TAG, "No changes, nothing to do.");
+                status = LoginStatus.OK;
+            } catch (IOException e) {
+                Log.e(TAG, "Exception", e);
+                exceptions.add(e);
+                status = LoginStatus.CONNECTION_FAILED;
+            } catch (JSONException e) {
+                Log.e(TAG, "Exception", e);
+                exceptions.add(e);
+                status = LoginStatus.JSON_FAILED;
+            } catch (TokenMismatchException e) {
+                Log.e(getClass().getSimpleName(), "Catch MISMATCHTOKEN", e);
+                status = LoginStatus.SSO_TOKEN_MISMATCH;
+            } catch (NextcloudHttpRequestFailedException e) {
+                Log.e(getClass().getSimpleName(), "Catch NC REQ failed", e);
+                status = LoginStatus.REQ_FAILED;
+                errorMessages.add(getErrorMessageFromException(e));
+                if (e.getCause() != null) {
+                    exceptions.add(e.getCause());
+                }
+            }
+            return status;
+        }
+
+        private void applyRemoteBills(List<DBBill> remoteBills, List<Long> remoteAllBillIds,
+                                      Map<Long, DBMember> remoteMembersByRemoteId, long serverSyncTimestamp) {
+            // All network requests are complete. Commit reconciliation as one disk transaction,
+            // rather than fsyncing once for every expense and participant row.
+            android.database.sqlite.SQLiteDatabase database = dbHelper.getWritableDatabase();
+            database.beginTransaction();
+            try {
                 Map<Long, DBBill> remoteBillsByRemoteId = new HashMap<>();
                 for (DBBill remoteBill : remoteBills) {
                     remoteBillsByRemoteId.put(remoteBill.getRemoteId(), remoteBill);
@@ -869,12 +856,21 @@ public class MoneyBusterServerSyncHelper {
                     if (!localBillsByRemoteId.containsKey(remoteBill.getRemoteId())) {
                         dbHelper.addBill(remoteBill);
                         nbPulledNewBills++;
-                        newBillsDialogText += "+ " + remoteBill.getWhat() + "\n";
-                        Log.d(TAG, "Add local bill : " + remoteBill);
+                        newBillsDialogText.append("+ ").append(remoteBill.getWhat()).append('\n');
                     } else {
                         // update bill if necessary
                         // and billOwers if necessary
                         DBBill localBill = localBillsByRemoteId.get(remoteBill.getRemoteId());
+                        // An edit made while the download was in flight still needs uploading.
+                        if (localBill.getState() != DBBill.STATE_OK) {
+                            continue;
+                        }
+                        // Backfill ordering metadata even when the expense itself is unchanged.
+                        // Missing server metadata must also replace a provisional local date,
+                        // so older servers consistently fall back to remote IDs for all bills.
+                        if (!remoteBill.getCreationDate().equals(localBill.getCreationDate())) {
+                            dbHelper.updateBillCreationDate(localBill.getId(), remoteBill.getCreationDate());
+                        }
                         if (hasChanged(localBill, remoteBill)) {
                             dbHelper.updateBill(
                                     localBill.getId(), null, remoteBill.getPayerId(),
@@ -884,12 +880,7 @@ public class MoneyBusterServerSyncHelper {
                                     remoteBill.getCategoryRemoteId(), remoteBill.getComment()
                             );
                             nbPulledUpdatedBills++;
-                            updatedBillsDialogText += "✏ " + remoteBill.getWhat() + "\n";
-                            Log.d(TAG, "Update local bill : " + remoteBill);
-                        } else {
-                            // fine
-                            Log.d(TAG, "Nothing to do for bill : " + localBill);
-                            Log.d(TAG, "remote bill : " + remoteBill);
+                            updatedBillsDialogText.append("✏ ").append(remoteBill.getWhat()).append('\n');
                         }
                         //////// billowers
                         Map<Long, DBBillOwer> localBillOwersByIds = new HashMap<>();
@@ -904,14 +895,12 @@ public class MoneyBusterServerSyncHelper {
                         for (DBBillOwer rbo : remoteBill.getBillOwers()) {
                             if (!localBillOwersByIds.containsKey(rbo.getMemberId())) {
                                 dbHelper.addBillower(localBill.getId(), rbo.getMemberId());
-                                Log.d(TAG, "Add local billOwer : " + rbo);
                             }
                         }
                         // delete local which are not there remotely
                         for (DBBillOwer lbo : localBill.getBillOwers()) {
                             if (!remoteBillOwersByIds.containsKey(lbo.getMemberId())) {
                                 dbHelper.deleteBillOwer(lbo.getId());
-                                Log.d(TAG, "Delete local billOwer : " + lbo);
                             }
                         }
                     }
@@ -924,21 +913,21 @@ public class MoneyBusterServerSyncHelper {
                 if (ProjectType.COSPEND.equals(project.getType())) {
                     for (DBBill localBill : localBills) {
                         // if local bill does not exist remotely
-                        if (!remoteAllBillIds.contains(localBill.getRemoteId())) {
+                        if (localBill.getState() == DBBill.STATE_OK
+                                && !remoteAllBillIds.contains(localBill.getRemoteId())) {
                             dbHelper.deleteBill(localBill.getId());
                             nbPulledDeletedBills++;
-                            deletedBillsDialogText += "\uD83D\uDDD1 " + localBill.getWhat() + "\n";
-                            Log.d(TAG, "Delete local bill : " + localBill);
+                            deletedBillsDialogText.append("\uD83D\uDDD1 ").append(localBill.getWhat()).append('\n');
                         }
                     }
                 } else {
                     for (DBBill localBill : localBills) {
                         // if local bill does not exist remotely
-                        if (!remoteBillsByRemoteId.containsKey(localBill.getRemoteId())) {
+                        if (localBill.getState() == DBBill.STATE_OK
+                                && !remoteBillsByRemoteId.containsKey(localBill.getRemoteId())) {
                             dbHelper.deleteBill(localBill.getId());
                             nbPulledDeletedBills++;
-                            deletedBillsDialogText += "\uD83D\uDDD1 " + localBill.getWhat() + "\n";
-                            Log.d(TAG, "Delete local bill : " + localBill);
+                            deletedBillsDialogText.append("\uD83D\uDDD1 ").append(localBill.getWhat()).append('\n');
                         }
                     }
                 }
@@ -972,30 +961,12 @@ public class MoneyBusterServerSyncHelper {
                         null, null, null,
                         null
                 );
-                status = LoginStatus.OK;
-            } catch (ServerResponse.NotModifiedException e) {
-                Log.d(TAG, "No changes, nothing to do.");
-                status = LoginStatus.OK;
-            } catch (IOException e) {
-                Log.e(TAG, "Exception", e);
-                exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
-            } catch (JSONException e) {
-                Log.e(TAG, "Exception", e);
-                exceptions.add(e);
-                status = LoginStatus.JSON_FAILED;
-            } catch (TokenMismatchException e) {
-                Log.e(getClass().getSimpleName(), "Catch MISMATCHTOKEN", e);
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            } catch (NextcloudHttpRequestFailedException e) {
-                Log.e(getClass().getSimpleName(), "Catch NC REQ failed", e);
-                status = LoginStatus.REQ_FAILED;
-                errorMessages.add(getErrorMessageFromException(e));
-                if (e.getCause() != null) {
-                    exceptions.add(e.getCause());
-                }
+                database.setTransactionSuccessful();
+            } finally {
+                database.endTransaction();
             }
-            return status;
+            Log.i(TAG, "Pulled expenses: added=" + nbPulledNewBills + ", updated="
+                    + nbPulledUpdatedBills + ", deleted=" + nbPulledDeletedBills);
         }
 
         @Override
@@ -1564,7 +1535,7 @@ public class MoneyBusterServerSyncHelper {
 
     public void runAccountProjectsSync() {
         Log.d(getClass().getSimpleName(), "Account projects sync requested; " + (syncAccountProjectsActive ? "sync active" : "sync NOT active") + ") ...");
-        Log.d(getClass().getSimpleName(), "(network:" + networkConnected + "; cert4android:" + cert4androidReady + ")");
+        Log.d(getClass().getSimpleName(), "(network:" + networkConnected + ")");
         updateNetworkStatus();
         if (isNextcloudAccountConfigured(appContext) && isSyncPossible() && (!syncAccountProjectsActive)) {
             SyncAccountProjectsTask syncAccountProjectTask = new SyncAccountProjectsTask();

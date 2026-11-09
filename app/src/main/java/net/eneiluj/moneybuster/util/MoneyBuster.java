@@ -18,6 +18,7 @@ public class MoneyBuster extends Application {
     public void onCreate() {
         setAppTheme(getAppTheme(getApplicationContext()));
         super.onCreate();
+        CertificateTrust.initialize();
     }
 
     public static void setAppTheme(int mode) {

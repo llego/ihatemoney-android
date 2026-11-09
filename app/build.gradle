@@ -44,7 +44,6 @@ android {
             resValue "string", "app_name", "MoneyBuster2 Dev"
         }
     }
-    // solves cert4android crash
     buildFeatures {
         dataBinding = true
         viewBinding = true
@@ -62,14 +61,13 @@ android {
 dependencies {
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.0.4'
 
-    //implementation project(':cert4android')
-    implementation 'com.github.bitfireAT:cert4android:7814052'
+    // Pinned, published revision compatible with this app's Kotlin/Android toolchain.
+    implementation 'com.github.bitfireAT:cert4android:b67ba86d313ceb622d7717ad7b587abc74a2caa9'
 
 // AndroidX
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core-ktx:1.13.0'
-    // needed for cert4android (conflict resolution)
-    implementation 'androidx.cardview:cardview:1.0.0'
+    implementation 'androidx.lifecycle:lifecycle-process:2.8.7'
     implementation 'androidx.recyclerview:recyclerview:1.3.2'
     implementation 'androidx.swiperefreshlayout:swiperefreshlayout:1.1.0'
     implementation 'androidx.work:work-runtime-ktx:2.9.0'
@@ -89,6 +87,7 @@ dependencies {
 
     // Testing
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.xerial:sqlite-jdbc:3.46.1.0'
     androidTestImplementation 'junit:junit:4.13.2'
 }
 

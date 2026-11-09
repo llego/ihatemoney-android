@@ -37,7 +37,7 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import at.bitfire.cert4android.CustomCertManager;
-import at.bitfire.cert4android.IOnCertificateDecision;
+import at.bitfire.cert4android.CustomCertStore;
 import net.eneiluj.moneybuster.R;
 import net.eneiluj.moneybuster.android.fragment.LoginDialogFragment;
 import net.eneiluj.moneybuster.databinding.ActivityAccountBinding;
@@ -314,7 +314,13 @@ public class AccountActivity extends ThemedActivity {
      * @return X509Certificate from error
      */
     public static X509Certificate getX509CertificateFromError(SslError error) {
+        if (error.getCertificate() == null) {
+            return null;
+        }
         Bundle bundle = SslCertificate.saveState(error.getCertificate());
+        if (bundle == null) {
+            return null;
+        }
         X509Certificate x509Certificate;
         byte[] bytes = bundle.getByteArray("x509-certificate");
         if (bytes == null) {
@@ -374,31 +380,17 @@ public class AccountActivity extends ThemedActivity {
             public void onReceivedSslError(WebView view, final SslErrorHandler handler, SslError error) {
                 X509Certificate cert = getX509CertificateFromError(error);
 
+                // URL validation asks about unknown certificates before opening this WebView.
+                // Never override an SSL error unless this exact certificate was explicitly trusted.
                 try {
-                    final boolean[] accepted = new boolean[1];
-                    MoneyBusterServerSyncHelper.getInstance(MoneyBusterSQLiteOpenHelper.getInstance(getApplicationContext()))
-                            .checkCertificate(cert.getEncoded(), new IOnCertificateDecision.Stub() {
-                                @Override
-                                public void accept() {
-                                    Log.d("MoneyBuster", "cert accepted");
-                                    handler.proceed();
-                                    accepted[0] = true;
-                                }
-
-                                @Override
-                                public void reject() {
-                                    Log.d("MoneyBuster", "cert rejected");
-                                    handler.cancel();
-                                }
-                            });
-
-                    if (!accepted[0]) {
-                        // this should never happen, submit button is only enabled if url has been validated
-                        Log.e("MoneyBuster", "No response from certificate service");
+                    if (cert != null && CustomCertStore.Companion.getInstance(getApplicationContext())
+                            .isTrustedByUser(cert)) {
+                        handler.proceed();
+                    } else {
                         handler.cancel();
                     }
                 } catch (Exception e) {
-                    Log.e("MoneyBuster", "Cert could not be verified");
+                    Log.e("MoneyBuster", "Certificate could not be verified", e);
                     handler.cancel();
                 }
             }

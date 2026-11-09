@@ -312,8 +312,8 @@
     <string name="no_bills_text">This project doesn\'t have any bills. Click the button below to add your first bill.</string>
 
     <!-- Certificates -->
-    <string name="certificate_notification_connection_security">MoneyBuster - Connection security</string>
-    <string name="trust_certificate_unknown_certificate_found">MoneyBuster has encountered an unknown certificate. Do you want to trust it?</string>
+    <string name="certificate_notification_connection_security">MoneyBuster2 - Connection security</string>
+    <string name="trust_certificate_unknown_certificate_found">MoneyBuster2 has encountered an unknown certificate. Do you want to trust it?</string>
 
     <!-- Network -->
 

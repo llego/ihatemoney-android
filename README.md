@@ -7,7 +7,32 @@ The original history, authorship, and GPL license are preserved. Existing local 
 
 ## Fork status
 
-The redesigned expense entry, expense list, and project setup are implemented. No MoneyBuster2 APK release is available yet. Full builds are currently blocked by the upstream dependency `com.github.bitfireAT:cert4android:7814052`, whose artifacts return 404 from JitPack. Device testing is still pending.
+The redesigned expense entry, expense list, and project setup are implemented. No MoneyBuster2 APK release is available yet. The unavailable upstream cert4android dependency has been replaced with a pinned revision using the in-process certificate-store API. Device testing is still pending.
+
+## Building MoneyBuster2
+
+Use JDK 21, Android SDK platform 36, and Android build tools 35.0.0, or open the project in Android Studio.
+
+On NixOS, the development shell supplies the JDK and Android SDK, including a Nix-compatible AAPT2:
+
+```sh
+nix-shell --run './gradlew :app:assembleDevDebug :app:testDevDebugUnitTest'
+```
+
+With your own Android SDK configured, run the same Gradle tasks without `nix-shell`.
+The debug APK is written to `app/build/outputs/apk/dev/debug/app-dev-debug.apk`.
+The `dev` flavor installs alongside the original MoneyBuster app, with separate app data.
+
+Dependency signature/checksum verification remains enabled in `gradle/verification-metadata.xml`.
+When updating dependencies, review new publisher keys and artifact checksums rather than disabling verification.
+
+### Sync performance
+
+Full IHateMoney refreshes still download the complete expense list so edits and deletions made elsewhere are detected. A refresh with no pending member additions uses two GET requests (project metadata/members and expenses), rather than fetching members separately first.
+
+Expense reconciliation is committed in one database transaction, and expenses plus their participants load in two queries instead of one query per expense. Lookup indexes are added automatically without removing data. Upload-only requests skip the remote refresh, and verified HTTPS connections can be reused.
+
+For on-device profiling, Android logs tagged `MoneyBusterServerSyncHelper` include `Sync phases (ms)` timings for upload and download/reconciliation. Actual sync time still depends on server performance, project size, and network latency.
 
 The documentation and installation links below describe the original MoneyBuster app, not MoneyBuster2 releases.
 

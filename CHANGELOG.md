@@ -6,6 +6,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+
+- Speed up synchronization by reconciling expenses in one database transaction, bulk-loading participants, adding lookup indexes, and reusing verified HTTPS connections. Skip redundant member downloads, honor upload-only sync requests, coalesce duplicate queued refreshes, and reduce per-expense logging/string allocations. Preserve local edits made while a remote download is in progress.
+- Replace the unavailable cert4android revision with a pinned published revision and migrate from its obsolete Binder service to the in-process certificate-store API. Preserve custom certificate decisions, hostname validation, and certificate reset; fail closed when TLS initialization fails.
+- Match IHateMoney expense-list ordering by expense date, creation date, and server ID (newest first), including search results. Ignore local time-of-day values for date-only IHateMoney expenses and order pending expenses consistently within each day.
+- Preserve IHateMoney creation dates locally with an additive database migration; existing expenses receive this metadata on their next sync. Local and Cospend ordering is unchanged.
+
+### Added
+
+- Nix development shell for building Android APKs and running unit tests.
+
 ## 0.1.20 – 2024-08-11
 
 ### Changed

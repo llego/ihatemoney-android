@@ -14,7 +14,6 @@ import android.util.Log;
 import android.widget.TextView;
 
 import androidx.annotation.Nullable;
-import androidx.annotation.WorkerThread;
 import androidx.preference.PreferenceManager;
 
 import net.eneiluj.moneybuster.R;
@@ -47,8 +46,6 @@ import java.util.Map;
 import java.util.Comparator;
 
 import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-import javax.net.ssl.TrustManager;
 
 import at.bitfire.cert4android.CustomCertManager;
 
@@ -58,6 +55,9 @@ import at.bitfire.cert4android.CustomCertManager;
  * Currently, it offers methods for working with HTML string resources.
  */
 public class SupportUtil {
+
+    private static final TlsConfigurationCache TLS_CONFIGURATION = new TlsConfigurationCache(
+            (manager, verifier) -> ((CustomCertManager) manager).new HostnameVerifier(verifier));
 
     public static final NumberFormat normalNumberFormat = NumberFormat.getInstance();
     static {
@@ -105,7 +105,7 @@ public class SupportUtil {
 
     /**
      * Create a new {@link HttpURLConnection} for strUrl.
-     * If protocol equals https, then install CustomCertManager in {@link SSLContext}.
+     * For HTTPS, install the reusable TLS configuration backed by CustomCertManager.
      *
      * @param ccm
      * @param strUrl
@@ -118,26 +118,27 @@ public class SupportUtil {
         HttpURLConnection httpCon = (HttpURLConnection) url.openConnection();
         if (ccm != null && url.getProtocol().equals("https")) {
             HttpsURLConnection httpsCon = (HttpsURLConnection) httpCon;
-            httpsCon.setHostnameVerifier(ccm.hostnameVerifier(httpsCon.getHostnameVerifier()));
             try {
-                SSLContext sslContext = SSLContext.getInstance("TLS");
-                sslContext.init(null, new TrustManager[]{ccm}, null);
-                httpsCon.setSSLSocketFactory(sslContext.getSocketFactory());
-            } catch (NoSuchAlgorithmException e) {
-                Log.e(SupportUtil.class.getSimpleName(), "Exception", e);
-                // ignore, use default TrustManager
-            } catch (KeyManagementException e) {
-                Log.e(SupportUtil.class.getSimpleName(), "Exception", e);
-                // ignore, use default TrustManager
+                TlsConfigurationCache.Configuration tls = TLS_CONFIGURATION.get(ccm, httpsCon.getHostnameVerifier());
+                httpsCon.setHostnameVerifier(tls.hostnameVerifier);
+                httpsCon.setSSLSocketFactory(tls.socketFactory);
+            } catch (NoSuchAlgorithmException | KeyManagementException e) {
+                httpsCon.disconnect();
+                throw new IOException("Could not initialize certificate validation", e);
             }
         }
         return httpCon;
     }
 
-    @WorkerThread
     public static CustomCertManager getCertManager(Context ctx) {
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(ctx);
-        return new CustomCertManager(ctx, preferences.getBoolean(ctx.getString(R.string.pref_key_trust_system_certs), true));
+        return CertificateTrust.createManager(ctx,
+                preferences.getBoolean(ctx.getString(R.string.pref_key_trust_system_certs), true));
+    }
+
+    public static void invalidateTlsConfiguration() {
+        // Do not reuse a TLS session or pooled connection after certificate trust is reset.
+        TLS_CONFIGURATION.clear();
     }
 
     public static boolean isInteger(String s) {

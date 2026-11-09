@@ -651,6 +651,9 @@ public class ServerResponse {
             0, remoteId, projId, payerId, amount, timestamp, what,
             DBBill.STATE_OK, repeat, paymentMode, categoryId, comment, paymentModeRemoteId
         );
+        if (!json.isNull("creation_date")) {
+            bill.setCreationDate(json.getString("creation_date"));
+        }
         bill.setBillOwers(getBillOwersFromJson(json, memberRemoteIdToId));
         return bill;
     }

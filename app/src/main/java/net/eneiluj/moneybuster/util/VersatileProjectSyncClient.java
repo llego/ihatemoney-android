@@ -1189,7 +1189,6 @@ public class VersatileProjectSyncClient {
         } else if (username != null) {
             con.setRequestProperty("Authorization", "Basic " + Base64.encodeToString((username + ":" + password).getBytes(), Base64.NO_WRAP));
         }
-        con.setRequestProperty("Connection", "Close");
         con.setRequestProperty("User-Agent", "MoneyBuster/" + SupportUtil.getAppVersionName(context));
         if (lastETag != null && METHOD_GET.equals(method)) {
             con.setRequestProperty("If-None-Match", lastETag);
@@ -1241,9 +1240,11 @@ public class VersatileProjectSyncClient {
             Log.e(TAG, "ERROR CODE : " + responseCode);
             rd = new BufferedReader(new InputStreamReader(con.getErrorStream()));
         }
-        String line;
-        while ((line = rd.readLine()) != null) {
-            result.append(line);
+        try (BufferedReader reader = rd) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                result.append(line);
+            }
         }
         if (responseCode >= 400) {
             throw new NextcloudHttpRequestFailedException(context, responseCode, new IOException(result.toString()));

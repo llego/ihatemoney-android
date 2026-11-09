@@ -43,7 +43,7 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
 
     private static final String TAG = MoneyBusterSQLiteOpenHelper.class.getSimpleName();
 
-    private static final int database_version = 19;
+    private static final int database_version = 21;
     private static final String database_name = "IHATEMONEY";
 
     private static final String table_members = "MEMBERS";
@@ -82,6 +82,7 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
     private static final String key_payer_id = "PAYERID";
     private static final String key_amount = "AMOUNT";
     private static final String key_timestamp = "TIMESTAMP";
+    private static final String key_creation_date = "CREATIONDATE";
     private static final String key_what = "WHAT";
     //private static final String key_state = "STATE";
     private static final String key_repeat = "REPEAT";
@@ -141,7 +142,7 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
     private static final String[] columnsBills = {
             key_id, key_remoteId, key_projectid, key_payer_id, key_amount,
             key_timestamp, key_what, key_state, key_repeat, key_payment_mode, key_category_id,
-            key_comment, key_payment_mode_id
+            key_comment, key_payment_mode_id, key_creation_date
     };
 
     private static final String[] columnsBillowers = {
@@ -256,7 +257,8 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
                 key_category_id + " INTEGER DEFAULT 0, " +
                 key_repeat + " TEXT, " +
                 key_comment + " TEXT DEFAULT \"\", " +
-                key_payment_mode_id + " INTEGER DEFAULT 0)"
+                key_payment_mode_id + " INTEGER DEFAULT 0, " +
+                key_creation_date + " TEXT NOT NULL DEFAULT '')"
         );
     }
 
@@ -444,6 +446,13 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
         if (oldVersion < 19) {
             db.execSQL("ALTER TABLE " + table_projects + " ADD COLUMN " + key_bearer_token + " TEXT");
         }
+        if (oldVersion < 20) {
+            // Additive migration: the next IHateMoney pull fills server creation dates.
+            db.execSQL("ALTER TABLE " + table_bills + " ADD COLUMN " + key_creation_date + " TEXT NOT NULL DEFAULT ''");
+        }
+        if (oldVersion < 21) {
+            createSyncIndexes(db);
+        }
     }
 
     @Override
@@ -492,6 +501,13 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
         createIndex(db, table_categories, key_id);
         createIndex(db, table_payment_modes, key_id);
         createIndex(db, table_currencies, key_id);
+        createSyncIndexes(db);
+    }
+
+    private void createSyncIndexes(SQLiteDatabase db) {
+        for (String sql : BillQueries.SYNC_INDEXES) {
+            db.execSQL(sql);
+        }
     }
 
     private void createIndex(SQLiteDatabase db, String table, String column) {
@@ -1300,6 +1316,11 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
         values.put(key_payment_mode_id, b.getPaymentModeRemoteId());
         values.put(key_category_id, b.getCategoryRemoteId());
         values.put(key_comment, b.getComment());
+        String creationDate = b.getCreationDate();
+        if (creationDate.isEmpty() && b.getRemoteId() == 0 && b.getState() == DBBill.STATE_ADDED) {
+            creationDate = java.time.LocalDate.now().toString();
+        }
+        values.put(key_creation_date, creationDate);
 
         long billId = db.insert(table_bills, null, values);
 
@@ -1347,6 +1368,13 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
         values.put(key_state, state);
         int rows = db.update(table_bills, values, key_id + " = ?",
                     new String[]{String.valueOf(billId)});
+    }
+
+    public void updateBillCreationDate(long billId, String creationDate) {
+        ContentValues values = new ContentValues();
+        values.put(key_creation_date, creationDate);
+        getWritableDatabase().update(table_bills, values, key_id + " = ?",
+                new String[]{String.valueOf(billId)});
     }
 
     public void updateBill(long billId, @Nullable Long newRemoteId, @Nullable Long newPayerId,
@@ -1582,7 +1610,8 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
             andWhere.add(whereStr);
         }
 
-        String order = key_timestamp + " DESC";
+        DBProject project = getProject(projectId);
+        String order = BillListOrder.forProject(project == null ? null : project.getType());
         return getBillsCustom(TextUtils.join(" AND ", andWhere), args.toArray(new String[]{}), order);
     }
 
@@ -1598,12 +1627,25 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
         }
         Cursor cursor = db.query(table_bills, columnsBills, selection, selectionArgs, null, null, orderBy);
         List<DBBill> bills = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            DBBill bill = getBillFromCursor(cursor);
-            bill.setBillOwers(getBillowersOfBill(bill.getId()));
-            bills.add(bill);
+        Map<Long, DBBill> billsById = new HashMap<>();
+        try {
+            while (cursor.moveToNext()) {
+                DBBill bill = getBillFromCursor(cursor);
+                bills.add(bill);
+                billsById.put(bill.getId(), bill);
+            }
+        } finally {
+            cursor.close();
         }
-        cursor.close();
+        if (!bills.isEmpty()) {
+            for (DBBillOwer participant : getBillOwersCustom(
+                    BillQueries.participantsForSelection(selection), selectionArgs, null)) {
+                DBBill bill = billsById.get(participant.getBillId());
+                if (bill != null) {
+                    bill.getBillOwers().add(participant);
+                }
+            }
+        }
         return bills;
     }
 
@@ -1615,7 +1657,7 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
     private DBBill getBillFromCursor(@NonNull Cursor cursor) {
         // key_id, key_remoteId, key_projectid, key_payer_id, key_amount, key_date, key_what, key_state, key_repeat
         // key_payment_mode, key_category_id, key_comment, key_payment_mode_id
-        return new DBBill(
+        DBBill bill = new DBBill(
                 cursor.getLong(cursor.getColumnIndex(key_id)),
                 cursor.getLong(cursor.getColumnIndex(key_remoteId)),
                 cursor.getLong(cursor.getColumnIndex(key_projectid)),
@@ -1630,6 +1672,8 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
                 cursor.getString(cursor.getColumnIndex(key_comment)),
                 cursor.getInt(cursor.getColumnIndex(key_payment_mode_id))
         );
+        bill.setCreationDate(cursor.getString(cursor.getColumnIndex(key_creation_date)));
+        return bill;
     }
 
     public void deleteBill(long id) {
