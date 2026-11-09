@@ -59,10 +59,7 @@ public class SupportUtil {
     private static final TlsConfigurationCache TLS_CONFIGURATION = new TlsConfigurationCache(
             (manager, verifier) -> ((CustomCertManager) manager).new HostnameVerifier(verifier));
 
-    public static final NumberFormat normalNumberFormat = NumberFormat.getInstance();
-    static {
-        normalNumberFormat.setMaximumFractionDigits(2);
-    }
+    public static final NumberFormat normalNumberFormat = MoneyFormatter.createDisplayFormat(Locale.getDefault());
 
     public static final NumberFormat dotNumberFormat = NumberFormat.getNumberInstance(Locale.UK);
     static {

@@ -8,6 +8,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Extract member-management dialogs from the expense-list activity without changing member permissions, validation, persistence, or synchronization. Use View Binding for the main screen, member dialogs, project management, and app settings.
+- Remove six unused resource keys (246 localized entries) left behind by receipt scanning, the old management choosers, and statistics date filters.
 - Add full Swedish interface translations, including expense entry, sidebar, project/member management, settings, color choices, and plural forms. Use utgift/utgifter consistently and inherit technical identifiers from the default resources.
 - Remove expense receipt QR scanning and its Austrian/Croatian receipt parsers. Preserve QR scanning for joining projects.
 - Use expense/expenses consistently throughout the English interface, including new/edit headings, confirmations, empty states, and notification settings. Keep database/API identifiers and existing expense data unchanged.
@@ -20,6 +22,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+- Always show two decimal places for displayed monetary amounts, retaining locale-specific separators and leaving stored values, API/export precision, and input behavior unchanged.
 - Fix untranslated locale overrides (including Finnish and Swedish) that still displayed New bill instead of New expense; check every locale in regression tests.
 - Replace the redundant Manage project selection dialog with direct Edit project and Remove from this device menu actions, preserving removal confirmation.
 - Keep the Edit project and App settings toolbars clear of the status bar, respect bottom system insets, and preserve their layouts/fragments on activity recreation.
