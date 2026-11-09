@@ -75,7 +75,6 @@ dependencies {
 
 // Other
     implementation 'com.github.kizitonwose.colorpreference:support:1.0.6'
-    implementation 'com.larswerkman:lobsterpicker:1.0.1'
     implementation 'com.google.zxing:core:3.5.3'
     implementation 'com.github.yuriy-budiyev:code-scanner:2.3.2'
     implementation 'commons-codec:commons-codec:1.16.0'

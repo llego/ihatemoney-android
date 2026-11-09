@@ -16,7 +16,6 @@ import androidx.preference.PreferenceManager;
 
 import net.eneiluj.moneybuster.R;
 import net.eneiluj.moneybuster.android.ui.TextDrawable;
-import net.eneiluj.moneybuster.databinding.DialogColorBinding;
 import net.eneiluj.moneybuster.databinding.DialogEditMemberBinding;
 import net.eneiluj.moneybuster.model.DBBill;
 import net.eneiluj.moneybuster.model.DBMember;
@@ -125,22 +124,11 @@ public final class MemberDialogs {
         binding.editMemberWeight.setTextColor(ContextCompat.getColor(activity, R.color.fg_default));
         binding.editMemberActivated.setChecked(member.isActivated());
         binding.editMemberColor.setBackgroundColor(color);
-        binding.editMemberColor.setOnClickListener(view -> {
-            DialogColorBinding colors = DialogColorBinding.inflate(activity.getLayoutInflater());
-            colors.lobsterPicker.addDecorator(colors.shadeSlider);
-            colors.lobsterPicker.setColorHistoryEnabled(true);
-            colors.lobsterPicker.setHistory(color);
-            colors.lobsterPicker.setColor(color);
-            new ThemedMaterialAlertDialogBuilder(activity)
-                    .setView(colors.getRoot())
-                    .setTitle(R.string.settings_colorpicker_title)
-                    .setPositiveButton(R.string.simple_ok, (dialog, which) -> {
-                        selectedColor[0] = colors.lobsterPicker.getColor();
-                        binding.editMemberColor.setBackgroundColor(selectedColor[0]);
-                    })
-                    .setNegativeButton(R.string.simple_cancel, null)
-                    .show();
-        });
+        binding.editMemberColor.setOnClickListener(view ->
+                ColorPickerDialog.show(activity, color, newColor -> {
+                    selectedColor[0] = newColor;
+                    binding.editMemberColor.setBackgroundColor(newColor);
+                }));
 
         AlertDialog dialog = new ThemedMaterialAlertDialogBuilder(
                 new ContextThemeWrapper(activity, R.style.AppThemeDialog))

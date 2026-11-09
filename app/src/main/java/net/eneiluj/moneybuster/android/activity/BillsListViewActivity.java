@@ -1353,6 +1353,17 @@ public class BillsListViewActivity
         }
     }
 
+    private ActionMode startMultiSelectActionMode() {
+        return startSupportActionMode(new MultiSelectActionModeCallback(this, adapter, db,
+                this::refreshLists,
+                () -> searchView.setIconified(true),
+                () -> {
+                    adapter.clearSelection();
+                    mActionMode = null;
+                    adapter.notifyDataSetChanged();
+                }));
+    }
+
     @Override
     public void onBillClick(int position, View v) {
         if (mActionMode != null) {
@@ -1374,7 +1385,7 @@ public class BillsListViewActivity
                 // SingleSelectedActionModeCallback());
                 // } else {
                 // there are some selected items, start the actionMode
-                mActionMode = startSupportActionMode(new MultiSelectedActionModeCallback());
+                mActionMode = startMultiSelectActionMode();
                 // }
             } else if (!hasCheckedItems && mActionMode != null) {
                 // there no selected items, finish the actionMode
@@ -1399,7 +1410,7 @@ public class BillsListViewActivity
         boolean selected = adapter.select(position);
         if (selected) {
             v.setSelected(true);
-            mActionMode = startSupportActionMode(new MultiSelectedActionModeCallback());
+            mActionMode = startMultiSelectActionMode();
             int checkedItemCount = adapter.getSelected().size();
             mActionMode.setTitle(getResources().getQuantityString(R.plurals.ab_selected, checkedItemCount, checkedItemCount));
 
@@ -1446,84 +1457,6 @@ public class BillsListViewActivity
             if (MoneyBusterServerSyncHelper.isNextcloudAccountConfigured(getApplicationContext())) {
                 db.getMoneyBusterServerSyncHelper().runAccountProjectsSync();
             }
-        }
-    }
-
-    /**
-     * Handler for the MultiSelect Actions
-     */
-    private class MultiSelectedActionModeCallback implements ActionMode.Callback {
-
-        @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            // inflate contextual menu
-            mode.getMenuInflater().inflate(R.menu.menu_list_context_multiple, menu);
-            return true;
-        }
-
-        @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            return false;
-        }
-
-        /**
-         * @param mode ActionMode - used to close the Action Bar after all work is done.
-         * @param item MenuItem - the item in the List that contains the Node
-         * @return boolean
-         */
-        @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            switch (item.getItemId()) {
-                case R.id.menu_delete:
-                    List<Integer> selection = adapter.getSelected();
-                    for (Integer i : selection) {
-                        DBBill bill = (DBBill) adapter.getItem(i);
-
-                        // check if we can delete bills
-                        final DBProject project = db.getProject(bill.getProjectId());
-                        if (project.isDeletionDisabled()) {
-                            showToast(getString(R.string.bill_deletion_is_disabled));
-                            mode.finish();
-                            return true;
-                        }
-
-                        // get up to date bill
-                        final DBBill dbBill = db.getBill(bill.getId());
-                        // get real original state to potentially restore it
-                        final int originalState = dbBill.getState();
-
-                        if (originalState == DBBill.STATE_ADDED) {
-                            db.deleteBill(dbBill.getId());
-                        } else {
-                            db.setBillState(dbBill.getId(), DBBill.STATE_DELETED);
-                        }
-                    }
-                    mode.finish();
-                    // delete selection has to be cleared
-                    searchView.setIconified(true);
-                    refreshLists();
-                    return true;
-                case R.id.menu_select_all:
-                    adapter.clearSelection();
-                    for (int i=0; i < adapter.getItemCount(); i++) {
-                        adapter.select(i);
-                    }
-                    adapter.notifyDataSetChanged();
-
-                    int checkedItemCount = adapter.getSelected().size();
-                    mActionMode.setTitle(getResources().getQuantityString(R.plurals.ab_selected, checkedItemCount, checkedItemCount));
-
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-        @Override
-        public void onDestroyActionMode(ActionMode mode) {
-            adapter.clearSelection();
-            mActionMode = null;
-            adapter.notifyDataSetChanged();
         }
     }
 
