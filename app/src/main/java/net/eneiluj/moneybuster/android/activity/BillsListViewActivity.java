@@ -74,6 +74,7 @@ import net.eneiluj.moneybuster.android.dialogs.MemberDialogs;
 import net.eneiluj.moneybuster.android.dialogs.ProjectSettlementDialogBuilder;
 import net.eneiluj.moneybuster.android.dialogs.ProjectStatisticsDialogBuilder;
 import net.eneiluj.moneybuster.android.fragment.NewProjectFragment;
+import net.eneiluj.moneybuster.android.ui.EmptyStateController;
 import net.eneiluj.moneybuster.android.ui.ProjectDrawerAdapter;
 import net.eneiluj.moneybuster.databinding.DrawerLayoutBinding;
 import net.eneiluj.moneybuster.databinding.SyncSuccessToastBinding;
@@ -165,9 +166,7 @@ public class BillsListViewActivity
     AppCompatImageView accountButton;
     MaterialCardView homeToolbar;
     AppBarLayout appBar;
-    View noProjectsView;
-    View noMembersView;
-    View noBillsView;
+    private EmptyStateController emptyState;
 
     private DrawerLayoutBinding binding;
 
@@ -237,9 +236,11 @@ public class BillsListViewActivity
         searchText = binding.mainContentView.searchText;
         homeToolbar = binding.mainContentView.homeToolbar;
         appBar = binding.mainContentView.appBar;
-        noProjectsView = binding.mainContentView.layoutNoProjects;
-        noMembersView = binding.mainContentView.layoutNoProjectMembers;
-        noBillsView = binding.mainContentView.layoutNoBills;
+        emptyState = new EmptyStateController(
+                binding.mainContentView.swipeRefreshLayout,
+                binding.mainContentView.layoutNoProjects,
+                binding.mainContentView.layoutNoProjectMembers,
+                binding.mainContentView.layoutNoBills);
 
         lastSyncLayout.setVisibility(GONE);
 
@@ -264,7 +265,7 @@ public class BillsListViewActivity
 
         setupToolBar();
         setupBillsList();
-        setupBillsListCornerCases();
+        setupEmptyStateButtons();
         setupDrawerButtons();
         setupDrawerProjects();
         setupDrawerProjectMembers(categoryAdapterSelectedItem);
@@ -273,10 +274,7 @@ public class BillsListViewActivity
 
         // show help if no project and no account configured
         if (db.getProjects().isEmpty() && !MoneyBusterServerSyncHelper.isNextcloudAccountConfigured(this)) {
-            swipeRefreshLayout.setVisibility(View.GONE);
-            noProjectsView.setVisibility(View.VISIBLE);
-            noMembersView.setVisibility(View.GONE);
-            noBillsView.setVisibility(View.GONE);
+            emptyState.showNoProjects();
         }
 
         // select a project if there are some and none is selected
@@ -584,7 +582,7 @@ public class BillsListViewActivity
 
     }
 
-    private void setupBillsListCornerCases() {
+    private void setupEmptyStateButtons() {
         binding.mainContentView.buttonNoProjectsConfigureNextcloud.setOnClickListener((view) -> {
             Intent newProjectIntent = new Intent(getApplicationContext(), AccountActivity.class);
             serverSettingsLauncher.launch(newProjectIntent);
@@ -1093,21 +1091,12 @@ public class BillsListViewActivity
                 // will overwrite the noMembersView (since no members => no bills).
                 int memberCount = db.getMembersOfProject(selectedProjectId, null).size();
                 if (memberCount == 0) {
-                    swipeRefreshLayout.setVisibility(View.GONE);
-                    noProjectsView.setVisibility(View.GONE);
-                    noMembersView.setVisibility(View.VISIBLE);
-                    noBillsView.setVisibility(View.GONE);
+                    emptyState.showNoMembers();
                     // show help if no bills
                 } else if (billItems.size() == 0) {
-                    swipeRefreshLayout.setVisibility(View.GONE);
-                    noProjectsView.setVisibility(View.GONE);
-                    noMembersView.setVisibility(View.GONE);
-                    noBillsView.setVisibility(View.VISIBLE);
+                    emptyState.showNoBills();
                 } else {
-                    swipeRefreshLayout.setVisibility(View.VISIBLE);
-                    noProjectsView.setVisibility(View.GONE);
-                    noMembersView.setVisibility(View.GONE);
-                    noBillsView.setVisibility(View.GONE);
+                    emptyState.showList();
 
                     adapter.setProjectType(projectType);
                     adapter.setItemList(billItems);

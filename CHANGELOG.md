@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 ### Changed
 
 - Share one fixed ten-color palette (new `ColorPickerDialog`) between the app theme and member colors, replacing the Lobster picker library and its unused layout.
+- Move empty-state (no projects / no members / no bills) visibility decisions into an `EmptyStateController`, leaving the expense-list screen to delegate to it.
 - Extract the expense-list multi-select action mode (select all / delete) into its own class so the main activity owns only the state it needs.
 - Extract member-management dialogs from the expense-list activity without changing member permissions, validation, persistence, or synchronization. Use View Binding for the main screen, member dialogs, project management, and app settings.
 - Remove six unused resource keys (246 localized entries) left behind by receipt scanning, the old management choosers, and statistics date filters.
