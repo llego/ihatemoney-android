@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Add full Swedish interface translations, including expense entry, sidebar, project/member management, settings, color choices, and plural forms. Use utgift/utgifter consistently and inherit technical identifiers from the default resources.
 - Remove expense receipt QR scanning and its Austrian/Croatian receipt parsers. Preserve QR scanning for joining projects.
 - Use expense/expenses consistently throughout the English interface, including new/edit headings, confirmations, empty states, and notification settings. Keep database/API identifiers and existing expense data unchanged.
 - Replace the app theme color wheel with ten named, one-tap color choices, and use a list icon for All expenses.
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Fixed
 
+- Fix untranslated locale overrides (including Finnish and Swedish) that still displayed New bill instead of New expense; check every locale in regression tests.
 - Replace the redundant Manage project selection dialog with direct Edit project and Remove from this device menu actions, preserving removal confirmation.
 - Keep the Edit project and App settings toolbars clear of the status bar, respect bottom system insets, and preserve their layouts/fragments on activity recreation.
 - Speed up synchronization by reconciling expenses in one database transaction, bulk-loading participants, adding lookup indexes, and reusing verified HTTPS connections. Skip redundant member downloads, honor upload-only sync requests, coalesce duplicate queued refreshes, and reduce per-expense logging/string allocations. Preserve local edits made while a remote download is in progress.

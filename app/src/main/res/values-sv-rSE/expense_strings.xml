@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="project_manage">Hantera projekt</string>
+    <string name="project_actions">Projektåtgärder</string>
+    <string-array name="theme_color_names">
+        <item>Röd</item><item>Rosa</item><item>Lila</item><item>Indigo</item><item>Blå</item>
+        <item>Havsblå</item><item>Turkos</item><item>Grön</item><item>Orange</item><item>Skiffergrå</item>
+    </string-array>
+    <string name="drawer_projects">Projekt</string>
+    <string name="drawer_expenses">Utgifter</string>
+    <string name="drawer_all_expenses">Alla utgifter</string>
+    <string name="drawer_settings">Inställningar</string>
+    <string name="drawer_project_options">Alternativ för %1$s</string>
+    <string name="project_remove_from_device">Ta bort från den här enheten</string>
+    <string name="project_remove_local">Ta bort lokalt projekt</string>
+    <string name="expense_description">Beskrivning</string>
+    <string name="expense_save">Spara utgift</string>
+    <string name="expense_add">Lägg till utgift</string>
+    <string name="expense_split_everyone">Dela mellan alla</string>
+    <plurals name="expense_split_selected">
+        <item quantity="one">Dela mellan %d person</item>
+        <item quantity="other">Dela mellan %d personer</item>
+    </plurals>
+    <string name="expense_convert_currency">Räkna om valuta</string>
+    <string name="expense_invalid_amount">Ange ett giltigt belopp</string>
+    <string name="expense_paid_by">Betalat av %1$s</string>
+    <string name="expense_pending_sync">Väntar på synkronisering</string>
+    <string name="expense_expanded">Utfälld</string>
+    <string name="expense_collapsed">Hopfälld</string>
+    <string name="expense_open_navigation">Öppna sidomenyn</string>
+    <string name="ihm_setup_summary">Anslut till IHateMoney för att dela utgifter. Ändringar sparas på den här enheten, även utan nätanslutning.</string>
+    <string name="ihm_no_projects">Lägg till ditt IHateMoney-projekt för att börja dela utgifter.</string>
+</resources>

@@ -13,6 +13,26 @@ import static org.junit.Assert.assertTrue;
 
 public class ExpenseTerminologyTest {
     @Test
+    public void noLocaleOverridesNewExpenseWithOldEnglishTitle() throws Exception {
+        File resources = new File("src/main/res");
+        if (!resources.isDirectory()) resources = new File("app/src/main/res");
+        File[] locales = resources.listFiles((dir, name) -> name.startsWith("values"));
+        assertTrue("Missing resource directories", locales != null && locales.length > 0);
+        for (File locale : locales) {
+            File[] files = locale.listFiles((dir, name) -> name.endsWith(".xml"));
+            if (files == null) continue;
+            for (File file : files) {
+                NodeList strings = DocumentBuilderFactory.newInstance().newDocumentBuilder()
+                        .parse(file).getElementsByTagName("string");
+                for (int i = 0; i < strings.getLength(); i++) {
+                    String value = strings.item(i).getTextContent().trim();
+                    assertFalse(file + ": " + value, value.equalsIgnoreCase("New bill"));
+                }
+            }
+        }
+    }
+
+    @Test
     public void englishUiUsesExpenseInsteadOfBill() throws Exception {
         File resources = new File("src/main/res");
         if (!resources.isDirectory()) resources = new File("app/src/main/res");

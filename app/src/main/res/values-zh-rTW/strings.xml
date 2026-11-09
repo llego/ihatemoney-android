@@ -131,7 +131,7 @@
   <string name="simple_no">No</string>
   <string name="simple_add">Add</string>
   <string name="simple_edit_bill">Edit bill</string>
-  <string name="simple_new_bill">New bill</string>
+  <string name="simple_new_bill">New expense</string>
   <string name="simple_add_project">Add project in MoneyBuster</string>
   <string name="simple_edit_project">Edit project</string>
   <string name="simple_about">About</string>
