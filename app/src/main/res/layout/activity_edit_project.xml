@@ -17,7 +17,7 @@
             android:layout_height="?attr/actionBarSize"
             app:contentInsetStartWithNavigation="0dp"
             app:navigationIcon="@drawable/ic_arrow_back_grey600_24dp"
-            app:title="@string/action_edit_project"
+            app:title="@string/project_manage"
             app:titleMarginStart="0dp" />
     </com.google.android.material.appbar.AppBarLayout>
 

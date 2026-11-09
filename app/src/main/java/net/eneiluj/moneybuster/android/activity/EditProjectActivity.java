@@ -3,6 +3,7 @@ package net.eneiluj.moneybuster.android.activity;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.net.Uri;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -13,17 +14,77 @@ import androidx.appcompat.app.ActionBar;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 
 import net.eneiluj.moneybuster.R;
 import net.eneiluj.moneybuster.android.fragment.EditProjectFragment;
+import net.eneiluj.moneybuster.android.dialogs.ProjectShareDialogBuilder;
+import net.eneiluj.moneybuster.persistence.MoneyBusterSQLiteOpenHelper;
+import net.eneiluj.moneybuster.theme.ThemedMaterialAlertDialogBuilder;
+import net.eneiluj.moneybuster.util.ExportUtil;
 import net.eneiluj.moneybuster.model.DBProject;
 import net.eneiluj.moneybuster.util.EdgeToEdge;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.nio.charset.StandardCharsets;
 
 public class EditProjectActivity extends AppCompatActivity implements EditProjectFragment.EditProjectFragmentListener {
 
     public static final String PARAM_PROJECT_ID = "projectId";
 
     protected EditProjectFragment fragment;
+
+    private final ActivityResultLauncher<String> exportLauncher = registerForActivityResult(
+            new ActivityResultContracts.CreateDocument("text/csv"), this::writeExport);
+
+    @Override
+    public void shareProject() {
+        DBProject project = MoneyBusterSQLiteOpenHelper.getInstance(this).getProject(getProjectId());
+        if (project != null && project.isShareable()) {
+            new ProjectShareDialogBuilder(this, project).show();
+        }
+    }
+
+    @Override
+    public void exportProject() {
+        exportLauncher.launch(ExportUtil.createExportFileName(
+                MoneyBusterSQLiteOpenHelper.getInstance(this), getProjectId()));
+    }
+
+    private void writeExport(Uri uri) {
+        if (uri == null) return;
+        try (OutputStream stream = getContentResolver().openOutputStream(uri)) {
+            if (stream == null) throw new IOException("Cannot open export file");
+            try (OutputStreamWriter writer = new OutputStreamWriter(stream, StandardCharsets.UTF_8)) {
+                writer.write(ExportUtil.createExportContent(
+                        MoneyBusterSQLiteOpenHelper.getInstance(this), getProjectId()));
+            }
+            showToast(getString(R.string.file_saved_success, uri.getLastPathSegment()), Toast.LENGTH_LONG);
+        } catch (IOException e) {
+            showToast(e.getMessage(), Toast.LENGTH_LONG);
+        }
+    }
+
+    @Override
+    public void removeProject() {
+        MoneyBusterSQLiteOpenHelper db = MoneyBusterSQLiteOpenHelper.getInstance(this);
+        DBProject project = db.getProject(getProjectId());
+        if (project == null) return;
+        ThemedMaterialAlertDialogBuilder builder = new ThemedMaterialAlertDialogBuilder(this);
+        builder.setTitle(R.string.confirm_remove_project_dialog_title);
+        if (!project.isLocal()) builder.setMessage(R.string.confirm_remove_project_dialog_message);
+        builder.setNegativeButton(R.string.simple_cancel, null);
+        builder.setPositiveButton(R.string.project_remove_from_device, (dialog, which) -> {
+            db.deleteProject(project.getId());
+            String name = project.getName();
+            showToast(getString(R.string.remove_project_confirmation,
+                    name == null || name.isEmpty() ? project.getRemoteId() : name), Toast.LENGTH_LONG);
+            closeOnDelete(project.getId());
+        });
+        builder.show();
+    }
 
     @Override
     protected void onCreate(final Bundle savedInstanceState) {

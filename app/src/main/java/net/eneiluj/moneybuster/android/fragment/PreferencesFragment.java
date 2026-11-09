@@ -1,17 +1,20 @@
 package net.eneiluj.moneybuster.android.fragment;
 
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.graphics.Color;
+import android.content.res.ColorStateList;
 import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.WindowManager;
 import android.widget.Toast;
+import android.widget.GridLayout;
+import android.widget.ScrollView;
+import com.google.android.material.button.MaterialButton;
+import androidx.appcompat.app.AlertDialog;
 
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
@@ -25,8 +28,6 @@ import androidx.preference.PreferenceScreen;
 import androidx.preference.SwitchPreferenceCompat;
 
 import com.kizitonwose.colorpreferencecompat.ColorPreferenceCompat;
-import com.larswerkman.lobsterpicker.LobsterPicker;
-import com.larswerkman.lobsterpicker.sliders.LobsterShadeSlider;
 
 import net.eneiluj.moneybuster.R;
 import net.eneiluj.moneybuster.service.SyncWorker;
@@ -259,32 +260,42 @@ public class PreferencesFragment extends PreferenceFragmentCompat implements Pre
     }
 
     private void showColorDialog(final Preference preference) {
-        LayoutInflater inflater = getActivity().getLayoutInflater();
-        View colorView = inflater.inflate(R.layout.dialog_color, null);
-
-        int color = PreferenceManager.getDefaultSharedPreferences(getActivity())
+        int[] colors = {0xFFB3261E, 0xFFAD1457, 0xFF7B1FA2, 0xFF4E3C9A, 0xFF1565C0,
+                0xFF006875, 0xFF00695C, 0xFF386A20, 0xFFB54708, 0xFF52606D};
+        String[] names = getResources().getStringArray(R.array.theme_color_names);
+        int current = PreferenceManager.getDefaultSharedPreferences(requireContext())
                 .getInt(getString(R.string.pref_key_color), Color.BLUE);
-        final LobsterPicker lobsterPicker = colorView.findViewById(R.id.lobsterPicker);
-        LobsterShadeSlider shadeSlider = colorView.findViewById(R.id.shadeSlider);
-
-        lobsterPicker.addDecorator(shadeSlider);
-        lobsterPicker.setColorHistoryEnabled(true);
-        lobsterPicker.setHistory(color);
-        lobsterPicker.setColor(color);
-
-        new ThemedMaterialAlertDialogBuilder(getActivity())
-                .setView(colorView)
+        int spacing = (int) (8 * getResources().getDisplayMetrics().density);
+        GridLayout grid = new GridLayout(requireContext());
+        grid.setColumnCount(2);
+        grid.setPadding(spacing * 2, spacing, spacing * 2, spacing);
+        ScrollView scroll = new ScrollView(requireContext());
+        scroll.addView(grid);
+        AlertDialog dialog = new ThemedMaterialAlertDialogBuilder(requireContext())
+                .setView(scroll)
                 .setTitle(getString(R.string.settings_colorpicker_title))
-                .setPositiveButton(getString(R.string.simple_ok), new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialogInterface, int i) {
-                        ((ColorPreferenceCompat) preference).setValue(lobsterPicker.getColor());
-                        if (getActivity() != null) {
-                            getActivity().recreate();
-                        }
-                    }
-                })
                 .setNegativeButton(getString(R.string.simple_cancel), null)
-                .show();
+                .create();
+        for (int i = 0; i < colors.length; i++) {
+            final int color = colors[i];
+            MaterialButton button = new MaterialButton(requireContext());
+            button.setText(current == color ? "✓ " + names[i] : names[i]);
+            button.setSelected(current == color);
+            button.setTextColor(Color.WHITE);
+            button.setBackgroundTintList(ColorStateList.valueOf(color));
+            button.setMinHeight(spacing * 7);
+            button.setAllCaps(false);
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams(
+                    GridLayout.spec(i / 2), GridLayout.spec(i % 2, 1f));
+            params.width = 0;
+            params.setMargins(spacing / 2, spacing / 2, spacing / 2, spacing / 2);
+            grid.addView(button, params);
+            button.setOnClickListener(v -> {
+                ((ColorPreferenceCompat) preference).setValue(color);
+                dialog.dismiss();
+                requireActivity().recreate();
+            });
+        }
+        dialog.show();
     }
 }

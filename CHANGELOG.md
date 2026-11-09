@@ -8,6 +8,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/).
 
 ### Changed
 
+- Use expense/expenses consistently throughout the English interface, including new/edit headings, confirmations, empty states, and notification settings. Keep database/API identifiers and existing expense data unchanged.
+- Replace the app theme color wheel with ten named, one-tap color choices, and use a list icon for All expenses.
+- Rename Edit project to Manage project and move Share, Export, and Remove from this device into that screen. Keep removal confirmation and support local-project management actions.
+- Open Manage members directly to a member list with an Add member action instead of a separate Add/Edit chooser.
 - Reorganize the sidebar into Projects and Expenses, with Add project beside its heading and Settings fixed at the bottom. Use a calm surface header, compact server labels, distinct project/filter selection styles, and softer accessible balance colors.
 - Remove date filters from project statistics; totals now cover all expense dates.
 - Remove the Manage currencies menu action and screen without changing stored expenses or currency data.

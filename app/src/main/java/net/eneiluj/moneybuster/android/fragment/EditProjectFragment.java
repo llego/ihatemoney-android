@@ -44,6 +44,12 @@ public class EditProjectFragment extends PreferenceFragmentCompat {
         void closeOnEdit(long projId);
 
         void onProjectUpdated(DBProject project);
+
+        void shareProject();
+
+        void exportProject();
+
+        void removeProject();
     }
 
     public static final String PARAM_PROJECT_ID = "projectId";
@@ -222,6 +228,25 @@ public class EditProjectFragment extends PreferenceFragmentCompat {
         } else {
             project = (DBProject) savedInstanceState.getSerializable(SAVEDKEY_PROJECT);
         }
+        findPreference("share_project").setEnabled(project.isShareable());
+        findPreference("share_project").setOnPreferenceClickListener(preference -> {
+            listener.shareProject();
+            return true;
+        });
+        findPreference("export_project").setOnPreferenceClickListener(preference -> {
+            listener.exportProject();
+            return true;
+        });
+        findPreference("remove_project").setOnPreferenceClickListener(preference -> {
+            listener.removeProject();
+            return true;
+        });
+        if (project.isLocal()) {
+            for (String key : new String[]{"name", "password", "newpassword", "email"}) {
+                findPreference(key).setVisible(false);
+            }
+            findPreference("remove_project").setTitle(R.string.project_remove_local);
+        }
         setHasOptionsMenu(true);
 
         Log.d(getClass().getSimpleName(), "PROJECT on create : "+project);
@@ -266,6 +291,8 @@ public class EditProjectFragment extends PreferenceFragmentCompat {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_edit_project_fragment, menu);
+        menu.findItem(R.id.menu_delete_remote).setVisible(!project.isLocal());
+        menu.findItem(R.id.menu_save).setVisible(!project.isLocal());
 
         myMenu = menu;
         saveButton = (ImageView) menu.findItem(R.id.menu_save).getActionView();
@@ -388,7 +415,8 @@ public class EditProjectFragment extends PreferenceFragmentCompat {
 
         editProjectPassword = (EditTextPreference) this.findPreference("password");
         editProjectPassword.setText(project.getPassword());
-        int nbChars = project.getPassword().length();
+        String password = project.getPassword() == null ? "" : project.getPassword();
+        int nbChars = password.length();
         String sum = "";
         for (int i=0; i < nbChars; i++) {
             sum += "*";
@@ -397,7 +425,7 @@ public class EditProjectFragment extends PreferenceFragmentCompat {
 
         editProjectNewPassword = (EditTextPreference) this.findPreference("newpassword");
         editProjectNewPassword.setText(project.getPassword());
-        nbChars = project.getPassword().length();
+        nbChars = password.length();
         sum = "";
         for (int i=0; i < nbChars; i++) {
             sum += "*";

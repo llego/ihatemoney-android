@@ -1,5 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="project_manage">Manage project</string>
+    <string name="project_actions">Project actions</string>
+    <string-array name="theme_color_names">
+        <item>Red</item><item>Rose</item><item>Purple</item><item>Indigo</item><item>Blue</item>
+        <item>Ocean</item><item>Teal</item><item>Green</item><item>Orange</item><item>Slate</item>
+    </string-array>
     <string name="drawer_projects">Projects</string>
     <string name="drawer_expenses">Expenses</string>
     <string name="drawer_all_expenses">All expenses</string>

@@ -20,7 +20,6 @@ import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Environment;
 import android.os.Handler;
 import android.text.InputType;
 import android.text.TextUtils;
@@ -82,7 +81,6 @@ import com.nextcloud.android.sso.model.SingleSignOnAccount;
 
 import net.eneiluj.moneybuster.R;
 import net.eneiluj.moneybuster.android.dialogs.ProjectSettlementDialogBuilder;
-import net.eneiluj.moneybuster.android.dialogs.ProjectShareDialogBuilder;
 import net.eneiluj.moneybuster.android.dialogs.ProjectStatisticsDialogBuilder;
 import net.eneiluj.moneybuster.android.fragment.NewProjectFragment;
 import net.eneiluj.moneybuster.android.ui.ProjectDrawerAdapter;
@@ -104,16 +102,12 @@ import net.eneiluj.moneybuster.theme.ThemeUtils;
 import net.eneiluj.moneybuster.theme.ThemedActivity;
 import net.eneiluj.moneybuster.theme.ThemedMaterialAlertDialogBuilder;
 import net.eneiluj.moneybuster.util.CospendClientUtil;
-import net.eneiluj.moneybuster.util.ExportUtil;
 import net.eneiluj.moneybuster.util.ICallback;
 import net.eneiluj.moneybuster.util.MoneyBuster;
 import net.eneiluj.moneybuster.util.IRefreshBillsListCallback;
 import net.eneiluj.moneybuster.util.SupportUtil;
 import net.eneiluj.moneybuster.util.ColorUtils;
 
-import java.io.IOException;
-import java.io.OutputStream;
-import java.io.OutputStreamWriter;
 import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.ArrayList;
@@ -162,7 +156,6 @@ public class BillsListViewActivity
     private static final String SAVED_STATE_NAVIGATION_ADAPTER_SLECTION = "navigationAdapterSelection";
     private static final String SAVED_STATE_NAVIGATION_OPEN = "navigationOpen";
 
-    private static String contentToExport = "";
 
     private static boolean activityVisible = false;
 
@@ -667,86 +660,17 @@ public class BillsListViewActivity
         if (projectId == 0) return;
 
         DBProject proj = db.getProject(projectId);
-        if (!proj.isLocal()) {
+        if (proj != null) {
             Intent editProjectIntent = new Intent(getApplicationContext(), EditProjectActivity.class);
             editProjectIntent.putExtra(PARAM_PROJECT_ID, projectId);
             editProjectLauncher.launch(editProjectIntent);
 
             drawerLayout.closeDrawers();
-        } else {
-            showToast(getString(R.string.edit_project_local_impossible));
         }
     }
-
-    @Override
-    public void onRemoveProjectClick(long projectId) {
-        if (projectId == 0) return;
-        DBProject proj = db.getProject(projectId);
-
-        AlertDialog.Builder builder = new ThemedMaterialAlertDialogBuilder(this);
-        builder.setTitle(getString(R.string.confirm_remove_project_dialog_title));
-        if (!proj.isLocal()) {
-            builder.setMessage(getString(R.string.confirm_remove_project_dialog_message));
-        }
-
-        // Set up the buttons
-        builder.setPositiveButton(getString(R.string.simple_yes), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                db.deleteProject(projectId);
-                List<DBProject> dbProjects = db.getProjects();
-                if (dbProjects.size() > 0) {
-                    setSelectedProject(dbProjects.get(0).getId());
-                    Log.v(TAG, "set selection 0");
-                } else {
-                    setSelectedProject(0);
-                }
-
-                //drawerLayout.closeDrawers();
-                setupDrawerProjects();
-                refreshLists();
-                synchronize();
-                String projName = proj.getName();
-                String projectNameString = (projName == null || "".equals(projName)) ? proj.getRemoteId() : projName;
-                showToast(getString(R.string.remove_project_confirmation, projectNameString));
-            }
-        });
-        builder.setNegativeButton(getString(R.string.simple_no), new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                dialog.cancel();
-            }
-        });
-
-        builder.show();
-    }
-
 
     @Override
     public void onManageMembersClick(long projectId) {
-        CharSequence[] choices = new CharSequence[]{
-                getString(R.string.fab_add_member),
-                getString(R.string.fab_edit_member)
-        };
-
-        AlertDialog.Builder selectBuilder = new ThemedMaterialAlertDialogBuilder(this);
-        selectBuilder.setTitle(getString(R.string.choose_member_management_action));
-        selectBuilder.setSingleChoiceItems(choices, -1, new DialogInterface.OnClickListener() {
-            @Override
-            public void onClick(DialogInterface dialog, int which) {
-                if (which == 0) {
-                    onAddMemberClick(projectId);
-                } else {
-                    onEditMemberClick(projectId);
-                }
-                dialog.dismiss();
-            }
-        });
-        selectBuilder.setNegativeButton(getString(R.string.simple_cancel), null);
-        selectBuilder.show();
-    }
-
-    private void onEditMemberClick(long projectId) {
         if (projectId == 0) return;
 
         // check if we are allowed
@@ -765,8 +689,8 @@ public class BillsListViewActivity
         CharSequence[] namescs = memberNames.toArray(new CharSequence[memberNames.size()]);
 
         AlertDialog.Builder selectBuilder = new ThemedMaterialAlertDialogBuilder(this);
-        selectBuilder.setTitle(getString(R.string.choose_member_to_edit));
-        selectBuilder.setSingleChoiceItems(namescs, -1, new DialogInterface.OnClickListener() {
+        selectBuilder.setTitle(getString(R.string.fab_manage_members));
+        selectBuilder.setItems(namescs, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
                 // user checked an item
@@ -774,6 +698,8 @@ public class BillsListViewActivity
                 dialog.dismiss();
             }
         });
+        selectBuilder.setNeutralButton(getString(R.string.fab_add_member),
+                (dialog, which) -> onAddMemberClick(projectId));
         selectBuilder.setNegativeButton(getString(R.string.simple_cancel), null);
         selectBuilder.show();
     }
@@ -871,52 +797,6 @@ public class BillsListViewActivity
     public void onSettleProjectClick(long projectId) {
         final DBProject proj = db.getProject(projectId);
         new ProjectSettlementDialogBuilder(this, db, proj, this).show();
-    }
-
-    @Override
-    public void onShareProjectClick(long projectId) {
-        final DBProject proj = db.getProject(projectId);
-        if (projectId != 0 && proj.isShareable()) {
-            new ProjectShareDialogBuilder(this, proj).show();
-        } else {
-            showToast(getString(R.string.share_impossible), Toast.LENGTH_LONG);
-        }
-    }
-
-    @Override
-    public void onExportProjectClick(long projectId) {
-        if (projectId == 0) return;
-
-        contentToExport = ExportUtil.createExportContent(db, projectId);
-        String fileName = ExportUtil.createExportFileName(db, projectId);
-
-        Intent intent = new Intent(Intent.ACTION_CREATE_DOCUMENT);
-        intent.addCategory(Intent.CATEGORY_OPENABLE);
-        intent.setType("text/csv");
-        intent.putExtra(Intent.EXTRA_TITLE, fileName);
-
-        // Open the launcher for a user to pick a location.
-        // This will return an ActivityResult which will call saveToFileUri() to write the content to the selected file.
-        saveFileLauncher.launch(intent);
-    }
-
-    private void saveToFileUri(String content, Uri fileUri) {
-        try {
-            OutputStream fOut = getContentResolver().openOutputStream(fileUri);
-            OutputStreamWriter myOutWriter = new OutputStreamWriter(fOut);
-            myOutWriter.append(content);
-            myOutWriter.close();
-            fOut.flush();
-            fOut.close();
-            showToast(getString(R.string.file_saved_success, fileUri.getLastPathSegment().replace(
-                    Environment.getExternalStorageDirectory().toString(),
-                    ""))
-            );
-        }
-        catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
-            showToast(e.toString());
-        }
     }
 
     /* --- End project options --- */
@@ -1177,7 +1057,7 @@ public class BillsListViewActivity
     }
 
     private void setupDrawerProjectMembers(final String selectedItem) {
-        itemAll = new NavigationAdapter.NavigationItem(ADAPTER_KEY_ALL, getString(R.string.drawer_all_expenses), null, R.drawable.ic_allgrey_24dp, false);
+        itemAll = new NavigationAdapter.NavigationItem(ADAPTER_KEY_ALL, getString(R.string.drawer_all_expenses), null, R.drawable.ic_format_list_bulleted_grey_24dp, false);
 
         adapterMembers = new NavigationAdapter(new NavigationAdapter.ClickListener() {
             @Override
@@ -1624,7 +1504,9 @@ public class BillsListViewActivity
                                     long pid = data.getLongExtra(DELETED_PROJECT, 0);
                                     Log.d(TAG, "onActivityResult editproject DELETED PID : "+pid);
                                     if (pid != 0) {
-                                        setSelectedProject(0);
+                                        List<DBProject> remaining = db.getProjects();
+                                        setSelectedProject(remaining.isEmpty() ? 0 : remaining.get(0).getId());
+                                        refreshLists();
                                     }
                                     // adapt after project has been edited
                                     pid = data.getLongExtra(EDITED_PROJECT, 0);
@@ -1635,23 +1517,6 @@ public class BillsListViewActivity
                                 }
                             }
                             setupDrawerProjects();
-                        }
-                    });
-
-    private final ActivityResultLauncher<Intent> saveFileLauncher =
-            registerForActivityResult(new ActivityResultContracts.StartActivityForResult(),
-                    new ActivityResultCallback<ActivityResult>() {
-                        @Override
-                        public void onActivityResult(ActivityResult result) {
-                            Intent data = result.getData();
-                            Log.d(TAG, "SAVE FILE result");
-                            if (result.getResultCode() == RESULT_OK) {
-                                if (data != null) {
-                                    Uri fileUri = data.getData();
-                                    Log.v(TAG, "WE SAVE to " + fileUri);
-                                    saveToFileUri(contentToExport, fileUri);
-                                }
-                            }
                         }
                     });
 

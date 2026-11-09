@@ -53,4 +53,18 @@
         android:summary=""
         android:title="@string/setting_email" />
 
+    <PreferenceCategory android:key="project_actions" android:title="@string/project_actions">
+        <Preference
+            android:key="share_project"
+            android:icon="@drawable/ic_share_grey_24dp"
+            android:title="@string/action_share_project" />
+        <Preference
+            android:key="export_project"
+            android:icon="@drawable/ic_save_black_24dp_daynight"
+            android:title="@string/fab_export_project" />
+        <Preference
+            android:key="remove_project"
+            android:icon="@drawable/ic_baseline_delete_grey_24"
+            android:title="@string/project_remove_from_device" />
+    </PreferenceCategory>
 </PreferenceScreen>
