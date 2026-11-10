@@ -23,6 +23,15 @@ public enum ProjectType {
         return reverseMap.get(id);
     }
 
+    /**
+     * Resolve a stored type id, falling back to LOCAL for ids that are no longer supported
+     * (e.g. legacy Cospend projects whose type is no longer mapped).
+     */
+    public static ProjectType fromStored(String id) {
+        ProjectType type = getTypeById(id);
+        return type == null ? LOCAL : type;
+    }
+
     public String getId() {
         return id;
     }

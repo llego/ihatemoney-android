@@ -634,8 +634,11 @@ public class BillsListViewActivity
         Intent newProjectIntent = new Intent(getApplicationContext(), NewProjectActivity.class);
         List<DBProject> projects = db.getProjects();
 
-        // look for a default IHM url in existing projects
+        // look for a default IHM url in existing IHateMoney projects
         for (DBProject project : projects) {
+            if (project.getType() == null || !ProjectType.IHATEMONEY.equals(project.getType())) {
+                continue;
+            }
             String url = project.getServerUrl();
             if (url != null && !url.equals("")) {
                 defaultIhmUrl = url;

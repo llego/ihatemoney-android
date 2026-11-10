@@ -326,10 +326,12 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
             String url;
             for (DBProject project : projects) {
                 url = project.getServerUrl();
-                if (url == null) {
-                    project.setType(ProjectType.LOCAL);
-                } else {
+                // Legacy Cospend rows are no longer supported; keep them as local-compatible
+                // so their cached data stays viewable offline without routing to IHateMoney.
+                if (url != null && !url.contains("index.php/apps/cospend")) {
                     project.setType(ProjectType.IHATEMONEY);
+                } else {
+                    project.setType(ProjectType.LOCAL);
                 }
 
                 updateProject(project.getId(), project.getName(), project.getEmail(),
@@ -917,7 +919,7 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
             cursor.getString(cursor.getColumnIndex(key_ihmUrl)),
             cursor.getString(cursor.getColumnIndex(key_email)),
             cursor.getLong(cursor.getColumnIndex(key_lastPayerId)),
-            ProjectType.getTypeById(cursor.getString(cursor.getColumnIndex(key_type))),
+            ProjectType.fromStored(cursor.getString(cursor.getColumnIndex(key_type))),
             cursor.getLong(cursor.getColumnIndex(key_lastSyncTimestamp)),
             cursor.getString(cursor.getColumnIndex(key_currencyName)),
             cursor.getInt(cursor.getColumnIndex(key_deletionDisabled)) != 0,
