@@ -25,7 +25,7 @@ nix-shell --run './gradlew :app:assembleDevDebug :app:testDevDebugUnitTest --no-
 - `.github/workflows/release.yml` — on `release: published`, builds and signs `:app:assembleNormalRelease` and attaches `IHateMoney-<tag>.apk` to the release's assets.
 - Release APK is signed with `-Pandroid.injected.signing.*` Gradle properties (the keystore is never committed). GitHub secrets: `KEYSTORE_BASE64`, `KEYSTORE_PASSWORD`, `KEY_ALIAS`, `KEY_PASSWORD`.
 - The release keystore (`~/.android/ihatemoney-release.jks`, alias `ihatemoney`) is a must-never-lose credential — back it up with the passwords, since Android updates must be signed with the same key.
-- Release flow: bump `versionName` in `app/build.gradle`, tag `vX.Y.Z`, publish the release; the signed APK attaches automatically. Do not change the signing setup or keystore without asking.
+- Release flow: bump **`versionCode`** (must increase; drives update ordering) and **`versionName`** (must match the tag; user-facing) in `app/build.gradle`'s `defaultConfig`, tag `vX.Y.Z`, publish the release; the signed APK attaches automatically. Do not change the signing setup or keystore without asking.
 
 ## State & scope
 
