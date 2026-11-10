@@ -246,8 +246,9 @@ public class PreferencesFragment extends PreferenceFragmentCompat implements Pre
         languagePref.setOnPreferenceChangeListener((preference, newValue) -> {
             String tag = String.valueOf(newValue);
             updateLanguageSummary(languagePref, tag, values, labels);
-            // Apply the new language and rebuild so the whole UI reloads in it.
-            MoneyBuster.applyAppLocale(requireContext());
+            // Apply the chosen language directly (the pref isn't persisted until we return true),
+            // then rebuild so the whole UI loads in the new language.
+            MoneyBuster.applyAppLocale(requireContext(), tag);
             if (getActivity() != null) {
                 getActivity().recreate();
             }

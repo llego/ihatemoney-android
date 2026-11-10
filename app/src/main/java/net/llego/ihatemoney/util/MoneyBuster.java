@@ -27,7 +27,11 @@ public class MoneyBuster extends Application {
 
     /** Applies the user-selected app language (or system default when unset). */
     public static void applyAppLocale(Context context) {
-        String languageTag = getAppLocaleTag(context);
+        applyAppLocale(context, getAppLocaleTag(context));
+    }
+
+    /** Applies a specific language tag, also setting the process default locale for formatting. */
+    public static void applyAppLocale(Context context, String languageTag) {
         AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageTag));
         if (languageTag != null && !languageTag.isEmpty()) {
             Locale.setDefault(Locale.forLanguageTag(languageTag));
