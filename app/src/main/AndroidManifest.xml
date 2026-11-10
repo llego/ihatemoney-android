@@ -50,14 +50,6 @@
         </activity>
 
         <activity
-            android:name="net.llego.ihatemoney.android.activity.AccountActivity"
-            android:label="@string/settings_server_settings"
-            android:parentActivityName="net.llego.ihatemoney.android.activity.PreferencesActivity"
-            android:windowSoftInputMode="stateVisible"
-            android:launchMode="standard"
-            />
-
-        <activity
             android:name="net.llego.ihatemoney.android.activity.PreferencesActivity"
             android:label="@string/action_settings"
             android:parentActivityName="net.llego.ihatemoney.android.activity.BillsListViewActivity"
@@ -77,18 +69,6 @@
             android:windowSoftInputMode="stateHidden|adjustResize"
             android:launchMode="standard"
             android:exported="true">
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:host="*" android:pathPrefix="/" android:scheme="cospend" />
-            </intent-filter>
-            <intent-filter>
-                <action android:name="android.intent.action.VIEW" />
-                <category android:name="android.intent.category.DEFAULT" />
-                <category android:name="android.intent.category.BROWSABLE" />
-                <data android:host="*" android:pathPrefix="/" android:scheme="cospend+http" />
-            </intent-filter>
             <intent-filter>
                 <action android:name="android.intent.action.VIEW" />
                 <category android:name="android.intent.category.DEFAULT" />

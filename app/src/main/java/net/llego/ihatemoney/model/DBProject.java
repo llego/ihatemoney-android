@@ -123,14 +123,6 @@ public class DBProject implements Serializable {
         return serverUrl;
     }
 
-    public String getRequestBaseUrl(boolean isOcsRequest) {
-        if (!isOcsRequest) {
-            return serverUrl.replaceAll("/+$", "");
-        }
-        return serverUrl.replaceAll("/+$", "")
-                .replace("/index.php/apps/cospend", "/ocs/v2.php/apps/cospend");
-    }
-
     public void setServerUrl(String serverUrl) {
         this.serverUrl = serverUrl;
     }
@@ -178,27 +170,13 @@ public class DBProject implements Serializable {
     public String getShareUrl() {
         String strippedUrl = getServerUrl()
                 .replace("https://", "")
-                .replace("http://", "")
-                .replace("/index.php/apps/cospend", "");
+                .replace("http://", "");
 
-        String protocol;
-        if (getServerUrl().contains("index.php/apps/cospend")) {
-            protocol = "cospend";
-        } else {
-            protocol = "ihatemoney";
-        }
-
-        final String shareUrl = protocol + "://" + strippedUrl + "/" + getRemoteId() + "/" + getPassword();
+        final String shareUrl = "ihatemoney://" + strippedUrl + "/" + getRemoteId() + "/" + getPassword();
         return shareUrl;
     }
 
     public String getPublicWebUrl() {
-        final String publicWebUrl;
-        if (getServerUrl().contains("index.php/apps/cospend")) {
-            publicWebUrl = getServerUrl() + "/loginproject/" + getRemoteId();
-        } else {
-            publicWebUrl = getServerUrl() + "/" + getRemoteId();
-        }
-        return publicWebUrl;
+        return getServerUrl() + "/" + getRemoteId();
     }
 }

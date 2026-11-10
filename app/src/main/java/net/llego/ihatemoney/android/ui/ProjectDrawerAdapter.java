@@ -90,8 +90,6 @@ public class ProjectDrawerAdapter extends RecyclerView.Adapter<ProjectDrawerAdap
         public Drawable getDrawable(Context context) {
             if (project.isLocal()) {
                 return ContextCompat.getDrawable(context, R.drawable.ic_phone_android_grey_24dp);
-            } else if (ProjectType.COSPEND.equals(project.getType())) {
-                return ContextCompat.getDrawable(context, R.drawable.ic_cospend_grey_24dp);
             } else if (ProjectType.IHATEMONEY.equals(project.getType())) {
                 return ContextCompat.getDrawable(context, R.drawable.ic_ihm_grey_24dp);
             }

@@ -111,7 +111,6 @@
     <string name="homescreen_map_shortcut_long_title">Map for %s</string>
     <string name="is_running">running (%s pending, %s sent)</string>
     <!-- Settings -->
-    <string name="settings_server_settings">Account</string>
     <string name="settings_url">Server address</string>
     <string name="settings_url_warn_http">WARNING: \"http\" is unsafe. Please use \"https\".</string>
     <string name="settings_username">Username</string>
@@ -130,8 +129,6 @@
     <string name="settings_sms_keyword_long">If this phone receives a SMS which just contains this keyword, location information will be sent back.</string>
     <string name="settings_sms_keyword_long2">You can also send commands with this syntax: KEYWORD COMMAND</string>
     <string name="settings_sms_keyword_long3">Available commands:\n- alarm\n- startlogjobs\n- stoplogjobs\n- createlogjob</string>
-    <string name="settings_use_server_color_title">Use server color</string>
-    <string name="settings_use_server_color_subtitle">Get server color when syncing and use it as main app color</string>
     <string name="settings_providers_title">Location providers</string>
     <string name="providers_gps">GPS</string>
     <string name="providers_network">Network</string>
@@ -227,7 +224,6 @@
     <string name="pref_value_theme_dark">Dark</string>
     <string name="fallback_weblogin_text">Revert to old login method</string>
     <string name="fallback_weblogin_back">Back</string>
-    <string name="use_sso_toggle">Use account from Nextcloud Files app</string>
     <!-- Plurals -->
     <plurals name="ab_selected">
         <item quantity="other">%d selected</item>

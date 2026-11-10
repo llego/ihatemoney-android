@@ -52,7 +52,6 @@ import com.opencsv.exceptions.CsvValidationException;
 import net.llego.ihatemoney.R;
 import net.llego.ihatemoney.android.activity.QrCodeScannerActivity;
 import net.llego.ihatemoney.databinding.ActivityNewProjectBinding;
-import net.llego.ihatemoney.model.DBAccountProject;
 import net.llego.ihatemoney.model.DBBill;
 import net.llego.ihatemoney.model.DBCategory;
 import net.llego.ihatemoney.model.DBCurrency;
@@ -61,7 +60,6 @@ import net.llego.ihatemoney.model.DBPaymentMode;
 import net.llego.ihatemoney.model.DBProject;
 import net.llego.ihatemoney.model.ProjectType;
 import net.llego.ihatemoney.persistence.MoneyBusterSQLiteOpenHelper;
-import net.llego.ihatemoney.persistence.MoneyBusterServerSyncHelper;
 import net.llego.ihatemoney.theme.ThemeUtils;
 import net.llego.ihatemoney.theme.ThemedFragment;
 import net.llego.ihatemoney.theme.ThemedMaterialAlertDialogBuilder;
@@ -113,7 +111,6 @@ public class NewProjectFragment extends ThemedFragment {
     protected MaterialButton whatTodoCreate;
     protected MaterialButton whereLocal;
     protected MaterialButton whereIhm;
-    protected MaterialButton whereCospend;
     protected EditText newProjectEmail;
     protected EditText newProjectName;
 
@@ -131,7 +128,6 @@ public class NewProjectFragment extends ThemedFragment {
     protected LinearLayout newProjectEmailLayout;
 
     protected Button scanButton;
-    protected Button chooseFromNextcloudButton;
     protected Button importButton;
 
     protected MaterialButton fabOk;
@@ -173,7 +169,6 @@ public class NewProjectFragment extends ThemedFragment {
         whatTodoCreate = view.findViewById(R.id.whatTodoCreate);
         whereLocal = view.findViewById(R.id.whereLocal);
         whereIhm = view.findViewById(R.id.whereIhm);
-        whereCospend = view.findViewById(R.id.whereCospend);
         whereIcon = view.findViewById(R.id.whereIcon);
 
         newProjectId = view.findViewById(R.id.editProjectId);
@@ -194,7 +189,6 @@ public class NewProjectFragment extends ThemedFragment {
         newProjectNameLayout = view.findViewById(R.id.editProjectNameLayout);
 
         scanButton = view.findViewById(R.id.scanButton);
-        chooseFromNextcloudButton = view.findViewById(R.id.chooseFromNextcloudButton);
         importButton = view.findViewById(R.id.importButton);
 
         fabOk = view.findViewById(R.id.fab_new_ok);
@@ -231,7 +225,6 @@ public class NewProjectFragment extends ThemedFragment {
             public void onClick(View view) {
                 boolean isChecked = ((MaterialButton)view).isChecked();
                 if (isChecked) {
-                    whereCospend.setChecked(false);
                     whereIhm.setChecked(false);
                     showHideInputFields(true);
                     showHideValidationButtons();
@@ -245,26 +238,11 @@ public class NewProjectFragment extends ThemedFragment {
             public void onClick(View view) {
                 boolean isChecked = ((MaterialButton)view).isChecked();
                 if (isChecked) {
-                    whereCospend.setChecked(false);
                     whereLocal.setChecked(false);
                     showHideInputFields(true);
                     showHideValidationButtons();
                 } else {
                     whereIhm.setChecked(true);
-                }
-            }
-        });
-        whereCospend.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                boolean isChecked = ((MaterialButton)view).isChecked();
-                if (isChecked) {
-                    whereLocal.setChecked(false);
-                    whereIhm.setChecked(false);
-                    showHideInputFields(true);
-                    showHideValidationButtons();
-                } else {
-                    whereCospend.setChecked(true);
                 }
             }
         });
@@ -293,44 +271,6 @@ public class NewProjectFragment extends ThemedFragment {
                         .setAction(Intent.ACTION_GET_CONTENT);
 
                 importFileLauncher.launch(Intent.createChooser(intent, "Select a file"));
-            }
-        });
-
-        chooseFromNextcloudButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                List<DBAccountProject> accountProjects = db.getAccountProjects();
-                List<String> acProjNameList = new ArrayList<>();
-                final List<Long> acProjIdList = new ArrayList<>();
-                for (DBAccountProject accountProject : accountProjects) {
-                    acProjNameList.add(accountProject.getName());
-                    acProjIdList.add(accountProject.getId());
-                }
-                // manage account projects list DIALOG
-                AlertDialog.Builder selectBuilder = new ThemedMaterialAlertDialogBuilder(view.getContext());
-                selectBuilder.setTitle(getString(R.string.choose_account_project_dialog_title));
-
-                if (acProjNameList.size() > 0) {
-
-                    CharSequence[] entcs = acProjNameList.toArray(new CharSequence[acProjNameList.size()]);
-
-                    selectBuilder.setSingleChoiceItems(entcs, -1, new DialogInterface.OnClickListener() {
-                        @Override
-                        public void onClick(DialogInterface dialog, int which) {
-                            long pid = acProjIdList.get(which);
-                            DBAccountProject p = db.getAccountProject(pid);
-                            newProjectId.setText(p.getRemoteId());
-                            newProjectUrl.setText(p.getncUrl());
-                            dialog.dismiss();
-                            newProjectPassword.requestFocus();
-                        }
-                    });
-                    selectBuilder.setNegativeButton(getString(R.string.simple_cancel), null);
-
-                    selectBuilder.create().show();
-                } else {
-                    showToast(getString(R.string.choose_account_project_dialog_impossible), Toast.LENGTH_LONG);
-                }
             }
         });
 
@@ -411,7 +351,6 @@ public class NewProjectFragment extends ThemedFragment {
         utils.material.colorTextInputLayout(binding.newProjectForm.editProjectEmailInputLayout);
         utils.material.colorMaterialButtonText(binding.newProjectForm.scanButton);
         utils.material.colorMaterialButtonText(binding.newProjectForm.importButton);
-        utils.material.colorMaterialButtonText(binding.newProjectForm.chooseFromNextcloudButton);
     }
 
     private void showHideValidationButtons() {
@@ -432,15 +371,13 @@ public class NewProjectFragment extends ThemedFragment {
         boolean isIhmInvitationLink = type.equals(ProjectType.IHATEMONEY)
                 && isValidUrl(projectUrl)
                 && isInvitationLink(projectUrl);
-        boolean isCospendScheme = type.equals(ProjectType.COSPEND)
-                && isCospendSchemeLink(projectUrl);
-        // in "join" mode, show/hide projId and password if this is an IHM invitation link or a Cospend scheme link
-        if (!todoCreate && (isIhmInvitationLink || isCospendScheme)) {
+        // in "join" mode, show/hide projId and password if this is an IHM invitation link
+        if (!todoCreate && isIhmInvitationLink) {
             newProjectPasswordLayout.setVisibility(View.GONE);
             newProjectIdLayout.setVisibility(View.GONE);
         } else {
             newProjectPasswordLayout.setVisibility(type.equals(ProjectType.LOCAL)
-                    || (type.equals(ProjectType.COSPEND) && todoCreate) ? View.GONE : View.VISIBLE);
+                    ? View.GONE : View.VISIBLE);
             newProjectIdLayout.setVisibility(View.VISIBLE);
         }
 
@@ -450,15 +387,14 @@ public class NewProjectFragment extends ThemedFragment {
                 valid = false;
             }
         } else {
-            if (projectId.equals("") && !isIhmInvitationLink && !isCospendScheme) {
+            if (projectId.equals("") && !isIhmInvitationLink) {
                 valid = false;
             }
         }
 
         if (!type.equals(ProjectType.LOCAL)) {
             if (
-                    !isCospendScheme
-                    && (projectUrl.equals("") || !isValidUrl(projectUrl))
+                    (projectUrl.equals("") || !isValidUrl(projectUrl))
             ) {
                 valid = false;
             }
@@ -467,7 +403,7 @@ public class NewProjectFragment extends ThemedFragment {
                     valid = false;
                 }
             } else {
-                if (projectPassword.equals("") && !isIhmInvitationLink && !isCospendScheme) {
+                if (projectPassword.equals("") && !isIhmInvitationLink) {
                     valid = false;
                 }
             }
@@ -504,9 +440,7 @@ public class NewProjectFragment extends ThemedFragment {
             type = getProjectType();
         }
         whereLocal.setVisibility(todoCreate ? View.VISIBLE : View.GONE);
-        whereCospend.setVisibility(type.equals(ProjectType.COSPEND) ? View.VISIBLE : View.GONE);
-        binding.newProjectForm.whereLayout.setVisibility(todoCreate || type.equals(ProjectType.COSPEND)
-                ? View.VISIBLE : View.GONE);
+        binding.newProjectForm.whereLayout.setVisibility(todoCreate ? View.VISIBLE : View.GONE);
         fabOk.setText(todoCreate ? R.string.todo_create_label : R.string.todo_join_label);
 
         newProjectUrlLayout.setVisibility(!type.equals(ProjectType.LOCAL) ? View.VISIBLE : View.GONE);
@@ -521,7 +455,6 @@ public class NewProjectFragment extends ThemedFragment {
         if (type.equals(ProjectType.LOCAL)) {
             whereIcon.setImageResource(R.drawable.ic_cellphone_grey_24dp);
 
-            chooseFromNextcloudButton.setVisibility(View.GONE);
             importButton.setVisibility(View.VISIBLE);
         } else if (type.equals(ProjectType.IHATEMONEY)) {
             whereIcon.setImageResource(R.drawable.ic_ihm_grey_24dp);
@@ -530,20 +463,7 @@ public class NewProjectFragment extends ThemedFragment {
                 newProjectUrl.setText(defaultIhmUrl);
             }
             newProjectUrlInputLayout.setHint(getString(R.string.setting_ihm_project_url));
-            chooseFromNextcloudButton.setVisibility(View.GONE);
             importButton.setVisibility(View.GONE);
-        } else if (type.equals(ProjectType.COSPEND)) {
-            whereIcon.setImageResource(R.drawable.ic_cospend_grey_24dp);
-
-            if (setDefaultUrl) {
-                newProjectUrl.setText(defaultNcUrl);
-            }
-            newProjectUrlInputLayout.setHint(getString(R.string.setting_cospend_project_url));
-            boolean isNCC = MoneyBusterServerSyncHelper.isNextcloudAccountConfigured(getContext());
-            List<DBAccountProject> accProjs = db.getAccountProjects();
-            chooseFromNextcloudButton.setVisibility((!todoCreate && isNCC && accProjs.size() > 0) ? View.VISIBLE : View.GONE);
-            importButton.setVisibility(View.GONE);
-            newProjectPasswordLayout.setVisibility(todoCreate ? View.GONE : View.VISIBLE);
         }
     }
 
@@ -651,34 +571,6 @@ public class NewProjectFragment extends ThemedFragment {
         String url;
         String pid;
         if (
-                (data.getScheme().equals("cospend") || data.getScheme().equals("cospend+http"))
-                && data.getPathSegments().size() >= 1
-        ) {
-            if (data.getPath().endsWith("/")) {
-                password = "";
-                pid = data.getLastPathSegment();
-            } else {
-                password = data.getLastPathSegment();
-                pid = data.getPathSegments().get(data.getPathSegments().size() - 2);
-            }
-            String protocol = "https";
-            if (data.getScheme().equals("cospend+http")) {
-                protocol = "http";
-            }
-            url = protocol + "://" + data.getHost();
-            if (data.getPort() != -1) {
-                url += ":" + data.getPort();
-            }
-            url += data.getPath().replaceAll("/"+pid+"/" + password + "$", "");
-            newProjectPassword.setText(password);
-            newProjectId.setText(pid);
-            newProjectUrl.setText(url);
-            whereLocal.setChecked(false);
-            whereIhm.setChecked(false);
-            whereCospend.setChecked(true);
-            showHideInputFields(false);
-            showHideValidationButtons();
-        } else if (
                 (data.getScheme().equals("ihatemoney") || data.getScheme().equals("ihatemoney+http"))
                 && data.getPathSegments().size() >= 1
         ) {
@@ -718,7 +610,6 @@ public class NewProjectFragment extends ThemedFragment {
             newProjectUrl.setText(url);
             whereLocal.setChecked(false);
             whereIhm.setChecked(true);
-            whereCospend.setChecked(false);
             showHideInputFields(false);
             showHideValidationButtons();
         } else {
@@ -735,45 +626,14 @@ public class NewProjectFragment extends ThemedFragment {
         }
     }
 
-    // we check if we should show warning about cospend compat with authenticated project creation
     private void onPressOk() {
-        ProjectType type = getProjectType();
-        boolean todoCreate = getTodoCreate();
-        String url = getUrl();
-        DBProject fakeProj = new DBProject(
-                0, "", "", "", url,
-                "", 0L, ProjectType.COSPEND, 0L,
-                null, false, DBProject.ACCESS_LEVEL_UNKNOWN,
-                ""
-        );
-        if (isValidUrl(url) && todoCreate && ProjectType.COSPEND.equals(type) &&
-                db.getMoneyBusterServerSyncHelper().canCreateAuthenticatedProject(fakeProj)) {
-            AlertDialog.Builder builder = new ThemedMaterialAlertDialogBuilder(requireContext());
-            builder.setTitle(getString(R.string.auth_project_creation_title))
-                    .setMessage(getString(R.string.warning_auth_project_creation))
-                    .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-                            createProject();
-                        }
-                    })
-                    .setNegativeButton(android.R.string.cancel, new DialogInterface.OnClickListener() {
-                        public void onClick(DialogInterface dialog, int which) {
-
-                        }
-                    })
-                    .setIcon(R.drawable.ic_nextcloud_logo_grey)
-                    .show();
-
-        } else {
-            createProject();
-        }
+        createProject();
     }
 
     private void createProject() {
         boolean isIhmInvitationLink = isInvitationLink(getUrl());
-        boolean isCospendScheme = isCospendSchemeLink(getUrl());
         String rid = getRemoteId();
-        if (!isIhmInvitationLink && !isCospendScheme && (rid == null || rid.equals("") || rid.contains(",") || rid.contains("/"))) {
+        if (!isIhmInvitationLink && (rid == null || rid.equals("") || rid.contains(",") || rid.contains("/"))) {
             showToast(getString(R.string.error_invalid_project_remote_id), Toast.LENGTH_LONG);
             return;
         }
@@ -781,7 +641,7 @@ public class NewProjectFragment extends ThemedFragment {
         ProjectType type = getProjectType();
 
         if (!ProjectType.LOCAL.equals(type)) {
-            if (!isIhmInvitationLink && !isCospendScheme) {
+            if (!isIhmInvitationLink) {
                 // check values
                 String url = getUrl();
                 if (!isValidUrl(url)) {
@@ -911,21 +771,6 @@ public class NewProjectFragment extends ThemedFragment {
             url = server.build().toString();
             Log.e(TAG, "IHM invitation link, url: " + url + " , token: " + bearerToken + " , remoteId: " + remoteId);
         }
-        // handle Cospend scheme links
-        if (type.equals(ProjectType.COSPEND) && isCospendSchemeLink(url)) {
-            Log.e(TAG, "!!!!Cospend raw URL " + url);
-            Uri data = Uri.parse(url);
-            password = data.getPathSegments().get(data.getPathSegments().size() - 1);
-            remoteId = data.getPathSegments().get(data.getPathSegments().size() - 2);
-            String protocol = "https";
-            if (data.getScheme().equals("cospend+http")) {
-                protocol = "http";
-            }
-            url = protocol + "://"
-                    + data.getHost() + data.getPath().replaceAll("/" + remoteId + "/" + password + "$", "")
-                    + "/index.php/apps/cospend";
-            Log.e(TAG, "Cospend scheme link, url: " + url + " , password: " + password + " , remoteId: " + remoteId);
-        }
         // get project info to check we can connect
         return new DBProject(
                 0, remoteId, password, name, url,
@@ -966,18 +811,12 @@ public class NewProjectFragment extends ThemedFragment {
 
         String defaultTypeId = getArguments().getString(PARAM_DEFAULT_PROJECT_TYPE);
         if (defaultTypeId != null) {
-            if (defaultTypeId.equals(ProjectType.COSPEND.getId())) {
-                whereLocal.setChecked(false);
-                whereIhm.setChecked(false);
-                whereCospend.setChecked(true);
-            } else if (defaultTypeId.equals(ProjectType.IHATEMONEY.getId())) {
+            if (defaultTypeId.equals(ProjectType.IHATEMONEY.getId())) {
                 whereLocal.setChecked(false);
                 whereIhm.setChecked(true);
-                whereCospend.setChecked(false);
             } else if (defaultTypeId.equals(ProjectType.LOCAL.getId())) {
                 whereLocal.setChecked(true);
                 whereIhm.setChecked(false);
-                whereCospend.setChecked(false);
             }
         }
 
@@ -1008,7 +847,7 @@ public class NewProjectFragment extends ThemedFragment {
         } else if (whereIhm.isChecked()) {
             return ProjectType.IHATEMONEY;
         } else {
-            return ProjectType.COSPEND;
+            return ProjectType.LOCAL;
         }
     }
     protected String getRemoteId() {
@@ -1016,10 +855,6 @@ public class NewProjectFragment extends ThemedFragment {
     }
     protected String getUrl() {
         String url = newProjectUrl.getText().toString().trim();
-        ProjectType type = getProjectType();
-        if (ProjectType.COSPEND.equals(type) && !isCospendSchemeLink(url)) {
-            url = url.replaceAll("/+$", "") + "/index.php/apps/cospend";
-        }
         if (!url.startsWith("http://") && !url.startsWith("https://") && isValidUrl("https://"+url)) {
             url = "https://" + url;
         }
@@ -1035,11 +870,6 @@ public class NewProjectFragment extends ThemedFragment {
         return ("https".equals(data.getScheme()) || "http".equals(data.getScheme()))
                 && data.getPathSegments().size() >= 3
                 && "join".equals(data.getPathSegments().get(data.getPathSegments().size() - 2));
-    }
-    protected boolean isCospendSchemeLink(String url) {
-        Uri data = Uri.parse(url);
-        return ("cospend".equals(data.getScheme()) || "cospend+http".equals(data.getScheme()))
-            && data.getPathSegments().size() >= 2;
     }
     protected String getPassword() {
         return newProjectPassword.getText().toString();

@@ -6,7 +6,6 @@ import android.widget.TextView
 import androidx.preference.PreferenceCategory
 import androidx.preference.PreferenceViewHolder
 import androidx.preference.R
-import com.nextcloud.android.common.ui.theme.utils.ColorRole
 
 
 class ThemedPreferenceCategory @JvmOverloads constructor(
@@ -24,7 +23,7 @@ class ThemedPreferenceCategory @JvmOverloads constructor(
         val title = holder.findViewById(android.R.id.title)
 
         if (title is TextView) {
-            utils.platform.colorTextView(title, ColorRole.PRIMARY)
+            utils.platform.colorTextView(title)
         }
     }
 }

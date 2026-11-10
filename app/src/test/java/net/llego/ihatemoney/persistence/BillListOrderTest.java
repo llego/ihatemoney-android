@@ -112,7 +112,7 @@ public class BillListOrderTest {
     public void otherBackendsKeepTimeBasedOrdering() throws Exception {
         bill(1, 10, "2026-11-09T20:00", "2026-11-08");
         bill(2, 11, "2026-11-09T00:00", "2026-11-09");
-        for (ProjectType type : new ProjectType[]{ProjectType.LOCAL, ProjectType.COSPEND, null}) {
+        for (ProjectType type : new ProjectType[]{ProjectType.LOCAL, null}) {
             assertEquals(Arrays.asList(1L, 2L), ordered(type));
         }
     }

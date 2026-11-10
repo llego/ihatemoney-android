@@ -746,9 +746,6 @@ public class EditBillFragment extends ThemedFragment {
             }
         }
         newCategoryId = getCategoryId();
-        if (ProjectType.COSPEND.equals(projectType)) {
-            newRepeat = getRepeat();
-        }
         List<Long> newOwersIds = getOwersIds();
 
         // check if owers have changed
@@ -805,9 +802,6 @@ public class EditBillFragment extends ThemedFragment {
             }
         }
         newCategoryId = getCategoryId();
-        if (ProjectType.COSPEND.equals(projectType)) {
-            newRepeat = getRepeat();
-        }
 
         List<Long> newOwersIds = getOwersIds();
 
@@ -1262,11 +1256,7 @@ public class EditBillFragment extends ThemedFragment {
     }
 
     private boolean usesOldPaymentModes() {
-        List<DBPaymentMode> userPaymentModes = db.getPaymentModes(bill.getProjectId());
-        return (
-            ProjectType.COSPEND.equals(projectType)
-            && userPaymentModes.size() == 0
-        );
+        return false;
     }
 
     protected String getWhat() {

@@ -7,22 +7,14 @@ import androidx.appcompat.view.menu.ActionMenuItemView
 import androidx.appcompat.widget.ActionBarContextView
 import androidx.appcompat.widget.AppCompatImageView
 import com.google.android.material.button.MaterialButton
-import com.nextcloud.android.common.ui.theme.MaterialSchemes
-import com.nextcloud.android.common.ui.theme.ViewThemeUtilsBase
-import com.nextcloud.android.common.ui.theme.utils.MaterialViewThemeUtils
 import net.llego.ihatemoney.R
 
+/** App-specific theming. Replaces Nextcloud `MoneyBusterViewThemeUtils` / `ViewThemeUtilsBase`. */
+class MoneyBusterViewThemeUtils(private val schemes: MoneyBusterSchemes) {
 
-// TODO: upstream these to android-common:ui library
-class MoneyBusterViewThemeUtils(
-    val material: MaterialViewThemeUtils,
-    schemes: MaterialSchemes,
-) : ViewThemeUtilsBase(schemes) {
-
-    /**
-     * Call this AFTER `dialog.show()`, otherwise the buttons will be null!
-     */
+    /** Call this AFTER `dialog.show()`, otherwise the buttons will be null! */
     fun colorDialogButtons(dialog: AlertDialog) {
+        val utils = MoneyBusterMaterialUtils(schemes)
         val buttons = listOf(
             AlertDialog.BUTTON_NEGATIVE,
             AlertDialog.BUTTON_NEUTRAL,
@@ -31,29 +23,26 @@ class MoneyBusterViewThemeUtils(
         buttons.forEach { buttonInt ->
             dialog.getButton(buttonInt)?.let { button ->
                 if (button is MaterialButton) {
-                    this.material.colorMaterialButtonText(button)
-                    this.material.colorMaterialTextButton(button)
+                    utils.colorMaterialButtonText(button)
                 }
             }
         }
     }
 
     fun themeActionModeActionBar(actionBar: ActionBarContextView, vararg menuIds: Int) {
-        withScheme(actionBar.context) { scheme ->
-            actionBar.setBackgroundColor(scheme.primary)
+        actionBar.setBackgroundColor(schemes.primary)
 
-            val title = actionBar.findViewById<TextView>(R.id.action_bar_title)
-            title.setTextColor(scheme.onPrimary)
+        val title = actionBar.findViewById<TextView>(R.id.action_bar_title)
+        title.setTextColor(schemes.onPrimary)
 
-            val closeButton =
-                actionBar.findViewById<AppCompatImageView>(R.id.action_mode_close_button)
-            closeButton.imageTintList = ColorStateList.valueOf(scheme.onPrimary)
+        val closeButton =
+            actionBar.findViewById<AppCompatImageView>(R.id.action_mode_close_button)
+        closeButton.imageTintList = ColorStateList.valueOf(schemes.onPrimary)
 
-            menuIds.forEach { id ->
-                val actionMenuItemView = actionBar.findViewById<ActionMenuItemView>(id)
-                actionMenuItemView.compoundDrawableTintList =
-                    ColorStateList.valueOf(scheme.onPrimary)
-            }
+        menuIds.forEach { id ->
+            val actionMenuItemView = actionBar.findViewById<ActionMenuItemView>(id)
+            actionMenuItemView.compoundDrawableTintList =
+                ColorStateList.valueOf(schemes.onPrimary)
         }
     }
 

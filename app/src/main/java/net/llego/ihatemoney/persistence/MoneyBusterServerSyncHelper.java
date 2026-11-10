@@ -5,7 +5,6 @@ import android.content.Context;
 import android.content.Intent;
 
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
@@ -16,19 +15,8 @@ import androidx.core.app.NotificationCompat;
 import androidx.core.app.NotificationManagerCompat;
 import androidx.preference.PreferenceManager;
 
-import com.google.gson.GsonBuilder;
-import com.nextcloud.android.sso.api.NextcloudAPI;
-import com.nextcloud.android.sso.exceptions.NextcloudFilesAppAccountNotFoundException;
-import com.nextcloud.android.sso.exceptions.NextcloudHttpRequestFailedException;
-import com.nextcloud.android.sso.exceptions.NoCurrentAccountSelectedException;
-import com.nextcloud.android.sso.exceptions.TokenMismatchException;
-import com.nextcloud.android.sso.helper.SingleAccountHelper;
-import com.nextcloud.android.sso.model.SingleSignOnAccount;
-
 import net.llego.ihatemoney.R;
 import net.llego.ihatemoney.android.activity.BillsListViewActivity;
-import net.llego.ihatemoney.android.activity.AccountActivity;
-import net.llego.ihatemoney.model.DBAccountProject;
 import net.llego.ihatemoney.model.DBBill;
 import net.llego.ihatemoney.model.DBBillOwer;
 import net.llego.ihatemoney.model.DBCategory;
@@ -37,8 +25,6 @@ import net.llego.ihatemoney.model.DBMember;
 import net.llego.ihatemoney.model.DBPaymentMode;
 import net.llego.ihatemoney.model.DBProject;
 import net.llego.ihatemoney.model.ProjectType;
-import net.llego.ihatemoney.util.NextcloudClient;
-import net.llego.ihatemoney.util.CospendClientUtil.LoginStatus;
 import net.llego.ihatemoney.util.ICallback;
 import net.llego.ihatemoney.util.IProjectCreationCallback;
 import net.llego.ihatemoney.util.VersatileProjectSyncClient;
@@ -106,9 +92,6 @@ public class MoneyBusterServerSyncHelper {
     private boolean syncActive = false;
     private static final List<Long> projectIdsToSync = new ArrayList<>();
 
-    // current state of the account projects synchronization
-    private boolean syncAccountProjectsActive = false;
-
     // list of callbacks for both parts of synchronziation
     private List<ICallback> callbacksPush = new ArrayList<>();
     private List<ICallback> callbacksPull = new ArrayList<>();
@@ -120,26 +103,6 @@ public class MoneyBusterServerSyncHelper {
         customCertManager = SupportUtil.getCertManager(appContext);
 
         updateNetworkStatus();
-    }
-
-    public static boolean isNextcloudAccountConfigured(Context context) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        return !preferences.getString(AccountActivity.SETTINGS_URL, AccountActivity.DEFAULT_SETTINGS).isEmpty() ||
-                preferences.getBoolean(AccountActivity.SETTINGS_USE_SSO, false);
-    }
-
-    public static String getNextcloudAccountServerUrl(Context context) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(context);
-        if (preferences.getBoolean(AccountActivity.SETTINGS_USE_SSO, false)) {
-            try {
-                SingleSignOnAccount ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(context.getApplicationContext());
-                return ssoAccount.url.replaceAll("/+$", "");
-            } catch (NextcloudFilesAppAccountNotFoundException | NoCurrentAccountSelectedException e) {
-                return "";
-            }
-        } else {
-            return preferences.getString(AccountActivity.SETTINGS_URL, AccountActivity.DEFAULT_SETTINGS).replaceAll("/+$", "");
-        }
     }
 
     /**
@@ -241,11 +204,10 @@ public class MoneyBusterServerSyncHelper {
      * SyncTask is an AsyncTask which performs the synchronization in a background thread.
      * Synchronization consists of two parts: pushLocalChanges and pullRemoteChanges.
      */
-    public class SyncTask extends AsyncTask<Void, Void, LoginStatus> {
+    public class SyncTask extends AsyncTask<Void, Void, Boolean> {
         private final boolean onlyLocalChanges;
         private final DBProject project;
         private final List<ICallback> callbacks = new ArrayList<>();
-        private NextcloudClient nextcloudClient;
         private VersatileProjectSyncClient client;
         private List<Throwable> exceptions = new ArrayList<>();
         private List<String> errorMessages = new ArrayList<>();
@@ -275,44 +237,21 @@ public class MoneyBusterServerSyncHelper {
         }
 
         @Override
-        protected LoginStatus doInBackground(Void... voids) {
-            String version = null;
-            if (project.getType().equals(ProjectType.COSPEND)) {
-                nextcloudClient = createNextcloudClient();
-                if (nextcloudClient != null) {
-                    try {
-                        ServerResponse.CapabilitiesResponse response = nextcloudClient.getCapabilities(customCertManager, project);
-                        version = response.getCospendVersion();
-                    } catch (Exception e) {
-                        Log.i(getClass().getSimpleName(), "Failed to get cospend version when syncing: " + e);
-                    }
-                }
-            }
+        protected Boolean doInBackground(Void... voids) {
+            Log.i(getClass().getSimpleName(), "STARTING SYNCHRONIZATION");
 
-            Log.i(getClass().getSimpleName(), "Syncing, cospend version is: " + version);
-
-            client = createVersatileProjectSyncClient(version);
-            Log.i(getClass().getSimpleName(), "STARTING SYNCHRONIZATION with Cospend version(" + version + ")");
+            client = createVersatileProjectSyncClient();
             //dbHelper.debugPrintFullDB();
-            LoginStatus status = LoginStatus.OK;
-
-            long startedAt = System.nanoTime();
-            status = pushLocalChanges();
-            long pushedAt = System.nanoTime();
-            if (status == LoginStatus.OK && !onlyLocalChanges) {
+            boolean status = pushLocalChanges();
+            if (status && !onlyLocalChanges) {
                 status = pullRemoteChanges();
             }
-            Log.i(TAG, "Sync phases (ms): push=" + (pushedAt - startedAt) / 1_000_000
-                    + ", pull=" + (System.nanoTime() - pushedAt) / 1_000_000
-                    + ", uploadOnly=" + onlyLocalChanges);
             //dbHelper.debugPrintFullDB();
             Log.i(getClass().getSimpleName(), "SYNCHRONIZATION FINISHED");
             return status;
         }
 
-        private LoginStatus pushLocalChanges() {
-            LoginStatus status;
-
+        private boolean pushLocalChanges() {
             Log.d(getClass().getSimpleName(), "PUSH LOCAL CHANGES");
 
             try {
@@ -376,7 +315,6 @@ public class MoneyBusterServerSyncHelper {
                             // but maybe there still are bills for this user,
                             // wait untill the end of pullremotechanges to check
                             // and delete useless members
-                            //dbHelper.deleteMember(mToEdit.getId());
                         } else {
                             throw e;
                         }
@@ -408,14 +346,6 @@ public class MoneyBusterServerSyncHelper {
                         } else {
                             throw e;
                         }
-                    } catch (NextcloudHttpRequestFailedException e) {
-                        if (e.getStatusCode() == 404) {
-                            // the bill does not exist in the remote project
-                            Log.d(TAG, "failed to delete bill on remote project : delete it locally anyway");
-                            dbHelper.deleteBill(bToDel.getId());
-                        } else {
-                            throw e;
-                        }
                     }
                 }
                 // edit what's been edited
@@ -429,10 +359,9 @@ public class MoneyBusterServerSyncHelper {
                         } else {
                             Log.d(getClass().getSimpleName(), "FAILED to edit remote bill (" + editRemoteBillResponse.getStringContent() + ")");
                         }
-                    } catch (IOException | NextcloudHttpRequestFailedException e) {
+                    } catch (IOException e) {
                         Log.d(getClass().getSimpleName(), "FAILED to edit remote bill: it probably does not exist remotely");
                         // pullremotechanges will take care of deletion if it's not there anymore
-                        //dbHelper.deleteBill(bToEdit.getId());
                     }
                 }
                 // add what's been added
@@ -486,8 +415,6 @@ public class MoneyBusterServerSyncHelper {
                         // if it's not there on the server
                         if (e.getMessage().equals("{\"message\": \"Internal Server Error\"}")) {
                             Log.d(getClass().getSimpleName(), "FAILED to edit remote currency : it does not exist remotely");
-                            // pullremotechanges will take care of deletion
-                            //dbHelper.deleteBill(bToEdit.getId());
                         } else {
                             throw e;
                         }
@@ -503,42 +430,29 @@ public class MoneyBusterServerSyncHelper {
                     }
                 }
 
-                status = LoginStatus.OK;
+                return true;
             } catch (ServerResponse.NotModifiedException e) {
                 Log.d(getClass().getSimpleName(), "No changes, nothing to do.");
-                status = LoginStatus.OK;
+                return true;
             } catch (IOException e) {
                 Log.e(getClass().getSimpleName(), "Exception", e);
                 exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
+                return false;
             } catch (JSONException e) {
                 Log.e(getClass().getSimpleName(), "Exception", e);
                 exceptions.add(e);
-                status = LoginStatus.JSON_FAILED;
-            } catch (TokenMismatchException e) {
-                Log.e(getClass().getSimpleName(), "Catch MISMATCHTOKEN", e);
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            } catch (NextcloudHttpRequestFailedException e) {
-                Log.e(getClass().getSimpleName(), "Catch SSO HTTP req FAILED", e);
-                status = LoginStatus.REQ_FAILED;
-                errorMessages.add(getErrorMessageFromException(e));
-                if (e.getCause() != null) {
-                    exceptions.add(e.getCause());
-                }
+                return false;
             }
-            Log.d(getClass().getSimpleName(), "END PUSH LOCAL CHANGES");
-            return status;
         }
 
         /**
          * Pull remote Changes: update or create each remote members/bills and remove remotely deleted ones
          */
-        private LoginStatus pullRemoteChanges() {
+        private boolean pullRemoteChanges() {
             Log.d(TAG, "pullRemoteChanges(" + project + ")");
             SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(appContext);
             String lastETag = null;
             long lastModified = 0;
-            LoginStatus status;
             try {
                 ServerResponse.ProjectResponse projResponse = client.getProject(customCertManager, project, lastModified, lastETag);
                 String name = projResponse.getName();
@@ -742,13 +656,6 @@ public class MoneyBusterServerSyncHelper {
                         ) {
                             // alright
                             Log.d(getClass().getSimpleName(), "Nothing to do for member : " + localMember);
-                            // if there was no change BUT there is a userid and no avatar => update avatar
-                            if (localMember.getNcUserId() != null && !"".equals(localMember.getNcUserId()) &&
-                                    (localMember.getAvatar() == null || "".equals(localMember.getAvatar()))
-                            ) {
-                                Log.d(getClass().getSimpleName(), "except updating avatar");
-                                updateMemberAvatar(localMember.getId());
-                            }
                         } else {
                             Log.d(getClass().getSimpleName(), "Update local member : " + m);
                             Integer r = m.getR();
@@ -760,21 +667,11 @@ public class MoneyBusterServerSyncHelper {
                                 g = localMember.getG();
                                 b = localMember.getB();
                             }
-                            // determine if we reset local avatar
-                            boolean needAvatarUpdate = (ncUserIdChanged && m.getNcUserId() != null && !m.getNcUserId().equals(""));
-                            String newAvatar = null;
-                            if (ncUserIdChanged) {
-                                newAvatar = "";
-                            }
                             dbHelper.updateMember(
                                     localMember.getId(), m.getName(), m.getWeight(),
                                     m.isActivated(), null, null,
-                                    r, g, b, m.getNcUserId(), newAvatar
+                                    r, g, b, m.getNcUserId(), null
                             );
-                            if (needAvatarUpdate) {
-                                Log.e("PLOP", "pullremote : update member avatar");
-                                updateMemberAvatar(localMember.getId());
-                            }
                         }
                     }
                 }
@@ -792,45 +689,24 @@ public class MoneyBusterServerSyncHelper {
                 List<DBBill> remoteBills;
                 List<Long> remoteAllBillIds = new ArrayList<>();
                 long serverSyncTimestamp = project.getLastSyncedTimestamp();
-                // get all bill ids
-                // and get server timestamp when this request was done
-                // COSPEND => we only get new/changed bills since last sync
-                // and bill id list and server timestamp at the sync moment
-                if (ProjectType.COSPEND.equals(project.getType())) {
-                    remoteBills = billsResponse.getBillsCospend(project.getId(), memberRemoteIdToId);
-                    remoteAllBillIds = billsResponse.getAllBillIds();
-                    serverSyncTimestamp = billsResponse.getSyncTimestamp();
-                } else {
-                    // IHATEMONEY => we get all bills
-                    remoteBills = billsResponse.getBillsIHM(project.getId(), memberRemoteIdToId);
-                    serverSyncTimestamp = System.currentTimeMillis() / 1000;
-                }
+                // IHATEMONEY => we get all bills
+                remoteBills = billsResponse.getBillsIHM(project.getId(), memberRemoteIdToId);
+                serverSyncTimestamp = System.currentTimeMillis() / 1000;
 
                 applyRemoteBills(remoteBills, remoteAllBillIds, remoteMembersByRemoteId, serverSyncTimestamp);
-                status = LoginStatus.OK;
+                return true;
             } catch (ServerResponse.NotModifiedException e) {
                 Log.d(TAG, "No changes, nothing to do.");
-                status = LoginStatus.OK;
+                return true;
             } catch (IOException e) {
                 Log.e(TAG, "Exception", e);
                 exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
+                return false;
             } catch (JSONException e) {
                 Log.e(TAG, "Exception", e);
                 exceptions.add(e);
-                status = LoginStatus.JSON_FAILED;
-            } catch (TokenMismatchException e) {
-                Log.e(getClass().getSimpleName(), "Catch MISMATCHTOKEN", e);
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            } catch (NextcloudHttpRequestFailedException e) {
-                Log.e(getClass().getSimpleName(), "Catch NC REQ failed", e);
-                status = LoginStatus.REQ_FAILED;
-                errorMessages.add(getErrorMessageFromException(e));
-                if (e.getCause() != null) {
-                    exceptions.add(e.getCause());
-                }
+                return false;
             }
-            return status;
         }
 
         private void applyRemoteBills(List<DBBill> remoteBills, List<Long> remoteAllBillIds,
@@ -907,28 +783,13 @@ public class MoneyBusterServerSyncHelper {
                 }
 
                 // delete local bill
-                // DELETION is now different between IHM and COSPEND
-                // smart sync is now always on for Cospend projects
-                // we just get bill ids
-                if (ProjectType.COSPEND.equals(project.getType())) {
-                    for (DBBill localBill : localBills) {
-                        // if local bill does not exist remotely
-                        if (localBill.getState() == DBBill.STATE_OK
-                                && !remoteAllBillIds.contains(localBill.getRemoteId())) {
-                            dbHelper.deleteBill(localBill.getId());
-                            nbPulledDeletedBills++;
-                            deletedBillsDialogText.append("\uD83D\uDDD1 ").append(localBill.getWhat()).append('\n');
-                        }
-                    }
-                } else {
-                    for (DBBill localBill : localBills) {
-                        // if local bill does not exist remotely
-                        if (localBill.getState() == DBBill.STATE_OK
-                                && !remoteBillsByRemoteId.containsKey(localBill.getRemoteId())) {
-                            dbHelper.deleteBill(localBill.getId());
-                            nbPulledDeletedBills++;
-                            deletedBillsDialogText.append("\uD83D\uDDD1 ").append(localBill.getWhat()).append('\n');
-                        }
+                for (DBBill localBill : localBills) {
+                    // if local bill does not exist remotely
+                    if (localBill.getState() == DBBill.STATE_OK
+                            && !remoteBillsByRemoteId.containsKey(localBill.getRemoteId())) {
+                        dbHelper.deleteBill(localBill.getId());
+                        nbPulledDeletedBills++;
+                        deletedBillsDialogText.append("\uD83D\uDDD1 ").append(localBill.getWhat()).append('\n');
                     }
                 }
 
@@ -970,9 +831,9 @@ public class MoneyBusterServerSyncHelper {
         }
 
         @Override
-        protected void onPostExecute(LoginStatus status) {
+        protected void onPostExecute(Boolean status) {
             super.onPostExecute(status);
-            if (status != LoginStatus.OK) {
+            if (!status) {
                 String errorString = "";
                 for (String errorMessage : errorMessages) {
                     errorString += errorMessage + "\n";
@@ -984,10 +845,7 @@ public class MoneyBusterServerSyncHelper {
                         try {
                             errorString += obj.getString("message") + "\n";
                         } catch (JSONException jsonEx) {
-//                            errorString += e.getMessage() + "\n";
                         }
-                    } else {
-//                        errorString += e.getMessage() + "\n";
                     }
                 }
                 // broadcast the error
@@ -996,10 +854,6 @@ public class MoneyBusterServerSyncHelper {
                 intent.putExtra(BillsListViewActivity.BROADCAST_ERROR_MESSAGE, errorString);
                 intent.putExtra(BillsListViewActivity.BROADCAST_PROJECT_ID, project.getId());
                 appContext.sendBroadcast(intent);
-                if (status == LoginStatus.SSO_TOKEN_MISMATCH) {
-                    Intent intent2 = new Intent(BillsListViewActivity.BROADCAST_SSO_TOKEN_MISMATCH);
-                    appContext.sendBroadcast(intent2);
-                }
             } else {
                 Intent intent = new Intent(BROADCAST_PROJECT_SYNCED);
                 intent.putExtra(BillsListViewActivity.BROADCAST_EXTRA_PARAM, project.getName());
@@ -1041,24 +895,6 @@ public class MoneyBusterServerSyncHelper {
                 scheduleSync(false, pid);
             }
         }
-    }
-
-    public String getErrorMessageFromException(NextcloudHttpRequestFailedException e) {
-        String message = "";
-        int errorCode = e.getStatusCode();
-        if (errorCode == 503) {
-            message += appContext.getString(R.string.error_maintenance_mode);
-        } else if (errorCode == 400) {
-            message += appContext.getString(R.string.error_400);
-        } else if (errorCode == 401) {
-            message += appContext.getString(R.string.error_401);
-        } else if (errorCode == 403) {
-            message += appContext.getString(R.string.error_403);
-        } else if (errorCode == 404) {
-            message += appContext.getString(R.string.error_404);
-        }
-        message += "\n" + e.getCause().getMessage();
-        return message;
     }
 
     public static void createNotificationChannels(Context context, MoneyBusterSQLiteOpenHelper db) {
@@ -1103,53 +939,9 @@ public class MoneyBusterServerSyncHelper {
         NOTIFICATION_ID++;
     }
 
-    private VersatileProjectSyncClient createVersatileProjectSyncClient(String cospendVersion) {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(appContext.getApplicationContext());
-        String url = "";
-        String username = "";
-        String password = "";
-        boolean useSSO = preferences.getBoolean(AccountActivity.SETTINGS_USE_SSO, false);
-        if (useSSO) {
-            try {
-                SingleSignOnAccount ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(appContext.getApplicationContext());
-                NextcloudAPI nextcloudAPI = new NextcloudAPI(appContext.getApplicationContext(), ssoAccount, new GsonBuilder().create(), apiCallback);
-                //Log.d(TAG, "SSSSSSSSSSSSS "+ssoAccount.url+" "+ssoAccount.userId);
-                return new VersatileProjectSyncClient(url, username, password, nextcloudAPI, ssoAccount, cospendVersion, appContext);
-            } catch (NextcloudFilesAppAccountNotFoundException e) {
-                return null;
-            } catch (NoCurrentAccountSelectedException e) {
-                return null;
-            }
-        } else {
-            url = preferences.getString(AccountActivity.SETTINGS_URL, AccountActivity.DEFAULT_SETTINGS);
-            username = preferences.getString(AccountActivity.SETTINGS_USERNAME, AccountActivity.DEFAULT_SETTINGS);
-            password = preferences.getString(AccountActivity.SETTINGS_PASSWORD, AccountActivity.DEFAULT_SETTINGS);
-            return new VersatileProjectSyncClient(url, username, password, null, null, cospendVersion, appContext);
-        }
-    }
-
-    // if this is a cospend project and the server URL is the same as the configured account
-    // => authenticated creation is possible
-    public boolean canCreateAuthenticatedProject(DBProject project) {
-        boolean isCospend = ProjectType.COSPEND.equals(project.getType());
-        String projUrl = project.getServerUrl().replaceAll("/index.php/apps/cospend", "").replaceAll("/+$", "");
-
-        String accountUrl = "";
-
-        boolean useSSO = preferences.getBoolean(AccountActivity.SETTINGS_USE_SSO, false);
-        if (useSSO) {
-            try {
-                SingleSignOnAccount ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(appContext.getApplicationContext());
-                accountUrl = ssoAccount.url.replaceAll("/+$", "");
-            } catch (NextcloudFilesAppAccountNotFoundException | NoCurrentAccountSelectedException e) {
-                return false;
-            }
-        } else {
-            accountUrl = preferences.getString(AccountActivity.SETTINGS_URL, AccountActivity.DEFAULT_SETTINGS).replaceAll("/$", "");
-        }
-
-        Log.v(TAG, "proj url : "+projUrl+" ; account url : "+accountUrl);
-        return (isCospend && projUrl.equals(accountUrl));
+    private VersatileProjectSyncClient createVersatileProjectSyncClient() {
+        // IHateMoney requests use credentials and URLs from the project itself.
+        return new VersatileProjectSyncClient("", "", "", appContext);
     }
 
     public boolean editRemoteProject(long projId, @Nullable String newName, @Nullable String newEmail,
@@ -1167,9 +959,8 @@ public class MoneyBusterServerSyncHelper {
      * task to ask server to create public share with name restriction on device
      * or just get the share token if it already exists
      */
-    private class EditRemoteProjectTask extends AsyncTask<Void, Void, LoginStatus> {
+    private class EditRemoteProjectTask extends AsyncTask<Void, Void, Boolean> {
         private VersatileProjectSyncClient client;
-        private NextcloudClient nextcloudClient;
         private final String newName;
         private final String newEmail;
         private final String newPassword;
@@ -1195,22 +986,11 @@ public class MoneyBusterServerSyncHelper {
         }
 
         @Override
-        protected LoginStatus doInBackground(Void... voids) {
-            nextcloudClient = createNextcloudClient();
-            String version = null;
-            if (nextcloudClient != null) {
-                try {
-                    ServerResponse.CapabilitiesResponse response = nextcloudClient.getCapabilities(customCertManager, null);
-                    version = response.getCospendVersion();
-                } catch (Exception e) {
-                    Log.i(getClass().getSimpleName(), "Failed to get cospend version when syncing: " + e);
-                }
-            }
-            client = createVersatileProjectSyncClient(version);
+        protected Boolean doInBackground(Void... voids) {
+            client = createVersatileProjectSyncClient();
             if (BillsListViewActivity.DEBUG) {
                 Log.i(getClass().getSimpleName(), "STARTING edit remote project");
             }
-            LoginStatus status = LoginStatus.OK;
             try {
                 ServerResponse.EditRemoteProjectResponse response = client.editRemoteProject(
                     customCertManager, project, newName, newEmail, newPassword, newMainCurrencyName
@@ -1223,44 +1003,29 @@ public class MoneyBusterServerSyncHelper {
                     Log.e(getClass().getSimpleName(), "Exception", e);
                 }
                 exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
+                return false;
             } catch (JSONException e) {
-                Log.e(getClass().getSimpleName(), "Catch JSON exception", e);
-                status = LoginStatus.JSON_FAILED;
-            } catch (TokenMismatchException e) {
-                Log.e(getClass().getSimpleName(), "Catch MISMATCHTOKEN", e);
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            } catch (NextcloudHttpRequestFailedException e) {
-                Log.e(getClass().getSimpleName(), "Catch NC REQ failed", e);
-                status = LoginStatus.REQ_FAILED;
-                errorMessages.add(getErrorMessageFromException(e));
+                if (BillsListViewActivity.DEBUG) {
+                    Log.d(getClass().getSimpleName(), "JSONException", e);
+                }
             }
             if (BillsListViewActivity.DEBUG) {
                 Log.i(getClass().getSimpleName(), "FINISHED edit remote project");
             }
-            return status;
+            return true;
         }
 
         @Override
-        protected void onPostExecute(LoginStatus status) {
+        protected void onPostExecute(Boolean status) {
             super.onPostExecute(status);
             String errorString = "";
-            if (status != LoginStatus.OK) {
-                errorString = appContext.getString(
-                        R.string.error_sync,
-                        appContext.getString(status.str)
-                );
-                errorString += "\n\n";
+            if (!status) {
                 for (String errorMessage : errorMessages) {
                     errorString += errorMessage + "\n";
                 }
                 errorString += "\n";
                 for (Throwable e : exceptions) {
                     errorString += e.getClass().getName() + ": " + e.getMessage();
-                }
-                if (status == LoginStatus.SSO_TOKEN_MISMATCH) {
-                    Intent intent2 = new Intent(BillsListViewActivity.BROADCAST_SSO_TOKEN_MISMATCH);
-                    appContext.sendBroadcast(intent2);
                 }
             } else {
                 dbHelper.updateProject(
@@ -1288,9 +1053,8 @@ public class MoneyBusterServerSyncHelper {
      * task to ask server to create public share with name restriction on device
      * or just get the share token if it already exists
      */
-    private class DeleteRemoteProjectTask extends AsyncTask<Void, Void, LoginStatus> {
+    private class DeleteRemoteProjectTask extends AsyncTask<Void, Void, Boolean> {
         private VersatileProjectSyncClient client;
-        private NextcloudClient nextcloudClient;
         private final DBProject project;
         private final ICallback callback;
         private final List<Throwable> exceptions = new ArrayList<>();
@@ -1307,22 +1071,11 @@ public class MoneyBusterServerSyncHelper {
         }
 
         @Override
-        protected LoginStatus doInBackground(Void... voids) {
-            nextcloudClient = createNextcloudClient();
-            String version = null;
-            if (nextcloudClient != null) {
-                try {
-                    ServerResponse.CapabilitiesResponse response = nextcloudClient.getCapabilities(customCertManager, null);
-                    version = response.getCospendVersion();
-                } catch (Exception e) {
-                    Log.i(getClass().getSimpleName(), "Failed to get cospend version when syncing: " + e);
-                }
-            }
-            client = createVersatileProjectSyncClient(version);
+        protected Boolean doInBackground(Void... voids) {
+            client = createVersatileProjectSyncClient();
             if (BillsListViewActivity.DEBUG) {
                 Log.i(getClass().getSimpleName(), "STARTING delete remote project");
             }
-            LoginStatus status = LoginStatus.OK;
             try {
                 ServerResponse.DeleteRemoteProjectResponse response = client.deleteRemoteProject(customCertManager, project);
                 if (BillsListViewActivity.DEBUG) {
@@ -1333,44 +1086,29 @@ public class MoneyBusterServerSyncHelper {
                     Log.e(getClass().getSimpleName(), "Exception", e);
                 }
                 exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
+                return false;
             } catch (JSONException e) {
-                Log.e(getClass().getSimpleName(), "Catch JSONException", e);
-                status = LoginStatus.JSON_FAILED;
-            } catch (TokenMismatchException e) {
-                Log.e(getClass().getSimpleName(), "Catch MISMATCHTOKEN", e);
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            } catch (NextcloudHttpRequestFailedException e) {
-                Log.e(getClass().getSimpleName(), "Catch NC REQ failed", e);
-                status = LoginStatus.REQ_FAILED;
-                errorMessages.add(getErrorMessageFromException(e));
+                if (BillsListViewActivity.DEBUG) {
+                    Log.d(getClass().getSimpleName(), "JSONException", e);
+                }
             }
             if (BillsListViewActivity.DEBUG) {
                 Log.i(getClass().getSimpleName(), "FINISHED delete device");
             }
-            return status;
+            return true;
         }
 
         @Override
-        protected void onPostExecute(LoginStatus status) {
+        protected void onPostExecute(Boolean status) {
             super.onPostExecute(status);
             String errorString = "";
-            if (status != LoginStatus.OK) {
-                errorString = appContext.getString(
-                        R.string.error_sync,
-                        appContext.getString(status.str)
-                );
-                errorString += "\n\n";
+            if (!status) {
                 for (String errorMessage : errorMessages) {
                     errorString += errorMessage + "\n";
                 }
                 errorString += "\n";
                 for (Throwable e : exceptions) {
                     errorString += e.getClass().getName() + ": " + e.getMessage();
-                }
-                if (status == LoginStatus.SSO_TOKEN_MISMATCH) {
-                    Intent intent2 = new Intent(BillsListViewActivity.BROADCAST_SSO_TOKEN_MISMATCH);
-                    appContext.sendBroadcast(intent2);
                 }
             } else {
                 dbHelper.deleteProject(project.getId());
@@ -1383,7 +1121,7 @@ public class MoneyBusterServerSyncHelper {
         if (isSyncPossible()) {
             DBProject proj = new DBProject(
                     0, remoteId,
-                    projectType.equals(ProjectType.COSPEND) ? "" : password,
+                    password,
                     name, ihmUrl, email,
                     null, projectType, 0L, null,
                     false, DBProject.ACCESS_LEVEL_UNKNOWN, null
@@ -1399,9 +1137,8 @@ public class MoneyBusterServerSyncHelper {
      * task to ask server to create public share with name restriction on device
      * or just get the share token if it already exists
      */
-    private class CreateRemoteProjectTask extends AsyncTask<Void, Void, LoginStatus> {
+    private class CreateRemoteProjectTask extends AsyncTask<Void, Void, Boolean> {
         private VersatileProjectSyncClient client;
-        private NextcloudClient nextcloudClient;
         private final DBProject project;
         private final IProjectCreationCallback callback;
         private final List<Throwable> exceptions = new ArrayList<>();
@@ -1419,31 +1156,13 @@ public class MoneyBusterServerSyncHelper {
         }
 
         @Override
-        protected LoginStatus doInBackground(Void... voids) {
-            nextcloudClient = createNextcloudClient();
-            String version = null;
-            if (nextcloudClient != null) {
-                try {
-                    ServerResponse.CapabilitiesResponse response = nextcloudClient.getCapabilities(customCertManager, null);
-                    version = response.getCospendVersion();
-                } catch (Exception e) {
-                    Log.i(getClass().getSimpleName(), "Failed to get cospend version when syncing: " + e);
-                }
-            }
-            client = createVersatileProjectSyncClient(version);
+        protected Boolean doInBackground(Void... voids) {
+            client = createVersatileProjectSyncClient();
             if (BillsListViewActivity.DEBUG) {
                 Log.i(getClass().getSimpleName(), "STARTING create remote project");
             }
-            LoginStatus status = LoginStatus.OK;
             try {
-                ServerResponse.CreateRemoteProjectResponse response;
-                // determine if we can create authenticated of just anonymous remote project
-                if (canCreateAuthenticatedProject(project)) {
-                    response = client.createAuthenticatedRemoteProject(customCertManager, project);
-                    usePrivateApi = true;
-                } else {
-                    response = client.createAnonymousRemoteProject(customCertManager, project);
-                }
+                ServerResponse.CreateRemoteProjectResponse response = client.createAnonymousRemoteProject(customCertManager, project);
                 if (BillsListViewActivity.DEBUG) {
                     Log.i(getClass().getSimpleName(), "RESPONSE create remote project : " + response.getStringContent());
                 }
@@ -1452,43 +1171,23 @@ public class MoneyBusterServerSyncHelper {
                     Log.e(getClass().getSimpleName(), "Exception", e);
                 }
                 exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
+                return false;
             } catch (JSONException e) {
                 if (BillsListViewActivity.DEBUG) {
-                    Log.e(getClass().getSimpleName(), "JSON Exception", e);
+                    Log.d(getClass().getSimpleName(), "JSONException", e);
                 }
-                exceptions.add(e);
-                status = LoginStatus.JSON_FAILED;
-            } catch (TokenMismatchException e) {
-                if (BillsListViewActivity.DEBUG) {
-                    Log.e(getClass().getSimpleName(), "Exception", e);
-                }
-                exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
-            } catch (NextcloudHttpRequestFailedException e) {
-                if (BillsListViewActivity.DEBUG) {
-                    Log.e(getClass().getSimpleName(), "Exception", e);
-                }
-                exceptions.add(e);
-                status = LoginStatus.REQ_FAILED;
-                errorMessages.add(getErrorMessageFromException(e));
             }
             if (BillsListViewActivity.DEBUG) {
                 Log.i(getClass().getSimpleName(), "FINISHED create remote project");
             }
-            return status;
+            return true;
         }
 
         @Override
-        protected void onPostExecute(LoginStatus status) {
+        protected void onPostExecute(Boolean status) {
             super.onPostExecute(status);
             String errorString = "";
-            if (status != LoginStatus.OK) {
-                errorString = appContext.getString(
-                        R.string.error_sync,
-                        appContext.getString(status.str)
-                );
-                errorString += "\n\n";
+            if (!status) {
                 for (String errorMessage : errorMessages) {
                     errorString += errorMessage + "\n";
                 }
@@ -1496,9 +1195,7 @@ public class MoneyBusterServerSyncHelper {
                 for (Throwable e : exceptions) {
                     errorString += e.getClass().getName() + ": " + e.getMessage();
                 }
-            } /*else {
-                dbHelper.deleteProject(project.getId());
-            }*/
+            }
             callback.onFinish(project.getRemoteId(), errorString, usePrivateApi);
         }
     }
@@ -1522,527 +1219,21 @@ public class MoneyBusterServerSyncHelper {
         }
     }
 
-    // update member avatar with Nextcloud user one
+    // member avatars are not supported for IHateMoney projects
     public void updateMemberAvatar(long memberId) {
-        updateNetworkStatus();
-        if (isNextcloudAccountConfigured(appContext) && isSyncPossible()) {
-            UpdateMemberAvatarTask updateMemberAvatarTask = new UpdateMemberAvatarTask(memberId);
-            updateMemberAvatarTask.execute();
-        }
-    }
-
-    // ACCOUNT SYNC
-
-    public void runAccountProjectsSync() {
-        Log.d(getClass().getSimpleName(), "Account projects sync requested; " + (syncAccountProjectsActive ? "sync active" : "sync NOT active") + ") ...");
-        Log.d(getClass().getSimpleName(), "(network:" + networkConnected + ")");
-        updateNetworkStatus();
-        if (isNextcloudAccountConfigured(appContext) && isSyncPossible() && (!syncAccountProjectsActive)) {
-            SyncAccountProjectsTask syncAccountProjectTask = new SyncAccountProjectsTask();
-            syncAccountProjectTask.execute();
-            // get NC color
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(appContext);
-            boolean settingServerColor = preferences.getBoolean(appContext.getString(R.string.pref_key_use_server_color), false);
-            if (settingServerColor) {
-                GetNCColorTask getColorTask = new GetNCColorTask();
-                getColorTask.execute();
-            }
-            GetNCUserAvatarTask getAvatarTask = new GetNCUserAvatarTask();
-            getAvatarTask.execute();
-        }
-    }
-
-    private final NextcloudAPI.ApiConnectedListener apiCallback = new NextcloudAPI.ApiConnectedListener() {
-        @Override
-        public void onConnected() {
-            // ignore this one..
-            Log.d(getClass().getSimpleName(), "API connected!!!!");
-        }
-
-        @Override
-        public void onError(Exception ex) {
-            // TODO handle error in your app
-        }
-    };
-
-    private NextcloudClient createNextcloudClient() {
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(appContext.getApplicationContext());
-        String url = "";
-        String username = "";
-        String password = "";
-        boolean useSSO = preferences.getBoolean(AccountActivity.SETTINGS_USE_SSO, false);
-        if (useSSO) {
-            try {
-                SingleSignOnAccount ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(appContext.getApplicationContext());
-                NextcloudAPI nextcloudAPI = new NextcloudAPI(appContext.getApplicationContext(), ssoAccount, new GsonBuilder().create(), apiCallback);
-                return new NextcloudClient(url, ssoAccount.userId, password, nextcloudAPI, appContext);
-            } catch (NextcloudFilesAppAccountNotFoundException e) {
-                return null;
-            } catch (NoCurrentAccountSelectedException e) {
-                return null;
-            }
-        } else {
-            url = preferences.getString(AccountActivity.SETTINGS_URL, AccountActivity.DEFAULT_SETTINGS);
-            username = preferences.getString(AccountActivity.SETTINGS_USERNAME, AccountActivity.DEFAULT_SETTINGS);
-            password = preferences.getString(AccountActivity.SETTINGS_PASSWORD, AccountActivity.DEFAULT_SETTINGS);
-            return new NextcloudClient(url, username, password, null, appContext);
-        }
-    }
-
-    private class SyncAccountProjectsTask extends AsyncTask<Void, Void, LoginStatus> {
-        private final List<ICallback> callbacks = new ArrayList<>();
-        private NextcloudClient client;
-        private final List<Throwable> exceptions = new ArrayList<>();
-        private final List<String> errorMessages = new ArrayList<>();
-
-        public SyncAccountProjectsTask() {
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-            syncAccountProjectsActive = true;
-        }
-
-        @Override
-        protected LoginStatus doInBackground(Void... voids) {
-            client = createNextcloudClient(); // recreate client on every sync in case the connection settings was changed
-            Log.i(getClass().getSimpleName(), "STARTING account projects SYNCHRONIZATION");
-            LoginStatus status = LoginStatus.OK;
-
-            if (client != null) {
-                status = pullRemoteProjects();
-            } else {
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            }
-            Log.i(getClass().getSimpleName(), "SYNCHRONIZATION FINISHED");
-            return status;
-        }
-
-        private LoginStatus pullRemoteProjects() {
-            Log.d(getClass().getSimpleName(), "pullRemoteProjects()");
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(appContext);
-            LoginStatus status;
-            try {
-                // get NC url
-                String url = "";
-                boolean useSSO = preferences.getBoolean(AccountActivity.SETTINGS_USE_SSO, false);
-                if (useSSO) {
-                    try {
-                        SingleSignOnAccount ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(appContext.getApplicationContext());
-                        url = ssoAccount.url;
-                    } catch (NextcloudFilesAppAccountNotFoundException e) {
-                    } catch (NoCurrentAccountSelectedException e) {
-                    }
-                } else {
-                    url = preferences.getString(AccountActivity.SETTINGS_URL, AccountActivity.DEFAULT_SETTINGS);
-                }
-
-                List<DBProject> localProjects = dbHelper.getProjects();
-
-                ServerResponse.CapabilitiesResponse capabilitiesResponse = client.getCapabilities(customCertManager, null);
-                String cospendVersion = capabilitiesResponse.getCospendVersion();
-                boolean useOcsApi = cospendVersion == null
-                        ? false
-                        : SupportUtil.compareVersions(cospendVersion, "1.6.1") >= 0;
-                if (cospendVersion == null) {
-                    Log.i(TAG, "project sync: GT161 is FALSE");
-                } else {
-                    Log.i(TAG, "project sync: GT161: " + (SupportUtil.compareVersions(cospendVersion, "1.6.1") >= 0));
-                }
-                ServerResponse.AccountProjectsResponse response = client.getAccountProjects(customCertManager, useOcsApi);
-                List<DBAccountProject> remoteAccountProjects = response.getAccountProjects(url);
-                // we successfully got accounts (or zero), so we can clear local ones before adding new ones
-                dbHelper.clearAccountProjects();
-                for (DBAccountProject remoteAccountProject : remoteAccountProjects) {
-                    dbHelper.addAccountProject(remoteAccountProject);
-                    Log.v(getClass().getSimpleName(), "received account project "+remoteAccountProject);
-                    // if the project does not exist yet, add it with empty password
-                    boolean found = false;
-                    for (DBProject localProject : localProjects) {
-                        if (localProject.getRemoteId().equals(remoteAccountProject.getRemoteId())
-                                && localProject.getServerUrl().replaceAll("/+$", "")
-                                    .equals(remoteAccountProject.getncUrl().replaceAll("/+$", "") + "/index.php/apps/cospend")
-                        ) {
-                            found = true;
-                            break;
-                        }
-                    }
-                    if (!found) {
-                        DBProject newProj = new DBProject(0,
-                                remoteAccountProject.getRemoteId(),
-                                "",
-                                remoteAccountProject.getName(),
-                                remoteAccountProject.getncUrl().replaceAll("/+$", "") + "/index.php/apps/cospend",
-                                "",
-                                null,
-                                ProjectType.COSPEND,
-                                0L,
-                                null,
-                                false,
-                                DBProject.ACCESS_LEVEL_UNKNOWN,
-                                null
-                        );
-                        dbHelper.addProject(newProj);
-                    }
-                }
-                status = LoginStatus.OK;
-            } catch (ServerResponse.NotModifiedException e) {
-                Log.d(getClass().getSimpleName(), "No changes, nothing to do.");
-                status = LoginStatus.OK;
-            } catch (IOException e) {
-                Log.e(getClass().getSimpleName(), "Exception", e);
-                exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
-            } catch (JSONException e) {
-                Log.e(getClass().getSimpleName(), "Exception", e);
-                exceptions.add(e);
-                status = LoginStatus.JSON_FAILED;
-            } catch (TokenMismatchException e) {
-                Log.e(getClass().getSimpleName(), "Catch MISMATCHTOKEN", e);
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            } catch (NextcloudHttpRequestFailedException e) {
-                Log.e(getClass().getSimpleName(), "Catch REQ FAILED", e);
-                status = LoginStatus.REQ_FAILED;
-                errorMessages.add(getErrorMessageFromException(e));
-            }
-
-            return status;
-        }
-
-        @Override
-        protected void onPostExecute(LoginStatus status) {
-            super.onPostExecute(status);
-            if (status != LoginStatus.OK) {
-                String errorString = appContext.getString(
-                        R.string.error_sync,
-                        appContext.getString(status.str)
-                );
-                errorString += "\n\n";
-                for (String errorMessage : errorMessages) {
-                    errorString += errorMessage + "\n";
-                }
-                errorString += "\n";
-                for (Throwable e : exceptions) {
-                    errorString += e.getClass().getName() + ": " + e.getMessage();
-                }
-                // broadcast the error
-                // if the bill list is not visible, no toast
-                Intent intent = new Intent(BillsListViewActivity.BROADCAST_ACCOUNT_PROJECTS_SYNC_FAILED);
-                intent.putExtra(BillsListViewActivity.BROADCAST_ERROR_MESSAGE, errorString);
-                appContext.sendBroadcast(intent);
-                if (status == LoginStatus.SSO_TOKEN_MISMATCH) {
-                    Intent intent2 = new Intent(BillsListViewActivity.BROADCAST_SSO_TOKEN_MISMATCH);
-                    appContext.sendBroadcast(intent2);
-                }
-            } else {
-                Intent intent = new Intent(BillsListViewActivity.BROADCAST_ACCOUNT_PROJECTS_SYNCED);
-                appContext.sendBroadcast(intent);
-            }
-            syncAccountProjectsActive = false;
-        }
-    }
-
-    private class GetNCColorTask extends AsyncTask<Void, Void, LoginStatus> {
-
-        private final List<ICallback> callbacks = new ArrayList<>();
-        private NextcloudClient client;
-        private final List<Throwable> exceptions = new ArrayList<>();
-        private final List<String> errorMessages = new ArrayList<>();
-
-        public GetNCColorTask() {
-
-        }
-
-        public void addCallbacks(List<ICallback> callbacks) {
-            this.callbacks.addAll(callbacks);
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected LoginStatus doInBackground(Void... voids) {
-            client = createNextcloudClient(); // recreate CospendClients on every sync in case the connection settings was changed
-            Log.i(getClass().getSimpleName(), "STARTING get color");
-
-            LoginStatus status = LoginStatus.OK;
-
-            if (client != null) {
-                status = getNextcloudColor();
-            } else {
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            }
-
-            Log.i(getClass().getSimpleName(), "Get color FINISHED");
-            return status;
-        }
-
-        private LoginStatus getNextcloudColor() {
-            Log.d(getClass().getSimpleName(), "getNextcloudColor()");
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(appContext);
-            String lastETag = preferences.getString(AccountActivity.SETTINGS_KEY_ETAG, null);
-            long lastModified = preferences.getLong(AccountActivity.SETTINGS_KEY_LAST_MODIFIED, 0);
-            LoginStatus status;
-            try {
-
-                ServerResponse.CapabilitiesResponse response = client.getCapabilities(customCertManager, null);
-                String color = response.getColor();
-
-                status = LoginStatus.OK;
-
-                // update ETag and Last-Modified in order to reduce size of next response
-                SharedPreferences.Editor editor = preferences.edit();
-
-                if (color != null && !color.isEmpty() && color.startsWith("#")) {
-                    if (color.length() == 4) {
-                        color = "#" + color.charAt(1) + color.charAt(1)
-                                + color.charAt(2) + color.charAt(2)
-                                + color.charAt(3) + color.charAt(3);
-                    }
-                    int intColor = Color.parseColor(color);
-                    Log.d(getClass().getSimpleName(), "COLOR from server is "+color);
-                    editor.putInt(appContext.getString(R.string.pref_key_server_color), intColor);
-                } else {
-                    //editor.remove(SettingsActivity.SETTINGS_KEY_ETAG);
-                }
-
-                editor.apply();
-            } catch (ServerResponse.NotModifiedException e) {
-                Log.d(getClass().getSimpleName(), "No changes, nothing to do.");
-                status = LoginStatus.OK;
-            } catch (IOException e) {
-                Log.e(getClass().getSimpleName(), "Exception", e);
-                exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
-            } catch (JSONException e) {
-                Log.e(getClass().getSimpleName(), "Exception", e);
-                exceptions.add(e);
-                status = LoginStatus.JSON_FAILED;
-            } catch (TokenMismatchException e) {
-                Log.e(getClass().getSimpleName(), "Catch MISMATCHTOKEN", e);
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            } catch (NextcloudHttpRequestFailedException e) {
-                Log.e(getClass().getSimpleName(), "Catch REQ FAILED", e);
-                status = LoginStatus.REQ_FAILED;
-                errorMessages.add(getErrorMessageFromException(e));
-            }
-
-            return status;
-        }
-
-        @Override
-        protected void onPostExecute(LoginStatus status) {
-            super.onPostExecute(status);
-        }
-    }
-
-    private class GetNCUserAvatarTask extends AsyncTask<Void, Void, LoginStatus> {
-
-        private final List<ICallback> callbacks = new ArrayList<>();
-        private NextcloudClient client;
-        private final List<Throwable> exceptions = new ArrayList<>();
-        private final List<String> errorMessages = new ArrayList<>();
-
-        public GetNCUserAvatarTask() {
-
-        }
-
-        public void addCallbacks(List<ICallback> callbacks) {
-            this.callbacks.addAll(callbacks);
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected LoginStatus doInBackground(Void... voids) {
-            client = createNextcloudClient();
-            Log.i(getClass().getSimpleName(), "STARTING get account avatar");
-
-            LoginStatus status = LoginStatus.OK;
-
-            if (client != null) {
-                status = getNextcloudUserAvatar();
-            } else {
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            }
-            return status;
-        }
-
-        private LoginStatus getNextcloudUserAvatar() {
-            Log.d(getClass().getSimpleName(), "getNextcloudUserAvatar()");
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(appContext);
-            //String lastETag = preferences.getString(SettingsActivity.SETTINGS_KEY_ETAG, null);
-            //long lastModified = preferences.getLong(SettingsActivity.SETTINGS_KEY_LAST_MODIFIED, 0);
-            LoginStatus status;
-            try {
-
-                ServerResponse.AvatarResponse response = client.getAvatar(customCertManager, null);
-                String avatar = response.getAvatarString();
-
-                status = LoginStatus.OK;
-
-                // update ETag and Last-Modified in order to reduce size of next response
-                SharedPreferences.Editor editor = preferences.edit();
-
-                if (avatar != null && !avatar.isEmpty()) {
-                    //Log.d(getClass().getSimpleName(), "avatar from server is "+avatar);
-                    editor.putString(appContext.getString(R.string.pref_key_avatar), avatar);
-                } else {
-                    //editor.remove(SettingsActivity.SETTINGS_KEY_ETAG);
-                }
-
-                editor.apply();
-            } catch (ServerResponse.NotModifiedException e) {
-                Log.d(getClass().getSimpleName(), "No changes, nothing to do.");
-                status = LoginStatus.OK;
-            } catch (IOException e) {
-                Log.e(getClass().getSimpleName(), "Exception", e);
-                exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
-            } catch (JSONException e) {
-                Log.e(getClass().getSimpleName(), "Exception", e);
-                exceptions.add(e);
-                status = LoginStatus.JSON_FAILED;
-            } catch (TokenMismatchException e) {
-                Log.e(getClass().getSimpleName(), "Catch MISMATCHTOKEN", e);
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            } catch (NextcloudHttpRequestFailedException e) {
-                Log.e(getClass().getSimpleName(), "Catch REQ FAILED", e);
-                status = LoginStatus.REQ_FAILED;
-                errorMessages.add(getErrorMessageFromException(e));
-            }
-
-            return status;
-        }
-
-        @Override
-        protected void onPostExecute(LoginStatus status) {
-            super.onPostExecute(status);
-            if (status == LoginStatus.OK) {
-                Intent intent = new Intent(BROADCAST_AVATAR_UPDATED);
-                appContext.sendBroadcast(intent);
-            }
-        }
-    }
-
-    private class UpdateMemberAvatarTask extends AsyncTask<Void, Void, LoginStatus> {
-
-        private final List<ICallback> callbacks = new ArrayList<>();
-        private NextcloudClient client;
-        private long memberId;
-        private List<Throwable> exceptions = new ArrayList<>();
-        private List<String> errorMessages = new ArrayList<>();
-
-        public UpdateMemberAvatarTask(long memberId) {
-            this.memberId = memberId;
-        }
-
-        public void addCallbacks(List<ICallback> callbacks) {
-            this.callbacks.addAll(callbacks);
-        }
-
-        @Override
-        protected void onPreExecute() {
-            super.onPreExecute();
-        }
-
-        @Override
-        protected LoginStatus doInBackground(Void... voids) {
-            client = createNextcloudClient();
-            Log.i(getClass().getSimpleName(), "STARTING get avatar for member");
-
-            LoginStatus status = LoginStatus.OK;
-
-            if (client != null) {
-                status = getNextcloudUserAvatar();
-            } else {
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            }
-            return status;
-        }
-
-        private LoginStatus getNextcloudUserAvatar() {
-            Log.d(getClass().getSimpleName(), "getNextcloudUserAvatar() "+memberId);
-            //SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(appContext);
-            //String lastETag = preferences.getString(SettingsActivity.SETTINGS_KEY_ETAG, null);
-            //long lastModified = preferences.getLong(SettingsActivity.SETTINGS_KEY_LAST_MODIFIED, 0);
-            LoginStatus status = LoginStatus.OK;
-            try {
-                DBMember m = dbHelper.getMember(memberId);
-                String targetUserName = m.getNcUserId();
-                if (targetUserName != null && !targetUserName.equals("")) {
-                    ServerResponse.AvatarResponse response = client.getAvatar(customCertManager, targetUserName);
-                    String avatar = response.getAvatarString();
-
-                    if (avatar != null && !avatar.isEmpty()) {
-                        //Log.d(getClass().getSimpleName(), "avatar from server is "+avatar);
-                        dbHelper.updateMember(
-                                memberId, null, null, null,
-                                null, null, null, null, null,
-                                null, avatar
-                        );
-                        Log.d(getClass().getSimpleName(), "RECEIVED AVATAR for member "+memberId+" length "+avatar.length());
-                    }
-                }
-            } catch (ServerResponse.NotModifiedException e) {
-                Log.d(getClass().getSimpleName(), "No changes, nothing to do.");
-                status = LoginStatus.OK;
-            } catch (IOException e) {
-                Log.e(getClass().getSimpleName(), "Exception", e);
-                exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
-            } catch (JSONException e) {
-                Log.e(getClass().getSimpleName(), "Exception", e);
-                exceptions.add(e);
-                status = LoginStatus.JSON_FAILED;
-            } catch (TokenMismatchException e) {
-                Log.e(getClass().getSimpleName(), "Catch MISMATCHTOKEN", e);
-                status = LoginStatus.SSO_TOKEN_MISMATCH;
-            } catch (NextcloudHttpRequestFailedException e) {
-                Log.e(getClass().getSimpleName(), "Catch REQ FAILED", e);
-                status = LoginStatus.REQ_FAILED;
-                errorMessages.add(getErrorMessageFromException(e));
-            }
-
-            return status;
-        }
-
-        @Override
-        protected void onPostExecute(LoginStatus status) {
-            super.onPostExecute(status);
-            if (status == LoginStatus.OK) {
-                Intent intent = new Intent(BROADCAST_AVATAR_UPDATED);
-                intent.putExtra(BROADCAST_AVATAR_UPDATED_MEMBER, memberId);
-                appContext.sendBroadcast(intent);
-            }
-        }
+        // IHateMoney has no account avatars.
     }
 
     public boolean canConnectToRemoteProject(DBProject project) {
-        NextcloudClient nextcloudClient = createNextcloudClient();
-        String version = null;
-        if (nextcloudClient != null) {
-            try {
-                ServerResponse.CapabilitiesResponse response = nextcloudClient.getCapabilities(customCertManager, project);
-                version = response.getCospendVersion();
-            } catch (Exception e) {
-                Log.i(getClass().getSimpleName(), "Failed to get cospend version when syncing: " + e);
-            }
+        updateNetworkStatus();
+        if (!isSyncPossible()) {
+            return false;
         }
-        VersatileProjectSyncClient client = createVersatileProjectSyncClient(version);
+        VersatileProjectSyncClient client = createVersatileProjectSyncClient();
         try {
             ServerResponse.ProjectResponse projResponse = client.getProject(customCertManager, project, 0, null);
-            String name = projResponse.getName();
-            String email = projResponse.getEmail();
-        } catch (JSONException e) {
-            Log.e(TAG, "Invalid JSON: " + e);
-            return false;
+            projResponse.getName();
+            projResponse.getEmail();
         } catch (Exception e) {
             Log.e(TAG, "Failed to get project info: " + e);
             return false;
@@ -2050,7 +1241,7 @@ public class MoneyBusterServerSyncHelper {
         return true;
     }
 
-    // update member avatar with Nextcloud user one
+    // get remote project info
     public boolean getRemoteProjectInfo(DBProject project, ICallback callback) {
         if (isSyncPossible()) {
             GetRemoteProjectInfoTask getRemoteProjectInfoTask = new GetRemoteProjectInfoTask(project, callback);
@@ -2064,13 +1255,12 @@ public class MoneyBusterServerSyncHelper {
      * task to ask server to create public share with name restriction on device
      * or just get the share token if it already exists
      */
-    private class GetRemoteProjectInfoTask extends AsyncTask<Void, Void, LoginStatus> {
+    private class GetRemoteProjectInfoTask extends AsyncTask<Void, Void, Boolean> {
         private VersatileProjectSyncClient client;
         private final DBProject project;
         private final ICallback callback;
         private final List<Throwable> exceptions = new ArrayList<>();
         private final List<String> errorMessages = new ArrayList<>();
-        private boolean usePrivateApi = false;
 
         public GetRemoteProjectInfoTask(DBProject project, ICallback callback) {
             this.project = project;
@@ -2083,68 +1273,38 @@ public class MoneyBusterServerSyncHelper {
         }
 
         @Override
-        protected LoginStatus doInBackground(Void... voids) {
-            String version = null;
-            if (project.getType().equals(ProjectType.COSPEND)) {
-                NextcloudClient nextcloudClient = createNextcloudClient();
-                if (nextcloudClient != null) {
-                    try {
-                        ServerResponse.CapabilitiesResponse response = nextcloudClient.getCapabilities(customCertManager, project);
-                        version = response.getCospendVersion();
-                    } catch (Exception e) {
-                        Log.i(getClass().getSimpleName(), "Failed to get cospend version when syncing: " + e);
-                    }
-                }
-            }
-            client = createVersatileProjectSyncClient(version);
+        protected Boolean doInBackground(Void... voids) {
+            client = createVersatileProjectSyncClient();
             if (BillsListViewActivity.DEBUG) {
                 Log.i(getClass().getSimpleName(), "STARTING create remote project");
             }
-            LoginStatus status = LoginStatus.OK;
             try {
                 ServerResponse.ProjectResponse projResponse = client.getProject(customCertManager, project, 0, null);
                 String name = projResponse.getName();
                 String email = projResponse.getEmail();
                 Log.e(TAG, "Project info: " + name + " and " + email);
-            } catch (NextcloudHttpRequestFailedException e) {
-                if (BillsListViewActivity.DEBUG) {
-                    Log.e(getClass().getSimpleName(), "Exception1", e);
-                }
-                //exceptions.add(e);
-                status = LoginStatus.REQ_FAILED;
-                errorMessages.add(getErrorMessageFromException(e));
-            } catch (JSONException e) {
-                Log.e(TAG, "Invalid JSON: " + e);
-                exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
             } catch (IOException e) {
                 if (BillsListViewActivity.DEBUG) {
                     Log.e(getClass().getSimpleName(), "Exception2", e);
                 }
                 exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
-            } catch (TokenMismatchException e) {
-                if (BillsListViewActivity.DEBUG) {
-                    Log.e(getClass().getSimpleName(), "Exception3", e);
-                }
-                exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
+                return false;
             } catch (Exception e) {
                 Log.e(TAG, "Failed to get project info: " + e);
                 exceptions.add(e);
-                status = LoginStatus.CONNECTION_FAILED;
+                return false;
             }
             if (BillsListViewActivity.DEBUG) {
                 Log.i(getClass().getSimpleName(), "FINISHED create remote project");
             }
-            return status;
+            return true;
         }
 
         @Override
-        protected void onPostExecute(LoginStatus status) {
+        protected void onPostExecute(Boolean status) {
             super.onPostExecute(status);
             String errorString = "";
-            if (status != LoginStatus.OK) {
+            if (!status) {
                 for (String errorMessage : errorMessages) {
                     errorString += errorMessage + "\n";
                 }

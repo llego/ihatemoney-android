@@ -26,7 +26,6 @@
   <string name="save_or_discard_bill_dialog_discard">抛弃</string>
   <string name="currency_manager">货币管理器</string>
   <string name="add_currency_title">添加货币</string>
-  <string name="currency_management_unavailable">货币管理仅适用于Cospend项目</string>
   <string name="setting_comment">评论</string>
   <string name="duplicate_bill">重复的帐单</string>
   <string name="currency_dialog_title">将当前金额从另一种货币转换为 %s</string>
@@ -74,15 +73,12 @@
   <string name="category_sport">运动</string>
   <string name="project_type_local">本地项目</string>
   <string name="project_type_ihatemoney">IHateMoney 项目</string>
-  <string name="project_type_nextcloud_cospend">Nextcloud Cospend 项目</string>
   <string name="new_project_what_todo">你想要做什么?</string>
   <string name="new_project_where">在哪里？</string>
   <string name="where_local">仅我的手机 (本地)</string>
   <string name="where_ihm">IHateMoney 服务器</string>
-  <string name="where_cospend">Cospend Nextcloud app</string>
   <string name="where_local_short">本地</string>
   <string name="where_ihm_short">IHateMoney</string>
-  <string name="where_cospend_short">账单</string>
   <string name="new_project_scan">扫描一个 MoneyBuster 二维码</string>
   <string name="todo_join">加入一个现有项目</string>
   <string name="todo_join_label">加入</string>
@@ -90,8 +86,6 @@
   <string name="todo_create">创建一个项目</string>
   <string name="setting_ihm_project_url_long">托管项目的 IHateMoney 实例地址</string>
   <string name="setting_ihm_project_url">IHateMoney 地址</string>
-  <string name="setting_cospend_project_url_long">托管 Cospend 项目的 Nextcloud 实例地址</string>
-  <string name="setting_cospend_project_url">Nextcloud Cospend 地址</string>
   <string name="setting_project_name">项目标题 (远程)</string>
   <string name="setting_project_name_long">显示在用户界面</string>
   <string name="setting_password_long">您用来连接项目的密码</string>
@@ -99,7 +93,6 @@
   <string name="setting_new_project_password">密码</string>
   <string name="setting_new_project_name">项目标题</string>
   <string name="setting_new_project_email">邮箱</string>
-  <string name="warning_auth_project_creation">警告：使用 Nextcloud 帐户创建一个成本项目与成本为 v0.3.4 或更高的成本兼容。</string>
   <string name="auth_project_creation_title">已认证的项目创建</string>
   <string name="project_edition_no_change">没有修改任何内容</string>
   <string name="setting_new_password_long">更改远程项目密码 (通知其他项目用户)</string>
@@ -164,7 +157,6 @@
   <string name="drawer_last_sync_text">上次同步： %1$02d:%2$02d</string>
   <string name="scan_qrcode_tooltip">扫描Cospend/IHateMoney QRCode</string>
   <string name="scan_qrcode">Scan QR code</string>
-  <string name="new_project_from_nextcloud_tooltip">Choose from Nextcloud account</string>
   <string name="import_tooltip">从 CSV 文件导入</string>
   <string name="import_error_owers">CSV格式不正确，在第 %1$d 行</string>
   <string name="import_error_date">CSV格式不正确，第 %1$d 行日期不正确</string>
@@ -200,7 +192,6 @@
   <string name="settings_sync_category">同步</string>
   <string name="settings_other_category">其它</string>
   <string name="settings_about">关于 MoneyBuster</string>
-  <string name="settings_server_settings">Nextcloud 帐户</string>
   <string name="settings_url">服务器地址</string>
   <string name="settings_url_warn_http">警告：“http” 不安全。请使用 “https”。</string>
   <string name="settings_username">用户名</string>
@@ -212,8 +203,6 @@
   <string name="settings_night_mode_title">主题</string>
   <string name="settings_offline_mode_title">离线模式</string>
   <string name="settings_offline_mode_summary">不要自动同步。只有当用户请求时才同步。</string>
-  <string name="settings_show_nextcloud_settings_summary">如果您不使用Nextcloud和Cospend，只是想创建/加入IHateMoney和本地项目，请禁用它。</string>
-  <string name="settings_show_nextcloud_settings_title">显示Nextcloud 设置</string>
   <string name="settings_color_title">应用主颜色</string>
   <string name="settings_color_summary">动作栏、地图按钮等等的颜色</string>
   <string name="settings_colorpicker_title">选择颜色</string>
@@ -224,8 +213,6 @@
   <string name="settings_cert_reset">重置（非）受信证书</string>
   <string name="settings_cert_reset_summary">重置对所有自定义证书的信任</string>
   <string name="settings_cert_reset_toast">已清除所有自定义证书</string>
-  <string name="settings_use_server_color_title">使用服务器颜色</string>
-  <string name="settings_use_server_color_subtitle">在同步时获取服务器颜色设置并将其用作主应用程序颜色</string>
   <string name="settings_periodical_sync_summary">定期同步所有项目</string>
   <string name="settings_periodical_sync_title">后台同步</string>
   <string name="settings_sync_interval_long">后台同步触发频率(分钟)</string>
@@ -283,8 +270,6 @@
   <string name="drawer_no_account">点击这里连接到下Nextcloud账户</string>
   <string name="add_bill_impossible_no_member">添加账单需要至少一个有效成员</string>
   <string name="edit_project_local_impossible">不可用于本地项目</string>
-  <string name="choose_account_project_dialog_title">从您的 Nextcloud 帐户中选择一个项目</string>
-  <string name="choose_account_project_dialog_impossible">您的 Nextcloud 帐户中没有 Cospend 项目</string>
   <string name="sync_notification_message">同步于 %1$s (每 %2$d 分钟)</string>
   <string name="error_invalid_sync_interval">同步间隔必须介于 15 到 1440 (24小时)</string>
   <string name="project_activity_notification">项目 %1$s</string>
@@ -357,12 +342,7 @@
   <string name="pref_key_reset_trust">resetTrust</string>
   <string name="pref_key_night_mode">nightMode</string>
   <string name="pref_key_color">appColor</string>
-  <string name="pref_key_server_color">serverColor</string>
-  <string name="pref_key_avatar">ncAvatar</string>
-  <string name="pref_key_use_server_color">useServerColor</string>
   <string name="pref_key_offline_mode">offlineMode</string>
-  <string name="pref_key_show_nextcloud_settings">showNextcloudSettings</string>
-  <string name="pref_key_nextcloud_account_settings">nextcloudAccountSettings</string>
   <string name="pref_key_autostart">autostart</string>
   <string name="pref_key_periodical_sync">periodicalSync</string>
   <string name="pref_key_sync_interval">syncInterval</string>
@@ -378,7 +358,6 @@
   <string name="avatar">头像</string>
   <string name="fallback_weblogin_text">恢复到旧登录方法</string>
   <string name="fallback_weblogin_back">返回</string>
-  <string name="use_sso_toggle">使用 Nextcloud 实例的帐户</string>
   <plurals name="ab_selected">
     <item quantity="other">已选择 %d 个</item>
   </plurals>

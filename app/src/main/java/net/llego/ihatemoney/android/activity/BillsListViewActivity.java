@@ -64,10 +64,6 @@ import com.google.android.material.card.MaterialCardView;
 import com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textview.MaterialTextView;
-import com.nextcloud.android.sso.exceptions.NextcloudFilesAppAccountNotFoundException;
-import com.nextcloud.android.sso.exceptions.NoCurrentAccountSelectedException;
-import com.nextcloud.android.sso.helper.SingleAccountHelper;
-import com.nextcloud.android.sso.model.SingleSignOnAccount;
 
 import net.llego.ihatemoney.R;
 import net.llego.ihatemoney.android.dialogs.MemberDialogs;
@@ -93,7 +89,6 @@ import net.llego.ihatemoney.service.SyncWorker;
 import net.llego.ihatemoney.theme.ThemeUtils;
 import net.llego.ihatemoney.theme.ThemedActivity;
 import net.llego.ihatemoney.theme.ThemedMaterialAlertDialogBuilder;
-import net.llego.ihatemoney.util.CospendClientUtil;
 import net.llego.ihatemoney.util.ICallback;
 import net.llego.ihatemoney.util.MoneyBuster;
 import net.llego.ihatemoney.util.IRefreshBillsListCallback;
@@ -153,17 +148,14 @@ public class BillsListViewActivity
 
     Toolbar toolbar;
     DrawerLayout drawerLayout;
-    TextView configuredAccount;
     SwipeRefreshLayout swipeRefreshLayout;
     ExtendedFloatingActionButton fabAddBill;
     RecyclerView listBillItems;
     RecyclerView listDrawerProjects;
     RecyclerView listDrawerMembers;
-    ImageView avatarView;
     LinearLayout lastSyncLayout;
     TextView lastSyncText;
     AppCompatImageButton menuButton;
-    AppCompatImageView accountButton;
     MaterialCardView homeToolbar;
     AppBarLayout appBar;
     private EmptyStateController emptyState;
@@ -221,17 +213,14 @@ public class BillsListViewActivity
 
         toolbar = binding.mainContentView.billsListActivityActionBar;
         drawerLayout = binding.getRoot();
-        configuredAccount = binding.configuredAccount;
         swipeRefreshLayout = binding.mainContentView.swipeRefreshLayout;
         fabAddBill = binding.mainContentView.fabAddBill;
         listBillItems = binding.mainContentView.listBillItems;
         listDrawerProjects = binding.listDrawerProjects;
         listDrawerMembers = binding.listDrawerProjectMembers;
-        avatarView = binding.drawerNcLogo;
         lastSyncLayout = binding.drawerLastSyncLayout;
         lastSyncText = binding.lastSyncText;
         menuButton = binding.mainContentView.menuButton;
-        accountButton = binding.mainContentView.launchAccountSwitcher;
         searchView = binding.mainContentView.searchView;
         searchText = binding.mainContentView.searchText;
         homeToolbar = binding.mainContentView.homeToolbar;
@@ -272,8 +261,8 @@ public class BillsListViewActivity
 
         updateUsernameInDrawer();
 
-        // show help if no project and no account configured
-        if (db.getProjects().isEmpty() && !MoneyBusterServerSyncHelper.isNextcloudAccountConfigured(this)) {
+        // show help if no project
+        if (db.getProjects().isEmpty()) {
             emptyState.showNoProjects();
         }
 
@@ -285,8 +274,6 @@ public class BillsListViewActivity
             setSelectedProject(dbProjects.get(0).getId());
             Log.v(TAG, "set selection 0");
         }
-
-        displayWelcomeDialog();
 
         checkAndRequestPermissions();
 
@@ -345,45 +332,6 @@ public class BillsListViewActivity
         }
     }
 
-    private void displayWelcomeDialog() {
-        // WELCOME/NEWS dialog
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        //preferences.edit().putLong("last_welcome_dialog_displayed_at_version", -1).apply();
-        long lastV = preferences.getLong("last_welcome_dialog_displayed_at_version", -1);
-        String dialogContent = null;
-        if (lastV == -1) {
-            dialogContent = getString(R.string.first_welcome_dialog_content);
-            // save last version for which welcome dialog was shown
-            preferences.edit().putLong("last_welcome_dialog_displayed_at_version", 0).apply();
-        }
-
-        if (dialogContent != null) {
-            // show the dialog
-            String dialogTitle = getString(R.string.welcome_dialog_title, getVersionName(this));
-
-            AlertDialog.Builder builder= new ThemedMaterialAlertDialogBuilder(this);
-            builder.setTitle(dialogTitle);
-            builder.setMessage(dialogContent);
-            // Set up the buttons
-            builder.setPositiveButton(getString(R.string.simple_ok), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    displayWelcomeDialog();
-                }
-            });
-            builder.setNeutralButton(getString(R.string.changelog), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Intent i = new Intent(Intent.ACTION_VIEW);
-                    i.setData(Uri.parse(getString(R.string.changelog_url)));
-                    startActivity(i);
-                }
-            });
-
-            builder.show();
-        }
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -411,7 +359,6 @@ public class BillsListViewActivity
 
         registerBroadcastReceiver();
 
-        displayWelcomeDialog();
         activityVisible = true;
     }
 
@@ -443,24 +390,11 @@ public class BillsListViewActivity
     private void setupToolBar() {
         setSupportActionBar(toolbar);
 
-        // hide nextcloud related stuff if needed
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-        boolean showNextcloudSettings = preferences.getBoolean(getString(R.string.pref_key_show_nextcloud_settings), false);
-        if (!showNextcloudSettings) {
-            binding.configuredAccountLayout.setVisibility(GONE);
-            binding.mainContentView.launchAccountSwitcher.setVisibility(GONE);
-        }
+        // Nextcloud account UI is no longer available; hide it.
+        binding.configuredAccountLayout.setVisibility(GONE);
+        binding.mainContentView.launchAccountSwitcher.setVisibility(GONE);
 
         menuButton.setOnClickListener((v) -> drawerLayout.openDrawer(GravityCompat.START));
-
-        final BillsListViewActivity that = this;
-        accountButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                Intent settingsIntent = new Intent(that, AccountActivity.class);
-                serverSettingsLauncher.launch(settingsIntent);
-            }
-        });
 
         ///////// SEARCH
         homeToolbar.setOnClickListener((v) -> {
@@ -552,7 +486,7 @@ public class BillsListViewActivity
                 } else {
                     swipeRefreshLayout.setRefreshing(false);
 
-                    Toast.makeText(getApplicationContext(), getString(R.string.error_sync, getString(CospendClientUtil.LoginStatus.NO_NETWORK.str)), Toast.LENGTH_LONG).show();
+                    Toast.makeText(getApplicationContext(), getString(R.string.error_no_network), Toast.LENGTH_LONG).show();
                 }
             }
         });
@@ -583,11 +517,6 @@ public class BillsListViewActivity
     }
 
     private void setupEmptyStateButtons() {
-        binding.mainContentView.buttonNoProjectsConfigureNextcloud.setOnClickListener((view) -> {
-            Intent newProjectIntent = new Intent(getApplicationContext(), AccountActivity.class);
-            serverSettingsLauncher.launch(newProjectIntent);
-        });
-
         binding.mainContentView.buttonNoProjectsConfigureManually.setOnClickListener((view) -> {
             Intent newProjectIntent = new Intent(getApplicationContext(), NewProjectActivity.class);
             newProjectIntent.putExtra(NewProjectFragment.PARAM_DEFAULT_IHM_URL, "https://ihatemoney.org");
@@ -603,11 +532,6 @@ public class BillsListViewActivity
     }
 
     private void setupDrawerButtons() {
-        configuredAccount.setOnClickListener((View view) -> {
-            Intent intent = new Intent(getApplicationContext(), AccountActivity.class);
-            serverSettingsLauncher.launch(intent);
-        });
-
         binding.buttonAddProject.setOnClickListener((View view) -> {
             addProject();
             drawerLayout.closeDrawers();
@@ -636,7 +560,6 @@ public class BillsListViewActivity
     public void applyTheme(int color) {
         final var utils = ThemeUtils.of(color, this);
         utils.material.colorMaterialButtonPrimaryFilled(binding.mainContentView.fabAddBill);
-        utils.material.colorMaterialButtonPrimaryFilled(binding.mainContentView.buttonNoProjectsConfigureNextcloud);
         utils.material.colorMaterialButtonPrimaryFilled(binding.mainContentView.buttonNoProjectsConfigureManually);
         utils.material.colorMaterialButtonPrimaryFilled(binding.mainContentView.buttonNoMembersAddMember);
     }
@@ -707,37 +630,22 @@ public class BillsListViewActivity
     /* --- End project options --- */
 
     private void addProject() {
-        String defaultNcUrl = "https://mynextcloud.org";
-        if (MoneyBusterServerSyncHelper.isNextcloudAccountConfigured(this)) {
-            defaultNcUrl = MoneyBusterServerSyncHelper.getNextcloudAccountServerUrl(this);
-        }
         String defaultIhmUrl = "https://ihatemoney.org";
         Intent newProjectIntent = new Intent(getApplicationContext(), NewProjectActivity.class);
         List<DBProject> projects = db.getProjects();
 
-        String url;
-        // look for a default NC url in existing projects
+        // look for a default IHM url in existing IHateMoney projects
         for (DBProject project : projects) {
-            url = project.getServerUrl();
-            if (url != null && !url.equals("")) {
-                if (url.contains("/index.php/apps/cospend")) {
-                    defaultNcUrl = url.replace("/index.php/apps/cospend", "");
-                    break;
-                }
+            if (project.getType() == null || !ProjectType.IHATEMONEY.equals(project.getType())) {
+                continue;
             }
-        }
-        // look for a default IHM url in existing projects
-        for (DBProject project : projects) {
-            url = project.getServerUrl();
+            String url = project.getServerUrl();
             if (url != null && !url.equals("")) {
-                if (!url.contains("/index.php/apps/cospend")) {
-                    defaultIhmUrl = url;
-                    break;
-                }
+                defaultIhmUrl = url;
+                break;
             }
         }
 
-        newProjectIntent.putExtra(NewProjectFragment.PARAM_DEFAULT_NC_URL, defaultNcUrl);
         newProjectIntent.putExtra(NewProjectFragment.PARAM_DEFAULT_IHM_URL, defaultIhmUrl);
         addProjectLauncher.launch(newProjectIntent);
     }
@@ -1175,9 +1083,7 @@ public class BillsListViewActivity
                                     /*adapter.removeAll();
                                     synchronize();*/
                                 } else {
-                                    if (MoneyBusterServerSyncHelper.isNextcloudAccountConfigured(getApplicationContext())) {
-                                        Toast.makeText(getApplicationContext(), getString(R.string.error_sync, getString(CospendClientUtil.LoginStatus.NO_NETWORK.str)), Toast.LENGTH_LONG).show();
-                                    }
+                                    Toast.makeText(getApplicationContext(), getString(R.string.error_no_network), Toast.LENGTH_LONG).show();
                                 }
                             }
                         }
@@ -1289,57 +1195,12 @@ public class BillsListViewActivity
     }
 
     private void updateUsernameInDrawer() {
-        if (!MoneyBusterServerSyncHelper.isNextcloudAccountConfigured(this)) {
-            configuredAccount.setText(getString(R.string.drawer_no_account));
-            updateAvatarInDrawer(false);
-        } else {
-            String accountServerUrl;
-            String accountUser;
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-            if (preferences.getBoolean(AccountActivity.SETTINGS_USE_SSO, false)) {
-                try {
-                    SingleSignOnAccount ssoAccount = SingleAccountHelper.getCurrentSingleSignOnAccount(this);
-                    accountServerUrl = ssoAccount.url.replaceAll("/+$", "").replaceAll("^https?://", "");
-                    accountUser = ssoAccount.userId;
-                } catch (NextcloudFilesAppAccountNotFoundException | NoCurrentAccountSelectedException e) {
-                    accountServerUrl = "error";
-                    accountUser = "error";
-                }
-            } else {
-                accountServerUrl = preferences.getString(AccountActivity.SETTINGS_URL, AccountActivity.DEFAULT_SETTINGS)
-                        .replaceAll("/+$", "")
-                        .replaceAll("^https?://", "");
-                accountUser = preferences.getString(AccountActivity.SETTINGS_USERNAME, AccountActivity.DEFAULT_SETTINGS);
-            }
-            configuredAccount.setText(accountUser + "@" + accountServerUrl);
-            updateAvatarInDrawer(true);
-        }
-
+        binding.configuredAccountLayout.setVisibility(GONE);
+        binding.mainContentView.launchAccountSwitcher.setVisibility(GONE);
     }
 
     private void updateAvatarInDrawer(boolean isAccountConfigured) {
-        if (isAccountConfigured) {
-            SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-            String avatarB64 = preferences.getString(getString(R.string.pref_key_avatar), "");
-            if (!"".equals(avatarB64)) {
-                try {
-                    byte[] decodedString = Base64.decode(avatarB64, Base64.DEFAULT);
-                    Bitmap decodedByte = BitmapFactory.decodeByteArray(decodedString, 0, decodedString.length);
-                    Bitmap rounded = ColorUtils.getRoundedBitmap(decodedByte, decodedByte.getWidth() / 2);
-                    avatarView.setImageBitmap(rounded);
-                    accountButton.setImageBitmap(rounded);
-                } catch (Exception e) {
-                    avatarView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_nextcloud_logo_white));
-                    accountButton.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_nextcloud_logo_white));
-                }
-            } else {
-                avatarView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_nextcloud_logo_white));
-                accountButton.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_nextcloud_logo_white));
-            }
-        } else {
-            avatarView.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_nextcloud_logo_white));
-            accountButton.setImageDrawable(ContextCompat.getDrawable(this, R.drawable.ic_account_circle_grey_24dp));
-        }
+        // No Nextcloud account is available; nothing to show.
     }
 
     private ActionMode startMultiSelectActionMode() {
@@ -1442,10 +1303,6 @@ public class BillsListViewActivity
             } else {
                 swipeRefreshLayout.setRefreshing(false);
             }
-            // then sync the nextcloud account projects
-            if (MoneyBusterServerSyncHelper.isNextcloudAccountConfigured(getApplicationContext())) {
-                db.getMoneyBusterServerSyncHelper().runAccountProjectsSync();
-            }
         }
     }
 
@@ -1480,7 +1337,7 @@ public class BillsListViewActivity
         filter.addAction(MoneyBusterServerSyncHelper.BROADCAST_NETWORK_UNAVAILABLE);
         filter.addAction(MoneyBusterServerSyncHelper.BROADCAST_AVATAR_UPDATED);
         filter.addAction(BROADCAST_ACCOUNT_PROJECTS_SYNC_FAILED);
-        filter.addAction(BROADCAST_ACCOUNT_PROJECTS_SYNCED);
+        filter.addAction(BROADCAST_ACCOUNT_PROJECTS_SYNC_FAILED);
         registerReceiver(mBroadcastReceiver, filter, Context.RECEIVER_EXPORTED);
     }
 
@@ -1548,49 +1405,10 @@ public class BillsListViewActivity
                     swipeRefreshLayout.setEnabled(false);
                     break;
                 case MoneyBusterServerSyncHelper.BROADCAST_AVATAR_UPDATED:
-                    Log.v("AAA", "BROAD AVATAR received");
                     long memberId = intent.getLongExtra(MoneyBusterServerSyncHelper.BROADCAST_AVATAR_UPDATED_MEMBER, 0);
-                    // this is the account avatar
-                    if (memberId == 0) {
-                        Log.v("AAA", "UPDATE avatar of NC account");
-                        updateAvatarInDrawer(true);
-                    } else {
-                        // update avatar for one specific member
-                        Log.v("AAA", "UPDATE avatar of project member "+memberId);
+                    // update the avatar of one specific member
+                    if (memberId != 0) {
                         refreshLists();
-                    }
-                    break;
-                case BROADCAST_ACCOUNT_PROJECTS_SYNCED:
-                    // show account projects sync success toast
-                    SyncSuccessToastBinding toastBinding = SyncSuccessToastBinding.inflate(getLayoutInflater());
-                    toastBinding.getRoot().setBackgroundColor(Color.TRANSPARENT);
-                    toastBinding.text.setText("");
-                    toastBinding.toastIcon.setImageResource(R.drawable.ic_nextcloud_logo_white);
-
-                    Toast toast2 = new Toast(getApplicationContext());
-                    toast2.setGravity(Gravity.TOP | Gravity.END, 55, 62);
-                    toast2.setDuration(Toast.LENGTH_SHORT);
-                    toast2.setView(toastBinding.getRoot());
-                    toast2.show();
-
-                    // select a project if there are some and none is selected
-                    SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
-                    long selectedProjectId = prefs.getLong("selected_project", 0);
-                    List<DBProject> dbProjects = db.getProjects();
-                    if (selectedProjectId == 0 && dbProjects.size() > 0) {
-                        setSelectedProject(dbProjects.get(0).getId());
-                        Log.v(TAG, "set selection 0");
-                        refreshLists();
-                        if (!db.getMoneyBusterServerSyncHelper().isSyncPossible()) {
-                            swipeRefreshLayout.setEnabled(false);
-                        } else {
-                            swipeRefreshLayout.setEnabled(true);
-                            db.getMoneyBusterServerSyncHelper().addCallbackPull(syncCallBack);
-                            boolean offlineMode2 = prefs.getBoolean(getString(R.string.pref_key_offline_mode), false);
-                            if (!offlineMode2) {
-                                synchronize();
-                            }
-                        }
                     }
                     break;
             }
