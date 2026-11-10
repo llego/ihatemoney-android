@@ -14,8 +14,8 @@ android {
         applicationId "net.llego.ihatemoney"
         minSdkVersion 26
         targetSdkVersion 36
-        versionCode 40
-        versionName "0.1.20"
+        versionCode 41
+        versionName "0.2.1"
         vectorDrawables.useSupportLibrary = true
         resValue "string", "applicationId", applicationId
     }
