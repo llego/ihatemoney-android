@@ -275,8 +275,6 @@ public class BillsListViewActivity
             Log.v(TAG, "set selection 0");
         }
 
-        displayWelcomeDialog();
-
         checkAndRequestPermissions();
 
         boolean backgroundSyncEnabled = preferences.getBoolean(getString(R.string.pref_key_periodical_sync), false);
@@ -334,45 +332,6 @@ public class BillsListViewActivity
         }
     }
 
-    private void displayWelcomeDialog() {
-        // WELCOME/NEWS dialog
-        SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(this);
-        //preferences.edit().putLong("last_welcome_dialog_displayed_at_version", -1).apply();
-        long lastV = preferences.getLong("last_welcome_dialog_displayed_at_version", -1);
-        String dialogContent = null;
-        if (lastV == -1) {
-            dialogContent = getString(R.string.first_welcome_dialog_content);
-            // save last version for which welcome dialog was shown
-            preferences.edit().putLong("last_welcome_dialog_displayed_at_version", 0).apply();
-        }
-
-        if (dialogContent != null) {
-            // show the dialog
-            String dialogTitle = getString(R.string.welcome_dialog_title, getVersionName(this));
-
-            AlertDialog.Builder builder= new ThemedMaterialAlertDialogBuilder(this);
-            builder.setTitle(dialogTitle);
-            builder.setMessage(dialogContent);
-            // Set up the buttons
-            builder.setPositiveButton(getString(R.string.simple_ok), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    displayWelcomeDialog();
-                }
-            });
-            builder.setNeutralButton(getString(R.string.changelog), new DialogInterface.OnClickListener() {
-                @Override
-                public void onClick(DialogInterface dialog, int which) {
-                    Intent i = new Intent(Intent.ACTION_VIEW);
-                    i.setData(Uri.parse(getString(R.string.changelog_url)));
-                    startActivity(i);
-                }
-            });
-
-            builder.show();
-        }
-    }
-
     @Override
     protected void onResume() {
         super.onResume();
@@ -400,7 +359,6 @@ public class BillsListViewActivity
 
         registerBroadcastReceiver();
 
-        displayWelcomeDialog();
         activityVisible = true;
     }
 

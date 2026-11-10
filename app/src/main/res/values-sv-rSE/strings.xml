@@ -179,11 +179,6 @@
     <string name="remote_project_operation_no_network">En nätverksanslutning krävs för att ändra projekt på servern</string>
     <string name="member_edit_weight_error">Medlemmens andel är ogiltig</string>
     <string name="bill_info_dialog_title">Om %s</string>
-    <string name="welcome_dialog_title">Välkommen till IHateMoney for Android v%s</string>
-    <string name="welcome_dialog_content_v12">Nyheter\n\n* Skanning av QR-koder\n* Förbättrat gränssnitt\n* Import av projekt från Nextcloud-konto\n* Förbättrad statistik\n* Och mycket mer!</string>
-    <string name="welcome_dialog_content_v13">Nyheter\n\n* Filter i statistiken\n* Skapa avräkningsutgifter automatiskt\n* Sök efter deltagarnas namn\n* Och mycket mer!</string>
-    <string name="first_welcome_dialog_content">Skapa eller anslut till ett projekt i IHateMoney eller Nextcloud Cospend, eller anslut ditt Nextcloud-konto. Lägg sedan till medlemmar och utgifter.\n\nAndra funktioner:\n* Räkna av projektet för att se vem som ska betala vem\n* Visa projektstatistik\n* Dela en QR-kod som andra kan skanna för att ansluta till projektet\n\nPå Android 8.0 och senare kan du hålla inne en åtgärdsknapp för att visa hjälp.</string>
-    <string name="changelog">Ändringslogg</string>
     <string name="permanent_notification_title">Löpande synkronisering</string>
     <string name="insufficient_access_level">Du saknar behörighet för den här åtgärden</string>
     <string name="settings_appearance_category">Utseende</string>
@@ -275,9 +270,8 @@
     <string name="activity_dialog_title">Aktivitet i projektet %1$s</string>
     <string name="manage_accounts">Hantera konton</string>
     <string name="no_projects_title">Inga projekt</string>
-    <string name="no_projects_text">Du har inga projekt ännu. Lägg till ett projekt manuellt eller anslut ditt Nextcloud-konto om du använder Cospend.</string>
-    <string name="configure_account_choice">Anslut Nextcloud-konto</string>
-    <string name="add_project_choice">Lägg till projekt manuellt (IHateMoney, Cospend eller lokalt)</string>
+    <string name="no_projects_text">Du har inga projekt ännu. Lägg till eller anslut till ett IHateMoney-projekt, eller skapa ett lokalt projekt.</string>
+    <string name="add_project_choice">Lägg till projekt</string>
     <string name="no_members_title">Inga medlemmar</string>
     <string name="no_members_text">Projektet har inga medlemmar. Lägg till minst en medlem för att skapa utgifter, gärna två eller fler.</string>
     <string name="no_bills_title">Inga utgifter</string>

@@ -143,14 +143,6 @@
                     android:text="@string/ihm_no_projects" />
 
                 <com.google.android.material.button.MaterialButton
-                    android:id="@+id/button_no_projects_configure_nextcloud"
-                    android:visibility="gone"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/spacer_1x"
-                    android:text="@string/configure_account_choice" />
-
-                <com.google.android.material.button.MaterialButton
                     android:id="@+id/button_no_projects_configure_manually"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
