@@ -28,8 +28,9 @@ nix-shell --run './gradlew :app:assembleDevDebug :app:testDevDebugUnitTest --no-
 
 ## Workflow
 
+- Do **not** create pull requests spontaneously. Only open a branch/PR when the user explicitly asks for one (e.g. "push", "open a PR", "set up a branch").
 - Use a **branch → pull request → merge** flow on `origin`, not direct pushes to `master`.
-- **Qodo PR Agent** is enabled on this repo to review pull requests. Keep PRs focused; use `push` to create a branch and open a PR for review before merging.
+- A self-hosted **PR Agent** (GitHub Action) reviews pull requests. Keep PRs focused; use `push` to create a branch and open a PR for review before merging.
 
 ## Code conventions learned
 
