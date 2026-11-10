@@ -4,13 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum ProjectType {
-    LOCAL("l"), COSPEND("c"), IHATEMONEY("i");
+    LOCAL("l"), IHATEMONEY("i");
 
     private static Map<String, ProjectType> reverseMap = new HashMap<>();
 
     static {
         reverseMap.put(LOCAL.id, LOCAL);
-        reverseMap.put(COSPEND.id, COSPEND);
         reverseMap.put(IHATEMONEY.id, IHATEMONEY);
     }
 

@@ -68,27 +68,6 @@ public class NewProjectActivity extends AppCompatActivity implements NewProjectF
                 showToast(getString(R.string.import_no_data), Toast.LENGTH_LONG);
                 shouldCloseActivity = true;
             } else if (
-                    (data.getScheme().equals("cospend") || data.getScheme().equals("cospend+http"))
-                    && data.getPathSegments().size() >= 1
-            ) {
-                if (data.getPath().endsWith("/")) {
-                    defaultProjectPassword = "";
-                    defaultProjectId = data.getLastPathSegment();
-                } else {
-                    defaultProjectPassword = data.getLastPathSegment();
-                    defaultProjectId = data.getPathSegments().get(data.getPathSegments().size() - 2);
-                }
-                String protocol = "https";
-                if (data.getScheme().equals("cospend+http")) {
-                    protocol = "http";
-                }
-                defaultNcUrl = protocol + "://" + data.getHost();
-                if (data.getPort() != -1) {
-                    defaultNcUrl += ":" + data.getPort();
-                }
-                defaultNcUrl += data.getPath().replaceAll("/"+defaultProjectId+"/" + defaultProjectPassword + "$", "");
-                defaultProjectType = ProjectType.COSPEND;
-            } else if (
                     (data.getScheme().equals("ihatemoney") || data.getScheme().equals("ihatemoney+http"))
                     && data.getPathSegments().size() >= 1
             ) {

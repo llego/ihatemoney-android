@@ -329,8 +329,6 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
                 url = project.getServerUrl();
                 if (url == null) {
                     project.setType(ProjectType.LOCAL);
-                } else if (url.contains("index.php/apps/cospend")) {
-                    project.setType(ProjectType.COSPEND);
                 } else {
                     project.setType(ProjectType.IHATEMONEY);
                 }
