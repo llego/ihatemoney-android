@@ -40,14 +40,14 @@ android {
     productFlavors {
         normal {
             dimension "default"
-            resValue "string", "app_name", "MoneyBuster2"
+            resValue "string", "app_name", "IHateMoney for Android"
         }
         dev {
             dimension "default"
             applicationId 'net.eneiluj.moneybuster.dev'
             resValue "string", "applicationId", applicationId
             // applicationIdSuffix '.dev'
-            resValue "string", "app_name", "MoneyBuster2 Dev"
+            resValue "string", "app_name", "IHateMoney for Android Dev"
         }
     }
     buildFeatures {

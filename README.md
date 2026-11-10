@@ -1,10 +1,10 @@
-# MoneyBuster2
+# IHateMoney for Android
 
 A simple, Material-style Android expense app focused on fast entry and IHateMoney syncing.
 
-MoneyBuster2 is a **fork** of the excellent [MoneyBuster](https://gitlab.com/eneiluj/moneybuster) app. Huge thanks to its maintainers and contributors for all their work. MoneyBuster was originally a fork of [PhoneTrack-Android](https://gitlab.com/eneiluj/phonetrack-android/), itself a fork of [Nextcloud Notes for Android](https://github.com/stefan-niedermann/nextcloud-notes). Many thanks to their developers!
+IHateMoney for Android is a **fork** of the excellent [MoneyBuster](https://gitlab.com/eneiluj/moneybuster) app. Huge thanks to its maintainers and contributors for all their work. MoneyBuster was originally a fork of [PhoneTrack-Android](https://gitlab.com/eneiluj/phonetrack-android/), itself a fork of [Nextcloud Notes for Android](https://github.com/stefan-niedermann/nextcloud-notes). Many thanks to their developers!
 
-MoneyBuster2 is **completely vibe-coded**: every change is produced by AI, and is unapologetically a love letter to fast, nice expense entry rather than a carefully engineered project.
+IHateMoney for Android is **completely vibe-coded**: every change is produced by AI, and is unapologetically a love letter to fast, nice expense entry rather than a carefully engineered project.
 
 ## What changed
 

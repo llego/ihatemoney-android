@@ -5,7 +5,7 @@
     <string name="action_create_bill">Ny utgift</string>
     <string name="action_settings">Appinställningar</string>
     <string name="action_projects">Projekt</string>
-    <string name="action_scan_qrcode">Skanna QR-kod från Cospend/MoneyBuster</string>
+    <string name="action_scan_qrcode">Skanna QR-kod från Cospend/IHateMoney for Android</string>
     <string name="action_add_project">Lägg till projekt</string>
     <string name="action_save_bill">Spara utgift</string>
     <string name="action_edit_project">Redigera projekt</string>
@@ -83,7 +83,7 @@
     <string name="where_local_short">Lokalt</string>
     <string name="where_ihm_short">IHateMoney</string>
     <string name="where_cospend_short">Cospend</string>
-    <string name="new_project_scan">Skanna en MoneyBuster-QR-kod</string>
+    <string name="new_project_scan">Skanna en IHateMoney for Android-QR-kod</string>
     <string name="todo_join">Anslut till ett befintligt projekt</string>
     <string name="todo_join_label">Anslut</string>
     <string name="todo_create_label">Skapa</string>
@@ -108,7 +108,7 @@
     <string name="setting_create_project_summary">Fungerar bara om servern tillåter att projekt skapas utan inloggning</string>
     <string name="setting_email_long">E-postadress för kontakt</string>
     <string name="setting_email">E-post (på servern)</string>
-    <string name="project_added_success">Projektet har lagts till i MoneyBuster2</string>
+    <string name="project_added_success">Projektet har lagts till i IHateMoney for Android</string>
     <string name="action_search">Sök</string>
     <string name="action_search_in_project">Sök i %s</string>
     <string name="simple_error">Fel</string>
@@ -116,7 +116,7 @@
     <string name="simple_loading">Läser in</string>
     <string name="simple_remove">Ta bort</string>
     <string name="sync_error_dialog_title">Projektet kunde inte synkroniseras</string>
-    <string name="sync_error_dialog_full_content">Synkroniseringen av projektet %1$s misslyckades. Felmeddelande:\n\n%2$s\n\nProjektet kanske inte längre finns på servern. I så fall kan du ta bort det från MoneyBuster2.</string>
+    <string name="sync_error_dialog_full_content">Synkroniseringen av projektet %1$s misslyckades. Felmeddelande:\n\n%2$s\n\nProjektet kanske inte längre finns på servern. I så fall kan du ta bort det från IHateMoney for Android.</string>
     <string name="error_maintenance_mode">Nextcloud-servern är troligen i underhållsläge</string>
     <string name="error_400">400 Felaktig begäran</string>
     <string name="error_401">401 Autentisering krävs</string>
@@ -132,7 +132,7 @@
     <string name="simple_add">Lägg till</string>
     <string name="simple_edit_bill">Redigera utgift</string>
     <string name="simple_new_bill">Ny utgift</string>
-    <string name="simple_add_project">Lägg till projekt i MoneyBuster2</string>
+    <string name="simple_add_project">Lägg till projekt i IHateMoney for Android</string>
     <string name="simple_edit_project">Redigera projekt</string>
     <string name="simple_about">Om</string>
     <string name="share_impossible">Det här projektet kan inte delas</string>
@@ -140,7 +140,7 @@
     <string name="simple_create_bills">Skapa utgifter</string>
     <string name="settle_bill_what">Avräkningsutgift</string>
     <string name="simple_stats_share">Dela statistik</string>
-    <string name="simple_share_share">Dela MoneyBuster-länk</string>
+    <string name="simple_share_share">Dela IHateMoney for Android-länk</string>
     <string name="action_bill_deleted">Utgiften har tagits bort</string>
     <string name="action_bill_restored">Utgiften har återställts</string>
     <string name="action_undo">Ångra</string>
@@ -187,7 +187,7 @@
     <string name="remote_project_operation_no_network">En nätverksanslutning krävs för att ändra projekt på servern</string>
     <string name="member_edit_weight_error">Medlemmens andel är ogiltig</string>
     <string name="bill_info_dialog_title">Om %s</string>
-    <string name="welcome_dialog_title">Välkommen till MoneyBuster2 v%s</string>
+    <string name="welcome_dialog_title">Välkommen till IHateMoney for Android v%s</string>
     <string name="welcome_dialog_content_v12">Nyheter\n\n* Skanning av QR-koder\n* Förbättrat gränssnitt\n* Import av projekt från Nextcloud-konto\n* Förbättrad statistik\n* Och mycket mer!</string>
     <string name="welcome_dialog_content_v13">Nyheter\n\n* Filter i statistiken\n* Skapa avräkningsutgifter automatiskt\n* Sök efter deltagarnas namn\n* Och mycket mer!</string>
     <string name="first_welcome_dialog_content">Skapa eller anslut till ett projekt i IHateMoney eller Nextcloud Cospend, eller anslut ditt Nextcloud-konto. Lägg sedan till medlemmar och utgifter.\n\nAndra funktioner:\n* Räkna av projektet för att se vem som ska betala vem\n* Visa projektstatistik\n* Dela en QR-kod som andra kan skanna för att ansluta till projektet\n\nPå Android 8.0 och senare kan du hålla inne en åtgärdsknapp för att visa hjälp.</string>
@@ -198,7 +198,7 @@
     <string name="settings_network_category">Nätverk</string>
     <string name="settings_sync_category">Synkronisering</string>
     <string name="settings_other_category">Övrigt</string>
-    <string name="settings_about">Om MoneyBuster2</string>
+    <string name="settings_about">Om IHateMoney for Android</string>
     <string name="settings_server_settings">Nextcloud-konto</string>
     <string name="settings_url">Serveradress</string>
     <string name="settings_url_warn_http">VARNING: \"http\" är osäkert. Använd \"https\".</string>
@@ -258,20 +258,20 @@
     <string name="project_create_success_message">Projektet %1$s har skapats</string>
     <string name="project_add_success_title">Projektet har lagts till</string>
     <string name="project_create_success_title">Projektet har skapats</string>
-    <string name="import_bad_url">Ogiltig MoneyBuster-länk. Importen kunde inte genomföras.</string>
+    <string name="import_bad_url">Ogiltig IHateMoney for Android-länk. Importen kunde inte genomföras.</string>
     <string name="import_no_data">Något gick fel när projektet lades till</string>
-    <string name="fab_scan_qrcode_import">Importera MoneyBuster-QR-kod</string>
+    <string name="fab_scan_qrcode_import">Importera IHateMoney for Android-QR-kod</string>
     <string name="statistic_dialog_title">Projektstatistik</string>
     <string name="settle_dialog_title">Räkna av projektet</string>
     <string name="settle_dialog_balanced">Projektets utgifter är redan balanserade. Det finns inget att räkna av!</string>
     <string name="share_dialog_title">Dela projektet</string>
-    <string name="share_project_dialog_message">Skanna QR-koden med MoneyBuster eller en skannerapp på en Android-enhet där MoneyBuster är installerat. Du kan också dela MoneyBuster-länken ovan.</string>
+    <string name="share_project_dialog_message">Skanna QR-koden med IHateMoney for Android eller en skannerapp på en Android-enhet där IHateMoney for Android är installerat. Du kan också dela IHateMoney for Android-länken ovan.</string>
     <string name="share_project_public_url_dialog_message">Dela webblänken så att andra kan öppna projektet i en webbläsare.</string>
     <string name="share_project_public_url_title">Webblänk</string>
-    <string name="share_project_public_qrcode_title">MoneyBuster-länk</string>
-    <string name="qrcode_link_open_attempt_warning">Dela länken med någon som använder MoneyBuster.</string>
-    <string name="share_share_intent_title">MoneyBuster-länk till %1$s</string>
-    <string name="share_share_chooser_title">Dela MoneyBuster-länk till %1$s</string>
+    <string name="share_project_public_qrcode_title">IHateMoney for Android-länk</string>
+    <string name="qrcode_link_open_attempt_warning">Dela länken med någon som använder IHateMoney for Android.</string>
+    <string name="share_share_intent_title">IHateMoney for Android-länk till %1$s</string>
+    <string name="share_share_chooser_title">Dela IHateMoney for Android-länk till %1$s</string>
     <string name="share_settle_intro">Så här räknar ni av projektet %1$s:</string>
     <string name="share_settle_sentence">%1$s är skyldig %2$s %3$.2f</string>
     <string name="share_settle_title">Räkna av projektet %1$s</string>
@@ -297,8 +297,8 @@
     <string name="no_members_text">Projektet har inga medlemmar. Lägg till minst en medlem för att skapa utgifter, gärna två eller fler.</string>
     <string name="no_bills_title">Inga utgifter</string>
     <string name="no_bills_text">Projektet har inga utgifter ännu. Tryck på knappen nedan för att lägga till den första.</string>
-    <string name="certificate_notification_connection_security">MoneyBuster2 – Anslutningssäkerhet</string>
-    <string name="trust_certificate_unknown_certificate_found">MoneyBuster2 har upptäckt ett okänt certifikat. Vill du lita på det?</string>
+    <string name="certificate_notification_connection_security">IHateMoney for Android – Anslutningssäkerhet</string>
+    <string name="trust_certificate_unknown_certificate_found">IHateMoney for Android har upptäckt ett okänt certifikat. Vill du lita på det?</string>
     <string name="error_project_connect_check">Det gick inte att ansluta till projektet på servern:\n\n%1$s</string>
     <string name="error_sync">Projektet kunde inte synkroniseras: %1$s</string>
     <string name="error_invalid_login">Inloggningen misslyckades: %1$s</string>
@@ -326,14 +326,14 @@
     <string name="about_maintainer_title">Ansvarig</string>
     <string name="about_developers_title">Utvecklare</string>
     <string name="about_translators_title">Översättare</string>
-    <string name="about_translators_crowdin">MoneyBuster-gemenskapen på &lt;a href="%1$s"&gt;Crowdin&lt;/a&gt;</string>
+    <string name="about_translators_crowdin">IHateMoney for Android-gemenskapen på &lt;a href="%1$s"&gt;Crowdin&lt;/a&gt;</string>
     <string name="about_testers_title">Testare</string>
     <string name="about_source_title">Källkod</string>
     <string name="about_source">Projektet finns på Gitlab: &lt;a href="%1$s"&gt;%1$s&lt;/a&gt;</string>
     <string name="about_issues_title">Felrapporter</string>
     <string name="about_issues">Rapportera fel, förbättringsförslag och önskemål i ärendehanteraren på Gitlab: &lt;a href="%1$s"&gt;%1$s&lt;/a&gt;</string>
     <string name="about_translate_title">Översätt</string>
-    <string name="about_translate">Hjälp MoneyBuster-teamet att översätta appen på Crowdin: &lt;a href="%1$s"&gt;%1$s&lt;/a&gt;</string>
+    <string name="about_translate">Hjälp IHateMoney for Android-teamet att översätta appen på Crowdin: &lt;a href="%1$s"&gt;%1$s&lt;/a&gt;</string>
     <string name="about_app_license_title">Appens licens</string>
     <string name="about_app_license">Appen är licensierad under GNU GENERAL PUBLIC LICENSE v3+.</string>
     <string name="about_app_license_button">Visa licens</string>
