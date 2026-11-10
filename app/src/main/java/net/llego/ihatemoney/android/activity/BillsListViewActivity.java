@@ -341,6 +341,8 @@ public class BillsListViewActivity
         if (selectedProjectId != 0) {
             refreshLists();
         }
+        // keep the drawer's project list in sync with the database (e.g. after adding a project)
+        setupDrawerProjects();
         swipeRefreshLayout.setRefreshing(false);
 
         if (!db.getMoneyBusterServerSyncHelper().isSyncPossible()) {

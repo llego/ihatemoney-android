@@ -63,6 +63,7 @@ import net.llego.ihatemoney.util.BillAmountParser;
 import net.llego.ihatemoney.util.EdgeToEdge;
 import net.llego.ihatemoney.util.ICallback;
 import net.llego.ihatemoney.util.ColorUtils;
+import net.llego.ihatemoney.util.MoneyFormatter;
 
 import java.security.NoSuchAlgorithmException;
 import java.text.SimpleDateFormat;
@@ -464,7 +465,7 @@ public class EditBillFragment extends ThemedFragment {
         double initAmountRounded = Math.round(initAmount*100.0)/100.0;
         double newAmount = initAmount * currency.getExchangeRate();
         //newAmount = Math.round(newAmount*100.0)/100.0;
-        editAmount.setText(String.valueOf(newAmount));
+        editAmount.setText(MoneyFormatter.createEditFormat(Locale.getDefault()).format(newAmount));
         String suffix = " ("+initAmountRounded+" "+currency.getName()+")";
         cleanExistingSuffix();
         String what = getWhat();
@@ -1032,7 +1033,7 @@ public class EditBillFragment extends ThemedFragment {
         Log.v(TAG, "AFTER TIME INIT");
 
         editAmount.setText(bill.getId() == 0 && !billIsDuplicated && bill.getAmount() == 0
-                ? "" : String.valueOf(bill.getAmount()));
+                ? "" : MoneyFormatter.createEditFormat(Locale.getDefault()).format(bill.getAmount()));
 
         if (!ProjectType.IHATEMONEY.equals(projectType)) {
             List<String> repeatNameList = new ArrayList<>();
