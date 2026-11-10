@@ -24,7 +24,7 @@ nix-shell --run './gradlew :app:assembleDevDebug :app:testDevDebugUnitTest --no-
 - **IHateMoney syncing is the priority.** IHateMoney is tested against a self-hosted instance.
 - **Cospend / Nextcloud is NOT tested**; pending removal as its own effort. Preserve existing data and locales.
 - Keep it simple: fast expense entry, minimal navigation churn. English UI must use "expense" (never "bill"); Swedish translations maintained.
-- Package/applicationId (`net.eneiluj.moneybuster`) NOT renamed yet to keep updates working — do not change casually.
+- Package/applicationId is `net.llego.ihatemoney` (renamed from the upstream `net.eneiluj.moneybuster`). Installing it now counts as a fresh app, not an update of an older build.
 
 ## Workflow
 

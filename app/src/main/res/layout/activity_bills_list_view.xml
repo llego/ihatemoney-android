@@ -103,7 +103,7 @@
                 android:id="@+id/swipe_refresh_layout"
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                tools:context="net.eneiluj.moneybuster.android.activity.BillsListViewActivity"
+                tools:context="net.llego.ihatemoney.android.activity.BillsListViewActivity"
                 tools:ignore="MergeRootFrame"
                 tools:visibility="visible">
 

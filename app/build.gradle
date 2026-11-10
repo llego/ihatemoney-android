@@ -11,7 +11,7 @@ android {
     compileSdkVersion 36
     // buildToolsVersion '31.0.0'
     defaultConfig {
-        applicationId "net.eneiluj.moneybuster"
+        applicationId "net.llego.ihatemoney"
         minSdkVersion 26
         targetSdkVersion 36
         versionCode 40
@@ -44,7 +44,7 @@ android {
         }
         dev {
             dimension "default"
-            applicationId 'net.eneiluj.moneybuster.dev'
+            applicationId 'net.llego.ihatemoney.dev'
             resValue "string", "applicationId", applicationId
             // applicationIdSuffix '.dev'
             resValue "string", "app_name", "IHateMoney for Android Dev"
@@ -58,7 +58,7 @@ android {
         abortOnError = false
         disable 'MissingTranslation'
     }
-    namespace = 'net.eneiluj.moneybuster'
+    namespace = 'net.llego.ihatemoney'
     androidResources {
         generateLocaleConfig = true
     }
