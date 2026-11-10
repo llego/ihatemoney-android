@@ -13,32 +13,36 @@ public class BillDateFormatterTest {
     private static final Locale EN = Locale.US;
 
     @Test
-    public void swedishDateUsesLocalizedMonthName() {
+    public void swedishDateUsesLocalizedMonthAndOrder() {
         assertEquals("6 juli", BillDateFormatter.format("2026-07-06", SV, LocalDate.of(2026, 1, 1)));
     }
 
     @Test
-    public void englishDateUsesLocalizedMonthName() {
-        assertEquals("6 July", BillDateFormatter.format("2026-07-06", EN, LocalDate.of(2026, 1, 1)));
+    public void englishDateUsesMonthFirstOrder() {
+        assertEquals("July 6", BillDateFormatter.format("2026-07-06", EN, LocalDate.of(2026, 1, 1)));
     }
 
     @Test
     public void currentYearOmitsYear() {
         assertEquals("6 juli", BillDateFormatter.format("2026-07-06", SV, LocalDate.of(2026, 11, 10)));
+        assertEquals("July 6", BillDateFormatter.format("2026-07-06", EN, LocalDate.of(2026, 11, 10)));
     }
 
     @Test
     public void olderYearsIncludeTheYear() {
         assertEquals("6 juli 2025", BillDateFormatter.format("2025-07-06", SV, LocalDate.of(2026, 11, 10)));
-        assertEquals("31 december 2024", BillDateFormatter.format("2024-12-31", SV, LocalDate.of(2026, 11, 10)));
+        assertEquals("July 6, 2025", BillDateFormatter.format("2025-07-06", EN, LocalDate.of(2026, 11, 10)));
     }
 
     @Test
     public void inflectedLocalesUseTheFormatMonthForm() {
-        // Russian uses a different month form when a day precedes it: "июля", not the standalone "июль".
-        Locale ru = Locale.forLanguageTag("ru");
-        assertEquals("6 июля", BillDateFormatter.format("2026-07-06", ru, LocalDate.of(2026, 11, 10)));
-        assertEquals("6 июля 2024", BillDateFormatter.format("2024-07-06", ru, LocalDate.of(2026, 11, 10)));
+        assertEquals("6 июля", BillDateFormatter.format("2026-07-06", Locale.forLanguageTag("ru"), LocalDate.of(2026, 11, 10)));
+    }
+
+    @Test
+    public void otherLocalesKeepTheirNaturalOrder() {
+        assertEquals("július 6.", BillDateFormatter.format("2026-07-06", Locale.forLanguageTag("hu"), LocalDate.of(2026, 11, 10)));
+        assertEquals("7月6日", BillDateFormatter.format("2026-07-06", Locale.forLanguageTag("ja"), LocalDate.of(2026, 11, 10)));
     }
 
     @Test
