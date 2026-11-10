@@ -218,16 +218,22 @@ public class PreferencesFragment extends PreferenceFragmentCompat implements Pre
         ListPreference languagePref = (ListPreference) findPreference(getString(R.string.pref_key_language));
         if (languagePref == null) return;
 
-        // Build the list of languages the app actually offers (all translation dirs).
-        String[] availableTags = getResources().getAssets().getLocales();
+        // Only the languages the app is actually translated into (mirrors app/src/main/res/values-*).
+        final String[] supported = {
+                "af", "ar", "bg", "bn", "ca", "cs", "da", "de", "el", "en",
+                "eo", "es", "fa", "fi", "fr", "hi", "hu", "id", "it", "he",
+                "ja", "ko", "lt", "mk", "mn", "ne", "nl", "no", "oc", "pl",
+                "pt", "qu", "ro", "ru", "sk", "sl", "sq", "sr", "sv", "ta",
+                "te", "th", "tr", "uk", "ur", "vi", "zh-CN", "zh-TW"
+        };
+
         List<String> values = new ArrayList<>();
         List<String> labels = new ArrayList<>();
         values.add("");
         labels.add(getString(R.string.language_system));
-        for (String tag : availableTags) {
-            if (tag == null || tag.isEmpty()) continue;
+        for (String tag : supported) {
             Locale locale = Locale.forLanguageTag(tag);
-            values.add(locale.toLanguageTag());
+            values.add(tag);
             labels.add(locale.getDisplayName(locale));
         }
         languagePref.setEntries(labels.toArray(new String[0]));
