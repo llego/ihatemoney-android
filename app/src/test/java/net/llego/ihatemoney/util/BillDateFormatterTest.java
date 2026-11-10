@@ -34,6 +34,14 @@ public class BillDateFormatterTest {
     }
 
     @Test
+    public void inflectedLocalesUseTheFormatMonthForm() {
+        // Russian uses a different month form when a day precedes it: "июля", not the standalone "июль".
+        Locale ru = Locale.forLanguageTag("ru");
+        assertEquals("6 июля", BillDateFormatter.format("2026-07-06", ru, LocalDate.of(2026, 11, 10)));
+        assertEquals("6 июля 2024", BillDateFormatter.format("2024-07-06", ru, LocalDate.of(2026, 11, 10)));
+    }
+
+    @Test
     public void publicHelperUsesSystemLocaleAndToday() {
         assertFalse(BillDateFormatter.format("2026-07-06").isEmpty());
     }
