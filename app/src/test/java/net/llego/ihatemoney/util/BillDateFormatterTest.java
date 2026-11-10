@@ -2,26 +2,40 @@ package net.llego.ihatemoney.util;
 
 import org.junit.Test;
 
+import java.time.LocalDate;
+import java.util.Locale;
+
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class BillDateFormatterTest {
+    private static final Locale SV = Locale.forLanguageTag("sv-SE");
+    private static final Locale EN = Locale.US;
+
     @Test
-    public void formatsRequestedDayAndFullMonthWithoutYear() {
-        assertEquals("6th July", BillDateFormatter.format("2026-07-06"));
-        assertEquals("1st January", BillDateFormatter.format("2025-01-01"));
-        assertEquals("31st December", BillDateFormatter.format("2024-12-31"));
+    public void swedishDateUsesLocalizedMonthName() {
+        assertEquals("6 juli", BillDateFormatter.format("2026-07-06", SV, LocalDate.of(2026, 1, 1)));
     }
 
     @Test
-    public void usesCorrectOrdinalForEveryDayOfTheMonth() {
-        for (int day = 1; day <= 31; day++) {
-            String suffix = "th";
-            if (day == 1 || day == 21 || day == 31) suffix = "st";
-            if (day == 2 || day == 22) suffix = "nd";
-            if (day == 3 || day == 23) suffix = "rd";
-            String isoDate = "2026-07-" + (day < 10 ? "0" : "") + day;
-            assertEquals(day + suffix + " July", BillDateFormatter.format(isoDate));
-        }
+    public void englishDateUsesLocalizedMonthName() {
+        assertEquals("6 July", BillDateFormatter.format("2026-07-06", EN, LocalDate.of(2026, 1, 1)));
+    }
+
+    @Test
+    public void currentYearOmitsYear() {
+        assertEquals("6 juli", BillDateFormatter.format("2026-07-06", SV, LocalDate.of(2026, 11, 10)));
+    }
+
+    @Test
+    public void olderYearsIncludeTheYear() {
+        assertEquals("6 juli 2025", BillDateFormatter.format("2025-07-06", SV, LocalDate.of(2026, 11, 10)));
+        assertEquals("31 december 2024", BillDateFormatter.format("2024-12-31", SV, LocalDate.of(2026, 11, 10)));
+    }
+
+    @Test
+    public void publicHelperUsesSystemLocaleAndToday() {
+        assertFalse(BillDateFormatter.format("2026-07-06").isEmpty());
     }
 
     @Test

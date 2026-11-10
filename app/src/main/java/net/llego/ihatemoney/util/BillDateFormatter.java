@@ -1,29 +1,28 @@
 package net.llego.ihatemoney.util;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
+import java.time.format.TextStyle;
 import java.util.Locale;
 
-/** Compact English dates for expense rows, for example "6th July". */
+/** Localized compact dates for expense rows, e.g. "6 juli" (year shown when not the current one). */
 public final class BillDateFormatter {
-    private static final DateTimeFormatter MONTH = DateTimeFormatter.ofPattern("MMMM", Locale.ENGLISH);
-
     private BillDateFormatter() {}
 
     public static String format(String isoDate) {
+        return format(isoDate, Locale.getDefault(), LocalDate.now());
+    }
+
+    static String format(String isoDate, Locale locale, LocalDate today) {
+        if (isoDate == null) return null;
         try {
             LocalDate date = LocalDate.parse(isoDate);
-            int day = date.getDayOfMonth();
-            String suffix = "th";
-            if (day < 11 || day > 13) {
-                switch (day % 10) {
-                    case 1: suffix = "st"; break;
-                    case 2: suffix = "nd"; break;
-                    case 3: suffix = "rd"; break;
-                }
+            String day = String.valueOf(date.getDayOfMonth());
+            String month = date.getMonth().getDisplayName(TextStyle.FULL, locale);
+            if (date.getYear() == today.getYear()) {
+                return day + " " + month;
             }
-            return day + suffix + " " + date.format(MONTH);
+            return day + " " + month + " " + date.getYear();
         } catch (DateTimeParseException e) {
             return isoDate;
         }
