@@ -2,7 +2,6 @@ package net.llego.ihatemoney.util;
 
 import android.util.Log;
 
-import net.llego.ihatemoney.model.DBAccountProject;
 import net.llego.ihatemoney.model.DBBill;
 import net.llego.ihatemoney.model.DBBillOwer;
 import net.llego.ihatemoney.model.DBCategory;
@@ -262,10 +261,6 @@ public class ServerResponse {
             return getBillsFromJSONArray(new JSONArray(getContent()), projId, memberRemoteIdToId);
         }
 
-        public List<DBBill> getBillsCospend(long projId, Map<Long, Long> memberRemoteIdToId) throws JSONException {
-            return getBillsFromJSONObject(getResponseObjectData(), projId, memberRemoteIdToId);
-        }
-
         public List<Long> getAllBillIds() throws JSONException {
             return getAllBillIdsFromJSON(getResponseObjectData());
         }
@@ -285,16 +280,6 @@ public class ServerResponse {
         }
     }
 
-    public static class AccountProjectsResponse extends ServerResponse {
-        public AccountProjectsResponse(VersatileProjectSyncClient.ResponseData response, boolean isOcsResponse) {
-            super(response, isOcsResponse);
-        }
-
-        public List<DBAccountProject> getAccountProjects(String ncUrl) throws JSONException {
-            return getAccountProjectsFromJSONArray(getResponseArrayData(), ncUrl);
-        }
-    }
-
     public static class CapabilitiesResponse extends ServerResponse {
         public CapabilitiesResponse(VersatileProjectSyncClient.ResponseData response) {
             super(response, true);
@@ -302,10 +287,6 @@ public class ServerResponse {
 
         public String getColor() throws IOException, JSONException {
             return getColorFromJsonContent(new JSONObject(getContent()));
-        }
-
-        public String getCospendVersion() throws JSONException {
-            return getCospendVersionFromCapabilitiesContent(new JSONObject(getContent()));
         }
     }
 
@@ -673,36 +654,6 @@ public class ServerResponse {
         return billOwers;
     }
 
-    protected List<DBAccountProject> getAccountProjectsFromJSONArray(JSONArray jsonAPs, String ncUrl) throws JSONException {
-        List<DBAccountProject> accountProjects = new ArrayList<>();
-        for (int i = 0; i < jsonAPs.length(); i++) {
-            JSONObject jsonAP = jsonAPs.getJSONObject(i);
-            accountProjects.add(getAccountProjectFromJSON(jsonAP, ncUrl));
-        }
-
-        return accountProjects;
-    }
-
-    protected DBAccountProject getAccountProjectFromJSON(JSONObject json, String accountNcUrl) throws JSONException {
-        String remoteId = "";
-        String name = "";
-        String ncUrl = "";
-
-        if (!json.isNull("name")) {
-            name = json.getString("name");
-        }
-        if (!json.isNull("id")) {
-            remoteId = json.getString("id");
-        }
-        if (!json.isNull("ncurl")) {
-            ncUrl = json.getString("ncUrl");
-        }
-        if (ncUrl.isEmpty()) {
-            ncUrl = accountNcUrl;
-        }
-        return new DBAccountProject(0, remoteId, null, name, ncUrl);
-    }
-
     protected String getColorFromContent(String content) throws IOException {
         //Log.i(TAG, "CONCON" + content);
         String result = null;
@@ -739,21 +690,6 @@ public class ServerResponse {
             return color;
         } catch (JSONException e) {
             Log.e(TAG,"Failed to get the color from OCS capabilities response " + e);
-        }
-        return null;
-    }
-
-    protected String getCospendVersionFromCapabilitiesContent(JSONObject json) {
-        try {
-            JSONObject ocs = json.getJSONObject("ocs");
-            JSONObject data = ocs.getJSONObject("data");
-            JSONObject capabilities = data.getJSONObject("capabilities");
-            JSONObject cospend = capabilities.getJSONObject("cospend");
-            String version = cospend.getString("version");
-            Log.i(TAG,"I GOT THE Cospend version: "+version);
-            return version;
-        } catch (JSONException e) {
-            Log.i(TAG,"Failed to get the Cospend version"+e);
         }
         return null;
     }

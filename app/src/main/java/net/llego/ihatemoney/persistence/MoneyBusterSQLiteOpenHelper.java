@@ -17,7 +17,6 @@ import androidx.preference.PreferenceManager;
 
 import net.llego.ihatemoney.R;
 import net.llego.ihatemoney.android.activity.BillsListViewActivity;
-import net.llego.ihatemoney.model.DBAccountProject;
 import net.llego.ihatemoney.model.DBBill;
 import net.llego.ihatemoney.model.DBBillOwer;
 import net.llego.ihatemoney.model.DBCategory;
@@ -515,66 +514,6 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
 
     public Context getContext() {
         return context;
-    }
-
-    public long addAccountProject(DBAccountProject accountProject) {
-        SQLiteDatabase db = this.getWritableDatabase();
-        ContentValues values = new ContentValues();
-        values.put(key_remoteId, accountProject.getRemoteId());
-        values.put(key_password, accountProject.getPassword());
-        values.put(key_ncUrl, accountProject.getncUrl());
-        values.put(key_name, accountProject.getName());
-        return db.insert(table_account_projects, null, values);
-    }
-
-    public DBAccountProject getAccountProject(long id) {
-        List<DBAccountProject> accountProjects = getAccountProjectsCustom(key_id + " = ?", new String[]{String.valueOf(id)}, null);
-        return accountProjects.isEmpty() ? null : accountProjects.get(0);
-    }
-
-    @NonNull
-    public List<DBAccountProject> getAccountProjects() {
-        return getAccountProjectsCustom("", new String[]{}, default_order);
-    }
-
-    @NonNull
-    @WorkerThread
-    private List<DBAccountProject> getAccountProjectsCustom(@NonNull String selection, @NonNull String[] selectionArgs, @Nullable String orderBy) {
-        return getAccountProjectsCustom(selection, selectionArgs, orderBy, getReadableDatabase());
-    }
-
-    @NonNull
-    @WorkerThread
-    private List<DBAccountProject> getAccountProjectsCustom(@NonNull String selection, @NonNull String[] selectionArgs, @Nullable String orderBy, SQLiteDatabase db) {
-        if (selectionArgs.length > 2) {
-            Log.v("AccountProject", selection + "   ----   " + selectionArgs[0] + " " + selectionArgs[1] + " " + selectionArgs[2]);
-        }
-        Cursor cursor = db.query(table_account_projects, columnsAccountProjects, selection, selectionArgs, null, null, orderBy);
-        List<DBAccountProject> accountProjects = new ArrayList<>();
-        while (cursor.moveToNext()) {
-            accountProjects.add(getAccountProjectFromCursor(cursor));
-        }
-        cursor.close();
-        return accountProjects;
-    }
-
-    /**
-     * Creates a DBProject object from the current row of a Cursor.
-     *
-     * @param cursor database cursor
-     * @return DBProject
-     */
-    @SuppressLint("Range")
-    @NonNull
-    private DBAccountProject getAccountProjectFromCursor(@NonNull Cursor cursor) {
-        // key_id, key_remoteId, key_password,  key_name, key_ncUrl
-        return new DBAccountProject(
-            cursor.getLong(cursor.getColumnIndex(key_id)),
-            cursor.getString(cursor.getColumnIndex(key_remoteId)),
-            cursor.getString(cursor.getColumnIndex(key_password)),
-            cursor.getString(cursor.getColumnIndex(key_name)),
-            cursor.getString(cursor.getColumnIndex(key_ncUrl))
-        );
     }
 
     public void clearAccountProjects() {

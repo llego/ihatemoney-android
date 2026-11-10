@@ -630,34 +630,19 @@ public class BillsListViewActivity
     /* --- End project options --- */
 
     private void addProject() {
-        String defaultNcUrl = "https://mynextcloud.org";
         String defaultIhmUrl = "https://ihatemoney.org";
         Intent newProjectIntent = new Intent(getApplicationContext(), NewProjectActivity.class);
         List<DBProject> projects = db.getProjects();
 
-        String url;
-        // look for a default NC url in existing projects
-        for (DBProject project : projects) {
-            url = project.getServerUrl();
-            if (url != null && !url.equals("")) {
-                if (url.contains("/index.php/apps/cospend")) {
-                    defaultNcUrl = url.replace("/index.php/apps/cospend", "");
-                    break;
-                }
-            }
-        }
         // look for a default IHM url in existing projects
         for (DBProject project : projects) {
-            url = project.getServerUrl();
+            String url = project.getServerUrl();
             if (url != null && !url.equals("")) {
-                if (!url.contains("/index.php/apps/cospend")) {
-                    defaultIhmUrl = url;
-                    break;
-                }
+                defaultIhmUrl = url;
+                break;
             }
         }
 
-        newProjectIntent.putExtra(NewProjectFragment.PARAM_DEFAULT_NC_URL, defaultNcUrl);
         newProjectIntent.putExtra(NewProjectFragment.PARAM_DEFAULT_IHM_URL, defaultIhmUrl);
         addProjectLauncher.launch(newProjectIntent);
     }
