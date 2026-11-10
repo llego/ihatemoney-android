@@ -72,29 +72,9 @@ public class PreferencesFragment extends PreferenceFragmentCompat implements Pre
 
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity().getApplicationContext());
 
-        final CheckBoxPreference useServerColorPref = (CheckBoxPreference) findPreference(getString(R.string.pref_key_use_server_color));
         final Preference appColorPref = findPreference(getString(R.string.pref_key_color));
 
-        Boolean useServerColor = sp.getBoolean(getString(R.string.pref_key_use_server_color), false);
-        if (useServerColor) {
-            appColorPref.setVisible(false);
-        }
-
-        useServerColorPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Boolean useServerColor = (Boolean) newValue;
-                if (useServerColor) {
-                    appColorPref.setVisible(false);
-                } else {
-                    appColorPref.setVisible(true);
-                }
-                if (getActivity() != null) {
-                    getActivity().recreate();
-                }
-                return true;
-            }
-        });
+        appColorPref.setVisible(true);
 
         // night mode
         final Preference nightModePref = findPreference(getString(R.string.pref_key_night_mode));
@@ -202,30 +182,6 @@ public class PreferencesFragment extends PreferenceFragmentCompat implements Pre
             notifyUpdatedPref.setVisible(false);
             notifyDeletedPref.setVisible(false);
             autostartPref.setVisible(false);
-        }
-
-        final Preference nextcloudAccountPref = findPreference(getString(R.string.pref_key_nextcloud_account_settings));
-
-        final SwitchPreferenceCompat showNextcloudSettingsPref = (SwitchPreferenceCompat) findPreference(getString(R.string.pref_key_show_nextcloud_settings));
-        showNextcloudSettingsPref.setOnPreferenceChangeListener(new Preference.OnPreferenceChangeListener() {
-            @Override
-            public boolean onPreferenceChange(Preference preference, Object newValue) {
-                Boolean newShowNextcloudSettings = (Boolean) newValue;
-                nextcloudAccountPref.setVisible(newShowNextcloudSettings);
-                useServerColorPref.setVisible(newShowNextcloudSettings);
-                if (!newShowNextcloudSettings) {
-                    useServerColorPref.setChecked(false);
-                    appColorPref.setVisible(true);
-                }
-                return true;
-            }
-        });
-
-        nextcloudAccountPref.setVisible(showNextcloudSettingsPref.isChecked());
-        useServerColorPref.setVisible(showNextcloudSettingsPref.isChecked());
-        if (!showNextcloudSettingsPref.isChecked()) {
-            useServerColorPref.setChecked(false);
-            appColorPref.setVisible(true);
         }
     }
 

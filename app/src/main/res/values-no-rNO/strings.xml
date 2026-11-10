@@ -26,7 +26,6 @@
   <string name="save_or_discard_bill_dialog_discard">Forkast</string>
   <string name="currency_manager">Valutahåndterer</string>
   <string name="add_currency_title">Legg til valuta</string>
-  <string name="currency_management_unavailable">Valutastyring er bare tilgjengelig for Cospend prosjekter</string>
   <string name="setting_comment">Kommentar</string>
   <string name="duplicate_bill">Dupliser regningen</string>
   <string name="currency_dialog_title">Konverter nåværende beløp fra annen valuta til %s</string>
@@ -74,15 +73,12 @@
   <string name="category_sport">Sport</string>
   <string name="project_type_local">Lokalt prosjekt</string>
   <string name="project_type_ihatemoney">IHateMoney prosjekt</string>
-  <string name="project_type_nextcloud_cospend">NextCloud Cospend prosjekt</string>
   <string name="new_project_what_todo">Hva ønsker du å gjøre?</string>
   <string name="new_project_where">Hvor?</string>
   <string name="where_local">Bare mobilen min (lokal)</string>
   <string name="where_ihm">IHateMoney server</string>
-  <string name="where_cospend">Cospend Nextcloud app</string>
   <string name="where_local_short">Lokalt</string>
   <string name="where_ihm_short">IHateMoney</string>
-  <string name="where_cospend_short">Cospend</string>
   <string name="new_project_scan">Skann en MoneyBuster QRCode</string>
   <string name="todo_join">Delta i et eksisterende prosjekt</string>
   <string name="todo_join_label">Bli med</string>
@@ -90,8 +86,6 @@
   <string name="todo_create">Opprett et nytt prosjekt</string>
   <string name="setting_ihm_project_url_long">Address of IHateMoney instance hosting the project</string>
   <string name="setting_ihm_project_url">IHateMoney address</string>
-  <string name="setting_cospend_project_url_long">Adresse til Nextcloud forekomst som er vertskap for Cospend prosjektet</string>
-  <string name="setting_cospend_project_url">Nextcloud Cospend adresse</string>
   <string name="setting_project_name">Prosjekttittel (eksternt)</string>
   <string name="setting_project_name_long">Vises i brukergrensesnitt</string>
   <string name="setting_password_long">Passordet du bruker for å koble til prosjektet</string>
@@ -99,7 +93,6 @@
   <string name="setting_new_project_password">Passord</string>
   <string name="setting_new_project_name">Prosjekttittel</string>
   <string name="setting_new_project_email">E-post</string>
-  <string name="warning_auth_project_creation">Advarsel: Oppretting av et evangeliumprosjekt ved hjelp av Nextcloud konto fungerer med Cospend v0.3.4 og høyere.</string>
   <string name="auth_project_creation_title">Verifisert prosjektopprettelse</string>
   <string name="project_edition_no_change">Ingenting ble endret</string>
   <string name="setting_new_password_long">Endre passord for eksternt prosjekt (fortell andre prosjektbrukere)</string>
@@ -164,7 +157,6 @@
   <string name="drawer_last_sync_text">Siste synkronisering: %1$02d:%2$02d</string>
   <string name="scan_qrcode_tooltip">Skanne en Cospend/IHateMoney QRCode</string>
   <string name="scan_qrcode">Scan QR code</string>
-  <string name="new_project_from_nextcloud_tooltip">Choose from Nextcloud account</string>
   <string name="import_tooltip">Importer fra CSV-fil</string>
   <string name="import_error_owers">Feilformet CSV, ugyldige skyldnere på linje %1$d</string>
   <string name="import_error_date">Feilformet CSV, ugyldig dato på linje %1$d</string>
@@ -200,7 +192,6 @@
   <string name="settings_sync_category">Synkronisering</string>
   <string name="settings_other_category">Annet</string>
   <string name="settings_about">Om MoneyBuster</string>
-  <string name="settings_server_settings">Nextcloud konto</string>
   <string name="settings_url">Tjeneradresse</string>
   <string name="settings_url_warn_http">ADVARSEL: «http» er usikker. Bruk «https».</string>
   <string name="settings_username">Brukernavn</string>
@@ -212,8 +203,6 @@
   <string name="settings_night_mode_title">Tema</string>
   <string name="settings_offline_mode_title">Frakoblet modus</string>
   <string name="settings_offline_mode_summary">Ikke synkroniser automatisk. Bare synkronisering når brukeren spør.</string>
-  <string name="settings_show_nextcloud_settings_summary">Deaktiver denne hvis du ikke bruker Nextcloud og Cospend og bare vil opprette/bli med i IHateMoney og lokale prosjekter.</string>
-  <string name="settings_show_nextcloud_settings_title">Vis Nextcloud innstillinger</string>
   <string name="settings_color_title">App hovedfarge</string>
   <string name="settings_color_summary">Farge for handlingslinjer, kartknapper etc...</string>
   <string name="settings_colorpicker_title">Velg farge</string>
@@ -224,8 +213,6 @@
   <string name="settings_cert_reset">Tilbakestilling (ikke) betrodde sertifikater</string>
   <string name="settings_cert_reset_summary">Nullstiller tillit til alle tilpassede sertifikater</string>
   <string name="settings_cert_reset_toast">Alle egendefinerte sertifikater har blitt fjernet</string>
-  <string name="settings_use_server_color_title">Bruk serverfarge</string>
-  <string name="settings_use_server_color_subtitle">Få serverfarge når du synkroniserer og bruker den som hoved-app farge</string>
   <string name="settings_periodical_sync_summary">Synkroniser alle prosjekter med jevne mellomrom</string>
   <string name="settings_periodical_sync_title">Bakgunnssynkronisering</string>
   <string name="settings_sync_interval_long">Hvor ofte er bakgrunnssynkronisering utløst (minutter)</string>
@@ -283,8 +270,6 @@
   <string name="drawer_no_account">Klikk her for å koble til en Nextcloud konto</string>
   <string name="add_bill_impossible_no_member">Minst ett aktivert medlem kreves for å legge til en regning</string>
   <string name="edit_project_local_impossible">Umulig for lokale prosjekter</string>
-  <string name="choose_account_project_dialog_title">Velg et prosjekt fra Nextcloud kontoen</string>
-  <string name="choose_account_project_dialog_impossible">Det finnes ikke noe Cospend-prosjekt i din Nextcloud konto</string>
   <string name="sync_notification_message">Synkronisert på %1$s (hvert %2$d min)</string>
   <string name="error_invalid_sync_interval">Synkroniseringsintervall må være mellom 15 og 1440 (24 t)</string>
   <string name="project_activity_notification">Prosjekt %1$s</string>
@@ -357,12 +342,7 @@
   <string name="pref_key_reset_trust">resetTrust</string>
   <string name="pref_key_night_mode">nightMode</string>
   <string name="pref_key_color">appColor</string>
-  <string name="pref_key_server_color">serverColor</string>
-  <string name="pref_key_avatar">ncAvatar</string>
-  <string name="pref_key_use_server_color">useServerColor</string>
   <string name="pref_key_offline_mode">offlineMode</string>
-  <string name="pref_key_show_nextcloud_settings">showNextcloudSettings</string>
-  <string name="pref_key_nextcloud_account_settings">nextcloudAccountSettings</string>
   <string name="pref_key_autostart">autostart</string>
   <string name="pref_key_periodical_sync">periodicalSync</string>
   <string name="pref_key_sync_interval">syncInterval</string>
@@ -378,7 +358,6 @@
   <string name="avatar">Profilbilde</string>
   <string name="fallback_weblogin_text">Gå tilbake til gammel innloggingsmetode</string>
   <string name="fallback_weblogin_back">Tilbake</string>
-  <string name="use_sso_toggle">Bruk konto fra Nextcloud Filer</string>
   <plurals name="ab_selected">
     <item quantity="one">%d valgt</item>
     <item quantity="other">%d selected</item>

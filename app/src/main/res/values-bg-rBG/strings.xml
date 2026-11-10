@@ -26,7 +26,6 @@
   <string name="save_or_discard_bill_dialog_discard">Discard</string>
   <string name="currency_manager">Currency manager</string>
   <string name="add_currency_title">Add currency</string>
-  <string name="currency_management_unavailable">Currency management is only available for Cospend projects</string>
   <string name="setting_comment">Коментар</string>
   <string name="duplicate_bill">Дублирана сметка</string>
   <string name="currency_dialog_title">Преобразуване на текущата сума от друга валута в %s</string>
@@ -74,15 +73,12 @@
   <string name="category_sport">Спорт</string>
   <string name="project_type_local">Местен проект</string>
   <string name="project_type_ihatemoney">Проект IHateMoney</string>
-  <string name="project_type_nextcloud_cospend">Проект Cospend за Nextcloud</string>
   <string name="new_project_what_todo">Какво искате да правите?</string>
   <string name="new_project_where">Къде?</string>
   <string name="where_local">Само на телефона ми (локално)</string>
   <string name="where_ihm">Сървър IHateMoney</string>
-  <string name="where_cospend">Приложение Cospend за Nextcloud</string>
   <string name="where_local_short">Локално</string>
   <string name="where_ihm_short">IHateMoney</string>
-  <string name="where_cospend_short">Cospend</string>
   <string name="new_project_scan">Сканиране на QR кода за MoneyBuster</string>
   <string name="todo_join">Присъединете се към съществуващ проект</string>
   <string name="todo_join_label">Присъединяване</string>
@@ -90,8 +86,6 @@
   <string name="todo_create">Създаване на проект</string>
   <string name="setting_ihm_project_url_long">Адресът на сървъра IHateMoney, в който е разположен проектът</string>
   <string name="setting_ihm_project_url">Адресът на IHateMoney</string>
-  <string name="setting_cospend_project_url_long">Адресът на сървъра Nextcloud, на който се хоства проектът Cospend</string>
-  <string name="setting_cospend_project_url">Адрес на Nextcloud Cospend</string>
   <string name="setting_project_name">Наименование на проекта (дистанционен)</string>
   <string name="setting_project_name_long">Показано в потребителския интерфейс</string>
   <string name="setting_password_long">Парола, която използвате, за да се свържете с проекта</string>
@@ -99,7 +93,6 @@
   <string name="setting_new_project_password">Парола</string>
   <string name="setting_new_project_name">Заглавие на проекта</string>
   <string name="setting_new_project_email">Имейл</string>
-  <string name="warning_auth_project_creation">Предпреждение: създаването на проект в Cospend чрез акаунт в Nextcloud става с Cospend v0.3.4 или по-нова версия.</string>
   <string name="auth_project_creation_title">Удостоверено създаване на проект</string>
   <string name="project_edition_no_change">Нищо не бе променено</string>
   <string name="setting_new_password_long">Смяна на паролата за дистанционния проект (кажете на другите ползватели на проекта)</string>
@@ -164,7 +157,6 @@
   <string name="drawer_last_sync_text">Последно синхронизиране: %1$02d:%2$02d</string>
   <string name="scan_qrcode_tooltip">Сканиране на QR кода в Cospend/IHateMoney</string>
   <string name="scan_qrcode">Scan QR code</string>
-  <string name="new_project_from_nextcloud_tooltip">Choose from Nextcloud account</string>
   <string name="import_tooltip">Внасяне от CSV файл</string>
   <string name="import_error_owers">Неправилно създаден CSV, невалидни длъжници онлайн %1$d</string>
   <string name="import_error_date">Неправилно създаден CSV, невалидна дата онлайн %1$d</string>
@@ -200,7 +192,6 @@
   <string name="settings_sync_category">Синхронизиране</string>
   <string name="settings_other_category">Друго</string>
   <string name="settings_about">За MoneyBuster</string>
-  <string name="settings_server_settings">Акаунт в Nextcloud</string>
   <string name="settings_url">Адрес на сървъра</string>
   <string name="settings_url_warn_http">ВНИМАНИЕ: Протоколът \"http\" не е безопасен. Употребявайте \"https\".</string>
   <string name="settings_username">Потребителско име</string>
@@ -212,8 +203,6 @@
   <string name="settings_night_mode_title">Тема</string>
   <string name="settings_offline_mode_title">Режим извън линия</string>
   <string name="settings_offline_mode_summary">Без автоматични синхронизиране. Синхронизиране само, когато потребител поиска.</string>
-  <string name="settings_show_nextcloud_settings_summary">Disable this if you don\'t use Nextcloud and Cospend and just want to create/join IHateMoney and local projects.</string>
-  <string name="settings_show_nextcloud_settings_title">Show Nextcloud settings</string>
   <string name="settings_color_title">Основен цвят на приложението</string>
   <string name="settings_color_summary">Оцветяване за лентите за действията, бутоните за картата и др.</string>
   <string name="settings_colorpicker_title">Изберете цвят</string>
@@ -224,8 +213,6 @@
   <string name="settings_cert_reset">Нулиране на (не)доверените сертификати</string>
   <string name="settings_cert_reset_summary">Възстановява доверието на всички персонализирани сертификати</string>
   <string name="settings_cert_reset_toast">Изчистени са всички персонализирани сертификати</string>
-  <string name="settings_use_server_color_title">Използвай цвят за сървъра</string>
-  <string name="settings_use_server_color_subtitle">Получи цвят за сървъра при синхронизиране и го използвай като основен цвят за приложението</string>
   <string name="settings_periodical_sync_summary">Периодично синхронизирай всички проекти</string>
   <string name="settings_periodical_sync_title">Синхронизиране на заден план</string>
   <string name="settings_sync_interval_long">Колко често се задейства синхронизацията на заден план (минути)</string>
@@ -283,8 +270,6 @@
   <string name="drawer_no_account">Кликнете тук, за да се свържете с акаунт в Nextcloud</string>
   <string name="add_bill_impossible_no_member">Нужен е поне един активиран член, за да се добави сметка</string>
   <string name="edit_project_local_impossible">Невъзможно за местни проекти</string>
-  <string name="choose_account_project_dialog_title">Изберете проект от акаунта си в Nextcloud</string>
-  <string name="choose_account_project_dialog_impossible">В акаунта ви Nextcloud няма проект Cospend</string>
   <string name="sync_notification_message">Synced at %1$s (every %2$d min)</string>
   <string name="error_invalid_sync_interval">Интервалите на синхронизация трябва да бъдат между 15 и 1440 (24 ч.)</string>
   <string name="project_activity_notification">Проект %1$s</string>
@@ -357,12 +342,7 @@
   <string name="pref_key_reset_trust">resetTrust</string>
   <string name="pref_key_night_mode">nightMode</string>
   <string name="pref_key_color">appColor</string>
-  <string name="pref_key_server_color">serverColor</string>
-  <string name="pref_key_avatar">ncAvatar</string>
-  <string name="pref_key_use_server_color">useServerColor</string>
   <string name="pref_key_offline_mode">offlineMode</string>
-  <string name="pref_key_show_nextcloud_settings">showNextcloudSettings</string>
-  <string name="pref_key_nextcloud_account_settings">nextcloudAccountSettings</string>
   <string name="pref_key_autostart">autostart</string>
   <string name="pref_key_periodical_sync">periodicalSync</string>
   <string name="pref_key_sync_interval">syncInterval</string>
@@ -378,7 +358,6 @@
   <string name="avatar">Аватар</string>
   <string name="fallback_weblogin_text">Обратно към стария метод за влизане</string>
   <string name="fallback_weblogin_back">Назад</string>
-  <string name="use_sso_toggle">Употребявайте акаунта от приложението Nextcloud Files</string>
   <plurals name="ab_selected">
     <item quantity="one">%d избрано</item>
     <item quantity="other">%d избрани</item>

@@ -83,15 +83,6 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:text="@string/where_local_short" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/whereCospend"
-                    style="@style/Widget.Material3.Button.OutlinedButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:visibility="gone"
-                    android:text="@string/where_cospend_short" />
             </com.google.android.material.button.MaterialButtonToggleGroup>
 
             <LinearLayout
@@ -213,14 +204,6 @@
                 android:layout_height="wrap_content"
                 android:text="@string/scan_qrcode"
                 app:icon="@drawable/ic_qrcode" />
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/chooseFromNextcloudButton"
-                style="@style/Widget.Material3.Button.TextButton"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:visibility="gone"
-                android:text="@string/new_project_from_nextcloud_tooltip" />
 
             <com.google.android.material.button.MaterialButton
                 android:id="@+id/importButton"

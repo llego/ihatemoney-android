@@ -15,13 +15,6 @@
             android:summary=""
             android:title="@string/settings_night_mode_title" />
 
-        <net.llego.ihatemoney.theme.ThemedCheckBoxPreference
-            android:defaultValue="true"
-            android:icon="@drawable/ic_palette_grey_24dp"
-            android:key="@string/pref_key_use_server_color"
-            android:summary="@string/settings_use_server_color_subtitle"
-            android:title="@string/settings_use_server_color_title" />
-
         <com.kizitonwose.colorpreferencecompat.ColorPreferenceCompat
             android:defaultValue="@color/primary"
             android:icon="@drawable/ic_palette_grey_24dp"
@@ -44,22 +37,6 @@
             android:key="@string/pref_key_offline_mode"
             android:summary="@string/settings_offline_mode_summary"
             android:title="@string/settings_offline_mode_title" />
-
-        <net.llego.ihatemoney.theme.ThemedSwitchPreference
-            android:defaultValue="false"
-            android:icon="@drawable/ic_nextcloud_logo_grey"
-            android:key="@string/pref_key_show_nextcloud_settings"
-            android:summary="@string/settings_show_nextcloud_settings_summary"
-            android:title="@string/settings_show_nextcloud_settings_title" />
-
-        <Preference
-            android:icon="@drawable/ic_account_circle_grey_24dp"
-            android:key="@string/pref_key_nextcloud_account_settings"
-            android:title="@string/settings_server_settings">
-            <intent
-                android:targetClass="net.llego.ihatemoney.android.activity.AccountActivity"
-                android:targetPackage="@string/applicationId" />
-        </Preference>
 
         <PreferenceScreen
             android:icon="@drawable/ic_https_grey_24dp"

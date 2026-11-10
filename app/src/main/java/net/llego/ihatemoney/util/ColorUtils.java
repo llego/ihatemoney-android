@@ -30,16 +30,10 @@ public class ColorUtils {
 
     public static int primaryColor(Context context) {
         SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
-        boolean useServerColor = prefs.getBoolean(context.getString(R.string.pref_key_use_server_color), true);
-        int serverColor = prefs.getInt(context.getString(R.string.pref_key_server_color), -1);
-        if (useServerColor && serverColor != -1) {
-            return serverColor;
-        } else {
-            return prefs.getInt(
-                    context.getString(R.string.pref_key_color),
-                    ContextCompat.getColor(context, R.color.primary)
-            );
-        }
+        return prefs.getInt(
+                context.getString(R.string.pref_key_color),
+                ContextCompat.getColor(context, R.color.primary)
+        );
     }
 
     public static int primaryColorTransparent(Context context) {
