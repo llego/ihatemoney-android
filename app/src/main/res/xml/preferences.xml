@@ -15,6 +15,13 @@
             android:summary=""
             android:title="@string/settings_night_mode_title" />
 
+        <ListPreference
+            android:defaultValue=""
+            android:icon="@drawable/ic_language_grey_24dp"
+            android:key="@string/pref_key_language"
+            android:summary="@string/language_system"
+            android:title="@string/settings_language_title" />
+
         <com.kizitonwose.colorpreferencecompat.ColorPreferenceCompat
             android:defaultValue="@color/primary"
             android:icon="@drawable/ic_palette_grey_24dp"

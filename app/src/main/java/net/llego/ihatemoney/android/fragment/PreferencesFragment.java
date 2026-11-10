@@ -33,6 +33,7 @@ import net.llego.ihatemoney.util.SupportUtil;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 import at.bitfire.cert4android.CustomCertStore;
 
@@ -75,6 +76,8 @@ public class PreferencesFragment extends PreferenceFragmentCompat implements Pre
         final Preference appColorPref = findPreference(getString(R.string.pref_key_color));
 
         appColorPref.setVisible(true);
+
+        setupLanguagePreference();
 
         // night mode
         final Preference nightModePref = findPreference(getString(R.string.pref_key_night_mode));
@@ -208,6 +211,56 @@ public class PreferencesFragment extends PreferenceFragmentCompat implements Pre
             preference.setIcon(R.drawable.ic_sunny_grey_24dp);
         } else if (nightModeValue.equals(getString(R.string.pref_value_night_mode_yes))) {
             preference.setIcon(R.drawable.ic_brightness_2_grey_24dp);
+        }
+    }
+
+    private void setupLanguagePreference() {
+        ListPreference languagePref = (ListPreference) findPreference(getString(R.string.pref_key_language));
+        if (languagePref == null) return;
+
+        // Only the languages the app is actually translated into (mirrors app/src/main/res/values-*).
+        final String[] supported = {
+                "af", "ar", "bg", "bn", "ca", "cs", "da", "de", "el", "en",
+                "eo", "es", "fa", "fi", "fr", "hi", "hu", "id", "it", "he",
+                "ja", "ko", "lt", "mk", "mn", "ne", "nl", "no", "oc", "pl",
+                "pt", "qu", "ro", "ru", "sk", "sl", "sq", "sr", "sv", "ta",
+                "te", "th", "tr", "uk", "ur", "vi", "zh-CN", "zh-TW"
+        };
+
+        List<String> values = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+        values.add("");
+        labels.add(getString(R.string.language_system));
+        for (String tag : supported) {
+            Locale locale = Locale.forLanguageTag(tag);
+            values.add(tag);
+            labels.add(locale.getDisplayName(locale));
+        }
+        languagePref.setEntries(labels.toArray(new String[0]));
+        languagePref.setEntryValues(values.toArray(new String[0]));
+
+        String current = PreferenceManager.getDefaultSharedPreferences(requireContext())
+                .getString(getString(R.string.pref_key_language), "");
+        updateLanguageSummary(languagePref, current, values, labels);
+
+        languagePref.setOnPreferenceChangeListener((preference, newValue) -> {
+            String tag = String.valueOf(newValue);
+            updateLanguageSummary(languagePref, tag, values, labels);
+            // Apply the chosen language directly (the pref isn't persisted until we return true),
+            // then rebuild so the whole UI loads in the new language.
+            MoneyBuster.applyAppLocale(requireContext(), tag);
+            if (getActivity() != null) {
+                getActivity().recreate();
+            }
+            return true;
+        });
+    }
+
+    private void updateLanguageSummary(ListPreference languagePref, String tag,
+                                       List<String> values, List<String> labels) {
+        int index = values.indexOf(tag);
+        if (index >= 0) {
+            languagePref.setSummary(labels.get(index));
         }
     }
 

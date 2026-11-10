@@ -200,6 +200,8 @@
     <string name="settings_color_title">Appens huvudfärg</string>
     <string name="settings_color_summary">Färg för knappar och andra markerade element</string>
     <string name="settings_colorpicker_title">Välj färg</string>
+    <string name="settings_language_title">Språk</string>
+    <string name="language_system">Systemets standard</string>
     <string name="settings_cert_category">Hantera certifikat</string>
     <string name="settings_cert_trust_system">Lita på systemets certifikat</string>
     <string name="settings_cert_trust_system_on">Lita på systemets och användarens certifikatutfärdare (rekommenderas)</string>

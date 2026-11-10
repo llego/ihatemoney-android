@@ -6,9 +6,12 @@ import android.content.SharedPreferences;
 import android.content.res.Configuration;
 
 import androidx.appcompat.app.AppCompatDelegate;
+import androidx.core.os.LocaleListCompat;
 import androidx.preference.PreferenceManager;
 
 import net.llego.ihatemoney.R;
+
+import java.util.Locale;
 
 
 public class MoneyBuster extends Application {
@@ -16,9 +19,29 @@ public class MoneyBuster extends Application {
 
     @Override
     public void onCreate() {
+        applyAppLocale(this);
         setAppTheme(getAppTheme(getApplicationContext()));
         super.onCreate();
         CertificateTrust.initialize();
+    }
+
+    /** Applies the user-selected app language (or system default when unset). */
+    public static void applyAppLocale(Context context) {
+        applyAppLocale(context, getAppLocaleTag(context));
+    }
+
+    /** Applies a specific language tag, also setting the process default locale for formatting. */
+    public static void applyAppLocale(Context context, String languageTag) {
+        AppCompatDelegate.setApplicationLocales(LocaleListCompat.forLanguageTags(languageTag));
+        if (languageTag != null && !languageTag.isEmpty()) {
+            Locale.setDefault(Locale.forLanguageTag(languageTag));
+        }
+    }
+
+    /** Returns the stored app-language tag, or empty string for system default. */
+    public static String getAppLocaleTag(Context context) {
+        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+        return prefs.getString(context.getString(R.string.pref_key_language), "");
     }
 
     public static void setAppTheme(int mode) {
