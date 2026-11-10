@@ -13,4 +13,14 @@ public final class MoneyFormatter {
         format.setMaximumFractionDigits(2);
         return format;
     }
+
+    /**
+     * Like {@link #createDisplayFormat(Locale)} but without digit grouping, so the value
+     * round-trips through the amount input field (grouped "1 234,56" would not re-parse).
+     */
+    public static NumberFormat createEditFormat(Locale locale) {
+        NumberFormat format = createDisplayFormat(locale);
+        format.setGroupingUsed(false);
+        return format;
+    }
 }
