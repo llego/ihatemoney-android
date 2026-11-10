@@ -28,6 +28,12 @@ nix-shell --run './gradlew :app:assembleDevDebug :app:testDevDebugUnitTest'
 
 Requires JDK 21 and Android SDK platform 36. The debug APK is written to `app/build/outputs/apk/dev/debug/app-dev-debug.apk`.
 
+## Releases
+
+Releases use GitHub's release flow: tag `vX.Y.Z`, then publish (GitHub UI or `gh release create vX.Y.Z --generate-notes`). A GitHub Actions workflow ([`.github/workflows/release.yml`](.github/workflows/release.yml)) automatically builds the **signed release APK** (`:app:assembleNormalRelease`) on publish and attaches it to the release as `IHateMoney-<tag>.apk`.
+
+The release APK is signed with the project's keystore, stored outside the repo as a GitHub secret. Pull requests are checked by [`.github/workflows/ci.yml`](.github/workflows/ci.yml): lint + unit tests + dev APK build.
+
 ## License
 
 [GNU GPL v3](/LICENSE), inherited from the upstream project.
