@@ -6,6 +6,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.text.SpannableStringBuilder;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -184,7 +185,9 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             } else if (categoryRemoteId == DBBill.CATEGORY_SPORT) {
                 whatPrefix += "\uD83C\uDFBE ";
             }
-            nvHolder.billTitle.setText(whatPrefix + bill.getWhat());
+            SpannableStringBuilder title = new SpannableStringBuilder(whatPrefix);
+            title.append(SupportUtil.fromHtml(bill.getWhat() == null ? "" : bill.getWhat()));
+            nvHolder.billTitle.setText(title);
 
             if (selected.contains(position)) {
                 nvHolder.avatar.setImageDrawable(ContextCompat.getDrawable(db.getContext(), R.drawable.ic_check_circle_gray_24dp));
