@@ -1,0 +1,18 @@
+package net.llego.ihatemoney.model;
+
+import androidx.annotation.Nullable;
+
+import java.io.Serializable;
+
+public class Category implements Serializable {
+
+    @Nullable
+    public final String memberName;
+    @Nullable
+    public final Long memberId;
+
+    public Category(@Nullable String memberName, @Nullable Long memberId) {
+        this.memberName = memberName;
+        this.memberId = memberId;
+    }
+}

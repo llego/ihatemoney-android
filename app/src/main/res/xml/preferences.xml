@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto">
 
     <!-- Appearance -->
-    <net.eneiluj.moneybuster.theme.ThemedPreferenceCategory
+    <net.llego.ihatemoney.theme.ThemedPreferenceCategory
         android:key="settings_appearance_category"
         android:title="@string/settings_appearance_category">
 
@@ -15,7 +15,7 @@
             android:summary=""
             android:title="@string/settings_night_mode_title" />
 
-        <net.eneiluj.moneybuster.theme.ThemedCheckBoxPreference
+        <net.llego.ihatemoney.theme.ThemedCheckBoxPreference
             android:defaultValue="true"
             android:icon="@drawable/ic_palette_grey_24dp"
             android:key="@string/pref_key_use_server_color"
@@ -31,21 +31,21 @@
             app:colorShape="circle"
             app:showDialog="false" />
 
-    </net.eneiluj.moneybuster.theme.ThemedPreferenceCategory>
+    </net.llego.ihatemoney.theme.ThemedPreferenceCategory>
 
     <!-- Network -->
-    <net.eneiluj.moneybuster.theme.ThemedPreferenceCategory
+    <net.llego.ihatemoney.theme.ThemedPreferenceCategory
         android:key="settings_network_category"
         android:title="@string/settings_network_category">
 
-        <net.eneiluj.moneybuster.theme.ThemedSwitchPreference
+        <net.llego.ihatemoney.theme.ThemedSwitchPreference
             android:defaultValue="false"
             android:icon="@drawable/ic_sync_grey_24dp"
             android:key="@string/pref_key_offline_mode"
             android:summary="@string/settings_offline_mode_summary"
             android:title="@string/settings_offline_mode_title" />
 
-        <net.eneiluj.moneybuster.theme.ThemedSwitchPreference
+        <net.llego.ihatemoney.theme.ThemedSwitchPreference
             android:defaultValue="false"
             android:icon="@drawable/ic_nextcloud_logo_grey"
             android:key="@string/pref_key_show_nextcloud_settings"
@@ -57,7 +57,7 @@
             android:key="@string/pref_key_nextcloud_account_settings"
             android:title="@string/settings_server_settings">
             <intent
-                android:targetClass="net.eneiluj.moneybuster.android.activity.AccountActivity"
+                android:targetClass="net.llego.ihatemoney.android.activity.AccountActivity"
                 android:targetPackage="@string/applicationId" />
         </Preference>
 
@@ -67,7 +67,7 @@
             android:persistent="false"
             android:title="@string/settings_cert_category">
 
-            <net.eneiluj.moneybuster.theme.ThemedCheckBoxPreference
+            <net.llego.ihatemoney.theme.ThemedCheckBoxPreference
                 android:defaultValue="true"
                 android:key="@string/pref_key_trust_system_certs"
                 android:summaryOff="@string/settings_cert_trust_system_off"
@@ -79,21 +79,21 @@
                 android:title="@string/settings_cert_reset" />
         </PreferenceScreen>
 
-    </net.eneiluj.moneybuster.theme.ThemedPreferenceCategory>
+    </net.llego.ihatemoney.theme.ThemedPreferenceCategory>
 
     <!-- Synchronisation -->
-    <net.eneiluj.moneybuster.theme.ThemedPreferenceCategory
+    <net.llego.ihatemoney.theme.ThemedPreferenceCategory
         android:key="settings_sync_category"
         android:title="@string/settings_sync_category">
 
-        <net.eneiluj.moneybuster.theme.ThemedSwitchPreference
+        <net.llego.ihatemoney.theme.ThemedSwitchPreference
             android:defaultValue="false"
             android:icon="@drawable/ic_sync_grey_24dp"
             android:key="@string/pref_key_periodical_sync"
             android:summary="@string/settings_periodical_sync_summary"
             android:title="@string/settings_periodical_sync_title" />
 
-        <net.eneiluj.moneybuster.theme.ThemedSwitchPreference
+        <net.llego.ihatemoney.theme.ThemedSwitchPreference
             android:defaultValue="true"
             android:icon="@drawable/ic_power_settings_new_grey_24dp"
             android:key="@string/pref_key_autostart"
@@ -112,37 +112,37 @@
             android:singleLine="true"
             android:title="@string/settings_sync_interval_title" />
 
-        <net.eneiluj.moneybuster.theme.ThemedCheckBoxPreference
+        <net.llego.ihatemoney.theme.ThemedCheckBoxPreference
             android:defaultValue="true"
             android:icon="@drawable/ic_chat_bubble_outline_grey_24dp"
             android:key="@string/pref_key_notify_new"
             android:title="@string/settings_notify_new" />
 
-        <net.eneiluj.moneybuster.theme.ThemedCheckBoxPreference
+        <net.llego.ihatemoney.theme.ThemedCheckBoxPreference
             android:defaultValue="true"
             android:icon="@drawable/ic_chat_bubble_outline_grey_24dp"
             android:key="@string/pref_key_notify_updated"
             android:title="@string/settings_notify_updated" />
 
-        <net.eneiluj.moneybuster.theme.ThemedCheckBoxPreference
+        <net.llego.ihatemoney.theme.ThemedCheckBoxPreference
             android:defaultValue="true"
             android:icon="@drawable/ic_chat_bubble_outline_grey_24dp"
             android:key="@string/pref_key_notify_deleted"
             android:title="@string/settings_notify_deleted" />
 
-    </net.eneiluj.moneybuster.theme.ThemedPreferenceCategory>
+    </net.llego.ihatemoney.theme.ThemedPreferenceCategory>
 
     <!-- Other -->
-    <net.eneiluj.moneybuster.theme.ThemedPreferenceCategory
+    <net.llego.ihatemoney.theme.ThemedPreferenceCategory
         android:key="settings_other_category"
         android:title="@string/settings_other_category">
         <Preference
             android:icon="@drawable/ic_info_outline_grey600_24dp"
             android:title="@string/settings_about">
             <intent
-                android:targetClass="net.eneiluj.moneybuster.android.activity.AboutActivity"
+                android:targetClass="net.llego.ihatemoney.android.activity.AboutActivity"
                 android:targetPackage="@string/applicationId" />
         </Preference>
-    </net.eneiluj.moneybuster.theme.ThemedPreferenceCategory>
+    </net.llego.ihatemoney.theme.ThemedPreferenceCategory>
 
 </PreferenceScreen>
