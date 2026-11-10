@@ -26,6 +26,11 @@ nix-shell --run './gradlew :app:assembleDevDebug :app:testDevDebugUnitTest --no-
 - Keep it simple: fast expense entry, minimal navigation churn. English UI must use "expense" (never "bill"); Swedish translations maintained.
 - Package/applicationId (`net.eneiluj.moneybuster`) NOT renamed yet to keep updates working — do not change casually.
 
+## Workflow
+
+- Use a **branch → pull request → merge** flow on `origin`, not direct pushes to `master`.
+- **Qodo PR Agent** is enabled on this repo to review pull requests. Keep PRs focused; use `push` to create a branch and open a PR for review before merging.
+
 ## Code conventions learned
 
 - Use View Binding where touched; small single-purpose classes favored over god-activities (see `EmptyStateController`, `MemberDialogs`, `ColorPickerDialog`).
