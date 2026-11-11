@@ -5,7 +5,7 @@
 
 [config]
 model = "openrouter/~deepseek/deepseek-v4.1-flash-latest"
-fallback_models = ["openrouter/deepseek/deepseek-v4-flash"]
+fallback_models = ["openrouter/~deepseek/deepseek-v4-flash"]
 custom_model_max_tokens = 16000
 
 [pr_reviewer]
