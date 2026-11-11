@@ -4,13 +4,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 public enum ProjectType {
-    LOCAL("l"), IHATEMONEY("i");
+    LOCAL("l"), IHATEMONEY("i"), SPLIIT("s");
 
     private static Map<String, ProjectType> reverseMap = new HashMap<>();
 
     static {
         reverseMap.put(LOCAL.id, LOCAL);
         reverseMap.put(IHATEMONEY.id, IHATEMONEY);
+        reverseMap.put(SPLIIT.id, SPLIIT);
     }
 
     private String id;

@@ -159,6 +159,8 @@ public class BillsListViewActivity
     MaterialCardView homeToolbar;
     AppBarLayout appBar;
     private EmptyStateController emptyState;
+    /** True when the selected project is a read-only Spliit group. */
+    private boolean readOnly = false;
 
     private DrawerLayoutBinding binding;
 
@@ -416,9 +418,9 @@ public class BillsListViewActivity
 
                 if (currentVisibility != oldVisibility) {
                     if (currentVisibility == VISIBLE) {
-                        fabAddBill.setVisibility(View.INVISIBLE);
+                        fabAddBill.setVisibility(readOnly ? View.GONE : View.INVISIBLE);
                     } else {
-                        new Handler().postDelayed(() -> fabAddBill.setVisibility(VISIBLE), 150);
+                        new Handler().postDelayed(() -> fabAddBill.setVisibility(readOnly ? View.GONE : View.VISIBLE), 150);
                     }
 
                     oldVisibility = currentVisibility;
@@ -676,6 +678,14 @@ public class BillsListViewActivity
             searchText.setText(getString(R.string.action_search_in_project, proj.getName()));
         }
 
+        // Spliit groups are read-only: hide the add-expense action.
+        readOnly = proj.isReadOnly();
+        if (readOnly) {
+            fabAddBill.setVisibility(View.GONE);
+        } else if (searchView == null || searchView.isIconified()) {
+            fabAddBill.setVisibility(View.VISIBLE);
+        }
+
         // drawer
         updateLastSyncText();
         projectAdapter.setSelected(projectId);
@@ -846,6 +856,7 @@ public class BillsListViewActivity
              */
             @Override
             public int getSwipeDirs(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
+                if (readOnly) return 0;
                 if (viewHolder instanceof ItemAdapter.SectionViewHolder) return 0;
                 return super.getSwipeDirs(recyclerView, viewHolder);
             }
@@ -1213,7 +1224,7 @@ public class BillsListViewActivity
                     adapter.clearSelection();
                     mActionMode = null;
                     adapter.notifyDataSetChanged();
-                }));
+                }, readOnly));
     }
 
     @Override

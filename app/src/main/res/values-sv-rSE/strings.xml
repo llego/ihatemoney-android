@@ -77,8 +77,10 @@
     <string name="new_project_where">Var?</string>
     <string name="where_local">Bara på min telefon (lokalt)</string>
     <string name="where_ihm">IHateMoney-server</string>
+    <string name="where_spliit">Spliit-grupp</string>
     <string name="where_local_short">Lokalt</string>
     <string name="where_ihm_short">IHateMoney</string>
+    <string name="where_spliit_short">Spliit</string>
     <string name="new_project_scan">Skanna en IHateMoney for Android-QR-kod</string>
     <string name="todo_join">Anslut till ett befintligt projekt</string>
     <string name="todo_join_label">Anslut</string>

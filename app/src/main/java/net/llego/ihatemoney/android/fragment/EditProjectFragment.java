@@ -246,6 +246,10 @@ public class EditProjectFragment extends PreferenceFragmentCompat {
                 findPreference(key).setVisible(false);
             }
             findPreference("remove_project").setTitle(R.string.project_remove_local);
+        } else if (project.isReadOnly()) {
+            for (String key : new String[]{"name", "password", "newpassword", "email"}) {
+                findPreference(key).setEnabled(false);
+            }
         }
         setHasOptionsMenu(true);
 
@@ -291,8 +295,8 @@ public class EditProjectFragment extends PreferenceFragmentCompat {
     @Override
     public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
         inflater.inflate(R.menu.menu_edit_project_fragment, menu);
-        menu.findItem(R.id.menu_delete_remote).setVisible(!project.isLocal());
-        menu.findItem(R.id.menu_save).setVisible(!project.isLocal());
+        menu.findItem(R.id.menu_delete_remote).setVisible(!project.isLocal() && !project.isReadOnly());
+        menu.findItem(R.id.menu_save).setVisible(!project.isLocal() && !project.isReadOnly());
 
         myMenu = menu;
         saveButton = (ImageView) menu.findItem(R.id.menu_save).getActionView();

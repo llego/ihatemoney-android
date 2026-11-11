@@ -15,6 +15,7 @@ public class DBBill implements Item, Serializable {
     // key_id, key_remoteId, key_projectid, key_payer_remoteId, key_amount, key_date, key_what
     private long id;
     private long remoteId;
+    private String remoteIdStr;
     private long projectId;
     private long payerId;
     private double amount;
@@ -144,6 +145,18 @@ public class DBBill implements Item, Serializable {
 
     public void setRemoteId(long remoteId) {
         this.remoteId = remoteId;
+    }
+
+    /**
+     * String remote id used by backends whose expense ids are not numeric
+     * (Spliit). IHateMoney keeps using {@link #getRemoteId()}.
+     */
+    public String getRemoteIdStr() {
+        return remoteIdStr;
+    }
+
+    public void setRemoteIdStr(String remoteIdStr) {
+        this.remoteIdStr = remoteIdStr;
     }
 
     public long getProjectId() {

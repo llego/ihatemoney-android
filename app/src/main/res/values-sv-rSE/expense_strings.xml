@@ -30,4 +30,11 @@
     <string name="expense_open_navigation">Öppna sidomenyn</string>
     <string name="ihm_setup_summary">Anslut till IHateMoney för att dela utgifter. Ändringar sparas på den här enheten, även utan nätanslutning.</string>
     <string name="ihm_no_projects">Lägg till ditt IHateMoney-projekt för att börja dela utgifter.</string>
+    <string name="spliit_setup_summary">Gå med i en Spliit-grupp för att läsa dess utgifter. Spliit är skrivskyddat i den här appen: ändringar görs i Spliit på webben.</string>
+    <string name="spliit_read_only">Spliit-grupp (skrivskyddad)</string>
+    <string name="spliit_read_only_hint">Den här Spliit-gruppen är skrivskyddad. Redigera utgifter i Spliit på webben.</string>
+    <string name="spliit_join_url">Spliit-gruppadress (eller grupp-ID)</string>
+    <string name="spliit_join_url_long">Fullständig Spliit-gruppadress, t.ex. https://spliit.app/groups/abc123</string>
+    <string name="spliit_error_not_found">Spliit-gruppen hittades inte. Kontrollera gruppadressen.</string>
+    <string name="spliit_error_invalid_url">Ange en giltig Spliit-gruppadress eller grupp-ID.</string>
 </resources>

@@ -111,6 +111,7 @@ public class NewProjectFragment extends ThemedFragment {
     protected MaterialButton whatTodoCreate;
     protected MaterialButton whereLocal;
     protected MaterialButton whereIhm;
+    protected MaterialButton whereSpliit;
     protected EditText newProjectEmail;
     protected EditText newProjectName;
 
@@ -136,6 +137,9 @@ public class NewProjectFragment extends ThemedFragment {
     protected String defaultNcUrl;
 
     private AlertDialog progress = null;
+
+    /** Project object whose name/currency are filled by the remote info fetch. */
+    private DBProject pendingRemoteProject;
 
     public static NewProjectFragment newInstance(String defaultIhmUrl, String defaultNCUrl,
                                                  @Nullable String defaultProjectId,
@@ -169,6 +173,7 @@ public class NewProjectFragment extends ThemedFragment {
         whatTodoCreate = view.findViewById(R.id.whatTodoCreate);
         whereLocal = view.findViewById(R.id.whereLocal);
         whereIhm = view.findViewById(R.id.whereIhm);
+        whereSpliit = view.findViewById(R.id.whereSpliit);
         whereIcon = view.findViewById(R.id.whereIcon);
 
         newProjectId = view.findViewById(R.id.editProjectId);
@@ -226,6 +231,7 @@ public class NewProjectFragment extends ThemedFragment {
                 boolean isChecked = ((MaterialButton)view).isChecked();
                 if (isChecked) {
                     whereIhm.setChecked(false);
+                    whereSpliit.setChecked(false);
                     showHideInputFields(true);
                     showHideValidationButtons();
                 } else {
@@ -239,10 +245,25 @@ public class NewProjectFragment extends ThemedFragment {
                 boolean isChecked = ((MaterialButton)view).isChecked();
                 if (isChecked) {
                     whereLocal.setChecked(false);
+                    whereSpliit.setChecked(false);
                     showHideInputFields(true);
                     showHideValidationButtons();
                 } else {
                     whereIhm.setChecked(true);
+                }
+            }
+        });
+        whereSpliit.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                boolean isChecked = ((MaterialButton)view).isChecked();
+                if (isChecked) {
+                    whereLocal.setChecked(false);
+                    whereIhm.setChecked(false);
+                    showHideInputFields(true);
+                    showHideValidationButtons();
+                } else {
+                    whereSpliit.setChecked(true);
                 }
             }
         });
@@ -362,6 +383,10 @@ public class NewProjectFragment extends ThemedFragment {
         boolean todoCreate = getTodoCreate();
         ProjectType type = getProjectType();
 
+        if (type.equals(ProjectType.SPLIIT)) {
+            return isSpliitFormValid();
+        }
+
         String projectId = getRemoteId();
         String projectUrl = getUrl();
         String projectPassword = getPassword();
@@ -429,9 +454,84 @@ public class NewProjectFragment extends ThemedFragment {
         return valid;
     }
 
+    private boolean isSpliitFormValid() {
+        String projectUrl = getUrl();
+        String projectId = getSpliitGroupId();
+        return !projectUrl.isEmpty() && isValidUrl(projectUrl) && !projectId.isEmpty();
+    }
+
+    /**
+     * Spliit group id can be entered directly or taken from a group URL
+     * (e.g. https://spliit.app/groups/abc123).
+     */
+    private String getSpliitGroupId() {
+        String id = getRemoteId();
+        if (id != null && !id.isEmpty()) {
+            Uri idUri = Uri.parse(id);
+            if (isSpliitGroupUrl(idUri)) {
+                return idUri.getLastPathSegment();
+            }
+            return id;
+        }
+        Uri uri = Uri.parse(getUrl());
+        if (isSpliitGroupUrl(uri)) {
+            return uri.getLastPathSegment();
+        }
+        return "";
+    }
+
+    private String getSpliitBaseUrl() {
+        String id = getRemoteId();
+        Uri idUri = id != null ? Uri.parse(id) : null;
+        if (idUri != null && isSpliitGroupUrl(idUri)) {
+            return spliitBaseUrl(idUri);
+        }
+        Uri uri = Uri.parse(getUrl());
+        if (isSpliitGroupUrl(uri)) {
+            return spliitBaseUrl(uri);
+        }
+        return getUrl();
+    }
+
+    /** Keep any sub-path a self-hosted Spliit instance is mounted under. */
+    private String spliitBaseUrl(Uri groupUri) {
+        StringBuilder base = new StringBuilder(groupUri.getScheme())
+                .append("://").append(groupUri.getHost());
+        if (groupUri.getPort() != -1) {
+            base.append(":").append(groupUri.getPort());
+        }
+        List<String> segments = groupUri.getPathSegments();
+        int baseSegmentCount = isSpliitGroupPath(segments)
+                ? segments.size() - 2 : segments.size() - 1;
+        for (int i = 0; i < baseSegmentCount; i++) {
+            base.append("/").append(segments.get(i));
+        }
+        return base.toString();
+    }
+
+    private boolean isSpliitGroupPath(List<String> segments) {
+        return segments.size() >= 2
+                && "groups".equals(segments.get(segments.size() - 2));
+    }
+
+    private boolean isSpliitGroupUrl(Uri uri) {
+        return uri.getScheme() != null
+                && (uri.getScheme().equals("https") || uri.getScheme().equals("http"))
+                && isSpliitGroupPath(uri.getPathSegments());
+    }
+
     private void showHideInputFields(boolean setDefaultUrl) {
         boolean todoCreate = getTodoCreate();
         ProjectType type = getProjectType();
+
+        // Spliit is join-only: hide the create toggle and force join.
+        if (type.equals(ProjectType.SPLIIT)) {
+            whatTodoCreate.setVisibility(View.GONE);
+            whatTodoJoin.setChecked(true);
+            todoCreate = false;
+        } else {
+            whatTodoCreate.setVisibility(View.VISIBLE);
+        }
 
         // change 'where' selection if we want to join a project and 'where' is local
         if (!todoCreate && type.equals(ProjectType.LOCAL)) {
@@ -440,11 +540,14 @@ public class NewProjectFragment extends ThemedFragment {
             type = getProjectType();
         }
         whereLocal.setVisibility(todoCreate ? View.VISIBLE : View.GONE);
-        binding.newProjectForm.whereLayout.setVisibility(todoCreate ? View.VISIBLE : View.GONE);
+        // Keep the where selector visible in join mode so Spliit groups can be
+        // joined; Local stays hidden because local projects cannot be joined.
+        binding.newProjectForm.whereLayout.setVisibility(View.VISIBLE);
         fabOk.setText(todoCreate ? R.string.todo_create_label : R.string.todo_join_label);
 
         newProjectUrlLayout.setVisibility(!type.equals(ProjectType.LOCAL) ? View.VISIBLE : View.GONE);
-        newProjectPasswordLayout.setVisibility(!type.equals(ProjectType.LOCAL) ? View.VISIBLE : View.GONE);
+        newProjectPasswordLayout.setVisibility(!type.equals(ProjectType.LOCAL)
+                && !type.equals(ProjectType.SPLIIT) ? View.VISIBLE : View.GONE);
 
         boolean showNameEmail = (todoCreate && !type.equals(ProjectType.LOCAL));
         newProjectNameLayout.setVisibility(showNameEmail ? View.VISIBLE : View.GONE);
@@ -463,6 +566,14 @@ public class NewProjectFragment extends ThemedFragment {
                 newProjectUrl.setText(defaultIhmUrl);
             }
             newProjectUrlInputLayout.setHint(getString(R.string.setting_ihm_project_url));
+            importButton.setVisibility(View.GONE);
+        } else if (type.equals(ProjectType.SPLIIT)) {
+            whereIcon.setImageResource(R.drawable.ic_ihm_grey_24dp);
+
+            if (setDefaultUrl) {
+                newProjectUrl.setText(defaultIhmUrl);
+            }
+            newProjectUrlInputLayout.setHint(getString(R.string.spliit_join_url));
             importButton.setVisibility(View.GONE);
         }
     }
@@ -570,8 +681,40 @@ public class NewProjectFragment extends ThemedFragment {
         String password;
         String url;
         String pid;
+        if (data.getScheme() != null && data.getScheme().equals("spliit")) {
+            // spliit://<host>[:port]/<base-path...>/<group>; also accept .../groups/<group>
+            Uri httpsUri = data.buildUpon().scheme("https").build();
+            newProjectUrl.setText(spliitBaseUrl(httpsUri));
+            newProjectId.setText(data.getPathSegments().isEmpty() ? "" : data.getLastPathSegment());
+            newProjectPassword.setText("");
+            whereLocal.setChecked(false);
+            whereIhm.setChecked(false);
+            whereSpliit.setChecked(true);
+            showHideInputFields(false);
+            showHideValidationButtons();
+            if (isFormValid()) {
+                onPressOk();
+            }
+            return;
+        }
+        if (isSpliitGroupUrl(data)) {
+            String groupId = data.getLastPathSegment();
+            newProjectUrl.setText(spliitBaseUrl(data));
+            newProjectId.setText(groupId);
+            newProjectPassword.setText("");
+            whereLocal.setChecked(false);
+            whereIhm.setChecked(false);
+            whereSpliit.setChecked(true);
+            showHideInputFields(false);
+            showHideValidationButtons();
+            if (isFormValid()) {
+                onPressOk();
+            }
+            return;
+        }
         if (
-                (data.getScheme().equals("ihatemoney") || data.getScheme().equals("ihatemoney+http"))
+                data.getScheme() != null
+                && (data.getScheme().equals("ihatemoney") || data.getScheme().equals("ihatemoney+http"))
                 && data.getPathSegments().size() >= 1
         ) {
             if (data.getPathSegments().size() >= 3
@@ -631,14 +774,15 @@ public class NewProjectFragment extends ThemedFragment {
     }
 
     private void createProject() {
+        ProjectType type = getProjectType();
+        boolean isSpliitGroupUrl = type.equals(ProjectType.SPLIIT) && isSpliitGroupUrl(Uri.parse(getUrl()));
         boolean isIhmInvitationLink = isInvitationLink(getUrl());
-        String rid = getRemoteId();
-        if (!isIhmInvitationLink && (rid == null || rid.equals("") || rid.contains(",") || rid.contains("/"))) {
+        String rid = type.equals(ProjectType.SPLIIT) ? getSpliitGroupId() : getRemoteId();
+        if (!isIhmInvitationLink && !isSpliitGroupUrl
+                && (rid == null || rid.equals("") || rid.contains(",") || rid.contains("/"))) {
             showToast(getString(R.string.error_invalid_project_remote_id), Toast.LENGTH_LONG);
             return;
         }
-
-        ProjectType type = getProjectType();
 
         if (!ProjectType.LOCAL.equals(type)) {
             if (!isIhmInvitationLink) {
@@ -737,6 +881,7 @@ public class NewProjectFragment extends ThemedFragment {
 
     protected void saveRemoteProject(@Nullable ICallback callback, boolean ignorePassword) {
         DBProject newProject = getProjectFromFields(ignorePassword);
+        pendingRemoteProject = newProject;
         Log.e(TAG, "URLLLLL " + newProject.getServerUrl());
         Log.e(TAG, "IDDDDDDDD " + newProject.getRemoteId());
         Log.e(TAG, "TOKENNNNN " + newProject.getBearerToken());
@@ -755,6 +900,19 @@ public class NewProjectFragment extends ThemedFragment {
         String bearerToken = null;
         if (!ignorePassword) {
             password = getPassword();
+        }
+        if (type.equals(ProjectType.SPLIIT)) {
+            // Spliit is anonymous: the group id is the capability, no password.
+            remoteId = getSpliitGroupId();
+            url = getSpliitBaseUrl();
+            password = "";
+            email = "";
+            return new DBProject(
+                    0, remoteId, password, name, url,
+                    email, null, type, 0L,
+                    null, false, DBProject.ACCESS_LEVEL_UNKNOWN,
+                    null
+            );
         }
         // handle IHM invitation links
         if (type.equals(ProjectType.IHATEMONEY) && isInvitationLink(url)) {
@@ -814,9 +972,15 @@ public class NewProjectFragment extends ThemedFragment {
             if (defaultTypeId.equals(ProjectType.IHATEMONEY.getId())) {
                 whereLocal.setChecked(false);
                 whereIhm.setChecked(true);
+                whereSpliit.setChecked(false);
             } else if (defaultTypeId.equals(ProjectType.LOCAL.getId())) {
                 whereLocal.setChecked(true);
                 whereIhm.setChecked(false);
+                whereSpliit.setChecked(false);
+            } else if (defaultTypeId.equals(ProjectType.SPLIIT.getId())) {
+                whereLocal.setChecked(false);
+                whereIhm.setChecked(false);
+                whereSpliit.setChecked(true);
             }
         }
 
@@ -838,6 +1002,10 @@ public class NewProjectFragment extends ThemedFragment {
             }
         }
 
+        if (ProjectType.SPLIIT.getId().equals(defaultTypeId) && isFormValid()) {
+            onPressOk();
+        }
+
         showHideValidationButtons();
     }
 
@@ -846,6 +1014,8 @@ public class NewProjectFragment extends ThemedFragment {
             return ProjectType.LOCAL;
         } else if (whereIhm.isChecked()) {
             return ProjectType.IHATEMONEY;
+        } else if (whereSpliit.isChecked()) {
+            return ProjectType.SPLIIT;
         } else {
             return ProjectType.LOCAL;
         }
@@ -891,7 +1061,9 @@ public class NewProjectFragment extends ThemedFragment {
 
         public void onFinish(String result, String message) {
             if (message.isEmpty()) {
-                long pid = addProjectToDb(getProjectFromFields(false));
+                DBProject project = pendingRemoteProject != null
+                        ? pendingRemoteProject : getProjectFromFields(false);
+                long pid = addProjectToDb(project);
                 listener.close(pid, true);
             } else {
                 AlertDialog.Builder builder = new ThemedMaterialAlertDialogBuilder(requireContext());

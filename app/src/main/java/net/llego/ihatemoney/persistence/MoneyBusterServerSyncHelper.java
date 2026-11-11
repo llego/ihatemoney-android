@@ -29,6 +29,7 @@ import net.llego.ihatemoney.util.ICallback;
 import net.llego.ihatemoney.util.IProjectCreationCallback;
 import net.llego.ihatemoney.util.VersatileProjectSyncClient;
 import net.llego.ihatemoney.util.ServerResponse;
+import net.llego.ihatemoney.util.SpliitClient;
 import net.llego.ihatemoney.util.SupportUtil;
 
 import org.json.JSONException;
@@ -239,6 +240,11 @@ public class MoneyBusterServerSyncHelper {
         @Override
         protected Boolean doInBackground(Void... voids) {
             Log.i(getClass().getSimpleName(), "STARTING SYNCHRONIZATION");
+
+            if (project.isReadOnly()) {
+                // Spliit is read-only: pull the group and never push local changes.
+                return pullSpliitGroup();
+            }
 
             client = createVersatileProjectSyncClient();
             //dbHelper.debugPrintFullDB();
@@ -830,6 +836,194 @@ public class MoneyBusterServerSyncHelper {
                     + nbPulledUpdatedBills + ", deleted=" + nbPulledDeletedBills);
         }
 
+        /**
+         * Pull a Spliit group read-only. Spliit has no auth and no push, so the
+         * local cache is reconciled against the remote group and never uploaded.
+         */
+        private boolean pullSpliitGroup() {
+            Log.d(TAG, "pullSpliitGroup(" + project + ")");
+            try {
+                SpliitClient spliitClient = new SpliitClient(project.getServerUrl(), project.getRemoteId());
+                SpliitClient.SpliitGroup group = spliitClient.getGroup(customCertManager);
+
+                // Keep the project name/currency in sync with the group.
+                if (group.name != null && !group.name.isEmpty() && !group.name.equals(project.getName())) {
+                    project.setName(group.name);
+                    dbHelper.updateProject(
+                            project.getId(), group.name, null, null, null, null, null, null, null, null
+                    );
+                }
+                if (group.currency != null && !group.currency.isEmpty()
+                        && !group.currency.equals(project.getCurrencyName())) {
+                    project.setCurrencyName(group.currency);
+                    dbHelper.updateProject(
+                            project.getId(), null, null, null, null, null, group.currency, null, null, null
+                    );
+                }
+
+                // The app formats amounts with a single currency; keep one local row.
+                if (group.currency != null && !group.currency.isEmpty()) {
+                    List<DBCurrency> localCurrencies = dbHelper.getCurrencies(project.getId());
+                    if (localCurrencies.isEmpty()) {
+                        dbHelper.addCurrency(new DBCurrency(
+                                0, 0, project.getId(), group.currency, 1.0, DBBill.STATE_OK));
+                    } else {
+                        DBCurrency mainCurrency = localCurrencies.get(0);
+                        if (!group.currency.equals(mainCurrency.getName())) {
+                            dbHelper.updateCurrency(mainCurrency.getId(), group.currency, 1.0);
+                        }
+                    }
+                }
+
+                // Reconcile members by their string remote id.
+                Map<String, DBMember> remoteMembersByRemoteId = new HashMap<>();
+                for (SpliitClient.SpliitParticipant participant : group.participants) {
+                    DBMember localMember = dbHelper.getMemberByRemoteIdStr(participant.id, project.getId());
+                    if (localMember == null) {
+                        DBMember newMember = new DBMember(
+                                0, 0, project.getId(), participant.name,
+                                true, 1, DBBill.STATE_OK, null, null, null, null, null
+                        );
+                        newMember.setRemoteIdStr(participant.id);
+                        long mid = dbHelper.addMember(newMember);
+                        remoteMembersByRemoteId.put(participant.id, dbHelper.getMember(mid));
+                    } else {
+                        if (participant.name != null && !participant.name.equals(localMember.getName())) {
+                            dbHelper.updateMember(
+                                    localMember.getId(), participant.name, null, null, null,
+                                    null, null, null, null, null, null, null
+                            );
+                        }
+                        remoteMembersByRemoteId.put(participant.id, localMember);
+                    }
+                }
+
+                // Delete local members that are no longer in the group and unused.
+                for (DBMember localMember : dbHelper.getMembersOfProject(project.getId(), null)) {
+                    if (localMember.getRemoteIdStr() == null) {
+                        continue;
+                    }
+                    if (!remoteMembersByRemoteId.containsKey(localMember.getRemoteIdStr())) {
+                        if (dbHelper.getBillsOfMember(localMember.getId()).size() == 0
+                                && dbHelper.getBillowersOfMember(localMember.getId()).size() == 0) {
+                            dbHelper.deleteMember(localMember.getId());
+                        }
+                    }
+                }
+
+                // Reconcile expenses by their string remote id.
+                Map<String, DBBill> localBillsByRemoteId = new HashMap<>();
+                for (DBBill localBill : dbHelper.getBillsOfProject(project.getId())) {
+                    if (localBill.getRemoteIdStr() != null) {
+                        localBillsByRemoteId.put(localBill.getRemoteIdStr(), localBill);
+                    }
+                }
+                Map<String, SpliitClient.SpliitExpense> remoteBillsByRemoteId = new HashMap<>();
+                for (SpliitClient.SpliitExpense expense : group.expenses) {
+                    remoteBillsByRemoteId.put(expense.id, expense);
+                    DBBill localBill = localBillsByRemoteId.get(expense.id);
+                    if (localBill == null) {
+                        addSpliitBill(expense, remoteMembersByRemoteId);
+                    } else {
+                        updateSpliitBill(localBill, expense, remoteMembersByRemoteId);
+                    }
+                }
+
+                // Delete local expenses that no longer exist remotely.
+                for (DBBill localBill : localBillsByRemoteId.values()) {
+                    if (!remoteBillsByRemoteId.containsKey(localBill.getRemoteIdStr())) {
+                        dbHelper.deleteBill(localBill.getId());
+                        nbPulledDeletedBills++;
+                        deletedBillsDialogText.append("\uD83D\uDDD1 ").append(localBill.getWhat()).append('\n');
+                    }
+                }
+
+                // Update the last sync timestamp.
+                dbHelper.updateProject(
+                        project.getId(), null, null, null, null,
+                        System.currentTimeMillis() / 1000,
+                        null, null, null, null
+                );
+                return true;
+            } catch (Exception e) {
+                // SpliitClient declares IOException/JSONException, but a malformed
+                // response or bad URL can also surface as a runtime exception.
+                Log.e(TAG, "Exception", e);
+                exceptions.add(e);
+                return false;
+            }
+        }
+
+        private void addSpliitBill(SpliitClient.SpliitExpense expense,
+                                   Map<String, DBMember> remoteMembersByRemoteId) {
+            DBBill newBill = new DBBill(
+                    0, 0, project.getId(), 0, expense.amount / 100.0,
+                    expense.expenseDate, expense.title, DBBill.STATE_OK,
+                    DBBill.NON_REPEATED, DBBill.PAYMODE_NONE, DBBill.CATEGORY_NONE,
+                    expense.notes, DBBill.PAYMODE_ID_NONE
+            );
+            newBill.setRemoteIdStr(expense.id);
+            newBill.setCreationDate(expense.createdAt);
+
+            DBMember payer = remoteMembersByRemoteId.get(expense.paidBy);
+            if (payer != null) {
+                newBill.setPayerId(payer.getId());
+            }
+            for (String owerId : expense.paidFor) {
+                DBMember ower = remoteMembersByRemoteId.get(owerId);
+                if (ower != null) {
+                    newBill.getBillOwers().add(new DBBillOwer(0, 0, ower.getId()));
+                }
+            }
+            dbHelper.addBill(newBill);
+            nbPulledNewBills++;
+            newBillsDialogText.append("+ ").append(expense.title).append('\n');
+        }
+
+        private void updateSpliitBill(DBBill localBill, SpliitClient.SpliitExpense expense,
+                                      Map<String, DBMember> remoteMembersByRemoteId) {
+            DBMember payer = remoteMembersByRemoteId.get(expense.paidBy);
+            long payerId = payer != null ? payer.getId() : localBill.getPayerId();
+            double amount = expense.amount / 100.0;
+            boolean changed = localBill.getAmount() != amount
+                    || localBill.getTimestamp() != expense.expenseDate
+                    || !Objects.equals(expense.title, localBill.getWhat())
+                    || !Objects.equals(expense.notes, localBill.getComment())
+                    || localBill.getPayerId() != payerId;
+            if (changed) {
+                dbHelper.updateBill(
+                        localBill.getId(), null, null, payerId, amount,
+                        expense.expenseDate, expense.title, DBBill.STATE_OK,
+                        localBill.getRepeat(), localBill.getPaymentMode(),
+                        localBill.getPaymentModeRemoteId(), localBill.getCategoryRemoteId(),
+                        expense.notes
+                );
+                nbPulledUpdatedBills++;
+                updatedBillsDialogText.append("✏ ").append(expense.title).append('\n');
+            }
+
+            // Reconcile the owers.
+            Map<Long, DBBillOwer> localBillOwersByMemberId = new HashMap<>();
+            for (DBBillOwer ower : localBill.getBillOwers()) {
+                localBillOwersByMemberId.put(ower.getMemberId(), ower);
+            }
+            java.util.Set<Long> remoteOwerIds = new java.util.HashSet<>();
+            for (String owerId : expense.paidFor) {
+                DBMember ower = remoteMembersByRemoteId.get(owerId);
+                if (ower != null) {
+                    remoteOwerIds.add(ower.getId());
+                    if (!localBillOwersByMemberId.containsKey(ower.getId())) {
+                        dbHelper.addBillower(localBill.getId(), ower.getId());
+                    }
+                }
+            }
+            for (DBBillOwer ower : localBill.getBillOwers()) {
+                if (!remoteOwerIds.contains(ower.getMemberId())) {
+                    dbHelper.deleteBillOwer(ower.getId());
+                }
+            }
+        }
+
         @Override
         protected void onPostExecute(Boolean status) {
             super.onPostExecute(status);
@@ -1229,6 +1423,16 @@ public class MoneyBusterServerSyncHelper {
         if (!isSyncPossible()) {
             return false;
         }
+        if (project.isReadOnly()) {
+            try {
+                SpliitClient client = new SpliitClient(project.getServerUrl(), project.getRemoteId());
+                SpliitClient.SpliitGroup group = client.getGroup(customCertManager);
+                return group.name != null;
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to get Spliit group: " + e);
+                return false;
+            }
+        }
         VersatileProjectSyncClient client = createVersatileProjectSyncClient();
         try {
             ServerResponse.ProjectResponse projResponse = client.getProject(customCertManager, project, 0, null);
@@ -1244,8 +1448,14 @@ public class MoneyBusterServerSyncHelper {
     // get remote project info
     public boolean getRemoteProjectInfo(DBProject project, ICallback callback) {
         if (isSyncPossible()) {
-            GetRemoteProjectInfoTask getRemoteProjectInfoTask = new GetRemoteProjectInfoTask(project, callback);
-            getRemoteProjectInfoTask.execute();
+            if (project.isReadOnly()) {
+                GetRemoteSpliitProjectInfoTask getRemoteSpliitProjectInfoTask =
+                        new GetRemoteSpliitProjectInfoTask(project, callback);
+                getRemoteSpliitProjectInfoTask.execute();
+            } else {
+                GetRemoteProjectInfoTask getRemoteProjectInfoTask = new GetRemoteProjectInfoTask(project, callback);
+                getRemoteProjectInfoTask.execute();
+            }
             return true;
         }
         return false;
@@ -1314,6 +1524,52 @@ public class MoneyBusterServerSyncHelper {
                 }
             }
             callback.onFinish(null, errorString);
+        }
+    }
+
+    /**
+     * Fetch a Spliit group's metadata and fill the project name/currency before
+     * the project is added to the local database.
+     */
+    private class GetRemoteSpliitProjectInfoTask extends AsyncTask<Void, Void, Boolean> {
+        private final DBProject project;
+        private final ICallback callback;
+        private final List<Throwable> exceptions = new ArrayList<>();
+        private String name;
+
+        public GetRemoteSpliitProjectInfoTask(DBProject project, ICallback callback) {
+            this.project = project;
+            this.callback = callback;
+        }
+
+        @Override
+        protected Boolean doInBackground(Void... voids) {
+            try {
+                SpliitClient client = new SpliitClient(project.getServerUrl(), project.getRemoteId());
+                SpliitClient.SpliitGroup group = client.getGroup(customCertManager);
+                project.setName(group.name);
+                project.setCurrencyName(group.currency);
+                name = group.name;
+                return true;
+            } catch (Exception e) {
+                Log.e(TAG, "Failed to get Spliit group info", e);
+                exceptions.add(e);
+                return false;
+            }
+        }
+
+        @Override
+        protected void onPostExecute(Boolean status) {
+            super.onPostExecute(status);
+            if (status) {
+                callback.onFinish(name, "");
+            } else {
+                String errorString = "";
+                for (Throwable e : exceptions) {
+                    errorString += e.getClass().getName() + ": " + e.getMessage() + "\n";
+                }
+                callback.onFinish(null, errorString);
+            }
         }
     }
 }
