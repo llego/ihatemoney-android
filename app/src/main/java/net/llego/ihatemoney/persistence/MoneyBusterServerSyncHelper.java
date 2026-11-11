@@ -945,11 +945,9 @@ public class MoneyBusterServerSyncHelper {
                         null, null, null, null
                 );
                 return true;
-            } catch (IOException e) {
-                Log.e(TAG, "Exception", e);
-                exceptions.add(e);
-                return false;
-            } catch (JSONException e) {
+            } catch (Exception e) {
+                // SpliitClient declares IOException/JSONException, but a malformed
+                // response or bad URL can also surface as a runtime exception.
                 Log.e(TAG, "Exception", e);
                 exceptions.add(e);
                 return false;

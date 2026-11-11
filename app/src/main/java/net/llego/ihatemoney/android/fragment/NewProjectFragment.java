@@ -482,8 +482,8 @@ public class NewProjectFragment extends ThemedFragment {
 
     private String getSpliitBaseUrl() {
         String id = getRemoteId();
-        Uri idUri = Uri.parse(id);
-        if (isSpliitGroupUrl(idUri)) {
+        Uri idUri = id != null ? Uri.parse(id) : null;
+        if (idUri != null && isSpliitGroupUrl(idUri)) {
             return spliitBaseUrl(idUri);
         }
         Uri uri = Uri.parse(getUrl());
