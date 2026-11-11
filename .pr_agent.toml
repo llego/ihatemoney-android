@@ -8,5 +8,10 @@ model = "openrouter/~deepseek/deepseek-v4-flash-latest"
 fallback_models = ["openrouter/deepseek/deepseek-v4.1-flash"]
 custom_model_max_tokens = 16000
 
+[pr_reviewer]
+# Review large diffs in chunks instead of dropping files over the token budget.
+enable_large_pr_chunking = true
+max_number_of_calls = 6
+
 [github_action_config]
 pr_actions = ['opened', 'reopened', 'ready_for_review', 'review_requested', 'synchronize']
