@@ -501,17 +501,23 @@ public class NewProjectFragment extends ThemedFragment {
             base.append(":").append(groupUri.getPort());
         }
         List<String> segments = groupUri.getPathSegments();
-        for (int i = 0; i < segments.size() - 2; i++) {
+        int baseSegmentCount = isSpliitGroupPath(segments)
+                ? segments.size() - 2 : segments.size() - 1;
+        for (int i = 0; i < baseSegmentCount; i++) {
             base.append("/").append(segments.get(i));
         }
         return base.toString();
     }
 
+    private boolean isSpliitGroupPath(List<String> segments) {
+        return segments.size() >= 2
+                && "groups".equals(segments.get(segments.size() - 2));
+    }
+
     private boolean isSpliitGroupUrl(Uri uri) {
         return uri.getScheme() != null
                 && (uri.getScheme().equals("https") || uri.getScheme().equals("http"))
-                && uri.getPathSegments().size() >= 2
-                && "groups".equals(uri.getPathSegments().get(uri.getPathSegments().size() - 2));
+                && isSpliitGroupPath(uri.getPathSegments());
     }
 
     private void showHideInputFields(boolean setDefaultUrl) {
@@ -676,17 +682,10 @@ public class NewProjectFragment extends ThemedFragment {
         String url;
         String pid;
         if (data.getScheme() != null && data.getScheme().equals("spliit")) {
-            // spliit://<host>[:port]/<base-path...>/<group>
-            List<String> segments = data.getPathSegments();
-            StringBuilder base = new StringBuilder("https://").append(data.getHost());
-            if (data.getPort() != -1) {
-                base.append(":").append(data.getPort());
-            }
-            for (int i = 0; i < segments.size() - 1; i++) {
-                base.append("/").append(segments.get(i));
-            }
-            newProjectUrl.setText(base.toString());
-            newProjectId.setText(segments.isEmpty() ? "" : data.getLastPathSegment());
+            // spliit://<host>[:port]/<base-path...>/<group>; also accept .../groups/<group>
+            Uri httpsUri = data.buildUpon().scheme("https").build();
+            newProjectUrl.setText(spliitBaseUrl(httpsUri));
+            newProjectId.setText(data.getPathSegments().isEmpty() ? "" : data.getLastPathSegment());
             newProjectPassword.setText("");
             whereLocal.setChecked(false);
             whereIhm.setChecked(false);
