@@ -989,8 +989,8 @@ public class MoneyBusterServerSyncHelper {
             double amount = expense.amount / 100.0;
             boolean changed = localBill.getAmount() != amount
                     || localBill.getTimestamp() != expense.expenseDate
-                    || !expense.title.equals(localBill.getWhat())
-                    || !expense.notes.equals(localBill.getComment())
+                    || !Objects.equals(expense.title, localBill.getWhat())
+                    || !Objects.equals(expense.notes, localBill.getComment())
                     || localBill.getPayerId() != payerId;
             if (changed) {
                 dbHelper.updateBill(

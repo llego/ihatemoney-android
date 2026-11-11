@@ -534,6 +534,8 @@ public class NewProjectFragment extends ThemedFragment {
             type = getProjectType();
         }
         whereLocal.setVisibility(todoCreate ? View.VISIBLE : View.GONE);
+        // Keep the where selector visible in join mode so Spliit groups can be
+        // joined; Local stays hidden because local projects cannot be joined.
         binding.newProjectForm.whereLayout.setVisibility(View.VISIBLE);
         fabOk.setText(todoCreate ? R.string.todo_create_label : R.string.todo_join_label);
 
