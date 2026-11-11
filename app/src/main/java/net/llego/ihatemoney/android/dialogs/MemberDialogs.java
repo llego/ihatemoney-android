@@ -194,6 +194,9 @@ public final class MemberDialogs {
     }
 
     private boolean canManage(DBProject project) {
+        if (project.isReadOnly()) {
+            return false;
+        }
         int access = project.getMyAccessLevel();
         if (access != DBProject.ACCESS_LEVEL_UNKNOWN && access < DBProject.ACCESS_LEVEL_MAINTAINER) {
             showToast(R.string.insufficient_access_level);

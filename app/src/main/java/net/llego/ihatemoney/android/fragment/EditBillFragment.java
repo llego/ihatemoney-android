@@ -81,6 +81,7 @@ public class EditBillFragment extends ThemedFragment {
 
     private static final String TAG = EditBillFragment.class.getSimpleName();
     private ProjectType projectType;
+    private boolean readOnly = false;
 
     public interface BillFragmentListener {
         void close();
@@ -445,6 +446,26 @@ public class EditBillFragment extends ThemedFragment {
         return view;
     }
 
+    private void applyReadOnlyState() {
+        fabSaveBill.setVisibility(View.GONE);
+        editWhat.setEnabled(false);
+        editComment.setEnabled(false);
+        editAmount.setEnabled(false);
+        editDate.setEnabled(false);
+        editTime.setEnabled(false);
+        editPayer.setEnabled(false);
+        editRepeat.setEnabled(false);
+        editPaymentMode.setEnabled(false);
+        editCategory.setEnabled(false);
+        bAll.setVisibility(View.GONE);
+        bNone.setVisibility(View.GONE);
+        duplicateLayout.setVisibility(View.GONE);
+        binding.editBillForm.splitButton.setEnabled(false);
+        for (CheckBox checkbox : owerCheckboxes.values()) {
+            checkbox.setEnabled(false);
+        }
+    }
+
     @Override
     public void applyTheme(int color) {
         final var utils = ThemeUtils.of(color, requireContext());
@@ -548,6 +569,8 @@ public class EditBillFragment extends ThemedFragment {
             projectType = (ProjectType) savedInstanceState.getSerializable(SAVEDKEY_PROJECT_TYPE);
             billIsDuplicated = savedInstanceState.getBoolean(PARAM_NEWBILL_IS_DUPLICATED, false);
         }
+        DBProject project = db.getProject(bill.getProjectId());
+        readOnly = project != null && project.isReadOnly();
         setHasOptionsMenu(true);
         Log.d(TAG, "BILL on create : " + bill);
 
@@ -644,12 +667,16 @@ public class EditBillFragment extends ThemedFragment {
     public void onPrepareOptionsMenu(Menu menu) {
         super.onPrepareOptionsMenu(menu);
 
-        if (bill.getId() < 1) {
+        if (bill.getId() < 1 || readOnly) {
             menu.removeItem(R.id.menu_delete);
         }
     }
 
     public void onBackPressed() {
+        if (readOnly) {
+            listener.close();
+            return;
+        }
         if (!valuesHaveChanged()) {
             listener.close();
             return;
@@ -703,6 +730,9 @@ public class EditBillFragment extends ThemedFragment {
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case R.id.menu_delete:
+                if (readOnly) {
+                    return true;
+                }
                 if (bill.getId() != 0) {
                     DBProject project = db.getProject(bill.getProjectId());
                     if (project.isDeletionDisabled()) {
@@ -1254,6 +1284,10 @@ public class EditBillFragment extends ThemedFragment {
         androidx.core.view.ViewCompat.setStateDescription(binding.editBillForm.splitButton,
                 getString(owersLayout.getVisibility() == View.VISIBLE
                         ? R.string.expense_expanded : R.string.expense_collapsed));
+
+        if (readOnly) {
+            applyReadOnlyState();
+        }
     }
 
     private boolean usesOldPaymentModes() {

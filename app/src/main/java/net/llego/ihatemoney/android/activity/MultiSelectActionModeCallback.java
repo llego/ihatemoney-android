@@ -23,17 +23,19 @@ final class MultiSelectActionModeCallback implements ActionMode.Callback {
     private final Runnable onRefresh;
     private final Runnable onClearSearch;
     private final Runnable onDestroy;
+    private final boolean readOnly;
 
     MultiSelectActionModeCallback(Activity activity, ItemAdapter adapter,
                                   MoneyBusterSQLiteOpenHelper db,
                                   Runnable onRefresh, Runnable onClearSearch,
-                                  Runnable onDestroy) {
+                                  Runnable onDestroy, boolean readOnly) {
         this.activity = activity;
         this.adapter = adapter;
         this.db = db;
         this.onRefresh = onRefresh;
         this.onClearSearch = onClearSearch;
         this.onDestroy = onDestroy;
+        this.readOnly = readOnly;
     }
 
     @Override
@@ -44,12 +46,19 @@ final class MultiSelectActionModeCallback implements ActionMode.Callback {
 
     @Override
     public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-        return false;
+        MenuItem deleteItem = menu.findItem(R.id.menu_delete);
+        if (deleteItem != null) {
+            deleteItem.setVisible(!readOnly);
+        }
+        return true;
     }
 
     @Override
     public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
         if (item.getItemId() == R.id.menu_delete) {
+            if (readOnly) {
+                return true;
+            }
             for (Integer i : adapter.getSelected()) {
                 DBBill bill = (DBBill) adapter.getItem(i);
 

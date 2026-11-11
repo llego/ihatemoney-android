@@ -99,6 +99,13 @@ public class DBProject implements Serializable {
         return ProjectType.LOCAL.equals(type);
     }
 
+    /**
+     * Spliit groups are pulled read-only: the app never pushes changes back.
+     */
+    public boolean isReadOnly() {
+        return ProjectType.SPLIIT.equals(type);
+    }
+
     public String getPassword() {
         return password;
     }
@@ -168,6 +175,9 @@ public class DBProject implements Serializable {
     }
 
     public String getShareUrl() {
+        if (ProjectType.SPLIIT.equals(type)) {
+            return getPublicWebUrl();
+        }
         String strippedUrl = getServerUrl()
                 .replace("https://", "")
                 .replace("http://", "");
@@ -177,6 +187,9 @@ public class DBProject implements Serializable {
     }
 
     public String getPublicWebUrl() {
+        if (ProjectType.SPLIIT.equals(type)) {
+            return getServerUrl() + "/groups/" + getRemoteId();
+        }
         return getServerUrl() + "/" + getRemoteId();
     }
 }

@@ -11,6 +11,7 @@ public class DBMember implements Serializable {
 
     private long id;
     private long remoteId;
+    private String remoteIdStr;
     private String name;
     private long projectId;
     private double weight;
@@ -95,6 +96,18 @@ public class DBMember implements Serializable {
 
     public void setRemoteId(long remoteId) {
         this.remoteId = remoteId;
+    }
+
+    /**
+     * String remote id used by backends whose participant ids are not numeric
+     * (Spliit). IHateMoney keeps using {@link #getRemoteId()}.
+     */
+    public String getRemoteIdStr() {
+        return remoteIdStr;
+    }
+
+    public void setRemoteIdStr(String remoteIdStr) {
+        this.remoteIdStr = remoteIdStr;
     }
 
     public String getName() {

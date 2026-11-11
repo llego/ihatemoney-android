@@ -219,8 +219,9 @@ public class ItemAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> {
             Log.d(TAG, "[get member of project " + bill.getProjectId() + " with remoteid : "+bill.getPayerId()+"]");
             double rAmount = Math.round(bill.getAmount() * 100.0 ) / 100.0;
             nvHolder.billAmount.setText(SupportUtil.normalNumberFormat.format(rAmount));
+            DBMember payer = db.getMember(bill.getPayerId());
             nvHolder.billSubtitle.setText(db.getContext().getString(R.string.expense_paid_by,
-                    db.getMember(bill.getPayerId()).getName()));
+                    payer != null ? payer.getName() : "?"));
 
             boolean isProjectLocal = ProjectType.LOCAL.equals(projectType);
             nvHolder.syncIcon.setVisibility((isProjectLocal || bill.getState() == DBBill.STATE_OK) ? View.INVISIBLE : View.VISIBLE);

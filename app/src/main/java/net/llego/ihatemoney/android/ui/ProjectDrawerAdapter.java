@@ -172,6 +172,9 @@ public class ProjectDrawerAdapter extends RecyclerView.Adapter<ProjectDrawerAdap
             popup.setForceShowIcon(true);
 
             long projectId = projectItem.project.getId();
+            if (projectItem.project.isReadOnly()) {
+                popup.getMenu().removeItem(R.id.opt_manage_members);
+            }
 
             popup.setOnMenuItemClickListener((MenuItem menuItem) -> {
                 int itemId = menuItem.getItemId();

@@ -10,6 +10,7 @@ public class ProjectTypeTest {
     public void fromStoredRecognizesSupportedTypes() {
         assertEquals(ProjectType.LOCAL, ProjectType.fromStored("l"));
         assertEquals(ProjectType.IHATEMONEY, ProjectType.fromStored("i"));
+        assertEquals(ProjectType.SPLIIT, ProjectType.fromStored("s"));
     }
 
     @Test

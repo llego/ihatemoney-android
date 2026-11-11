@@ -14,6 +14,8 @@ import net.llego.ihatemoney.R;
 import net.llego.ihatemoney.android.fragment.NewProjectFragment;
 import net.llego.ihatemoney.model.ProjectType;
 
+import java.util.List;
+
 public class NewProjectActivity extends AppCompatActivity implements NewProjectFragment.NewProjectFragmentListener {
 
     protected NewProjectFragment fragment;
@@ -68,7 +70,8 @@ public class NewProjectActivity extends AppCompatActivity implements NewProjectF
                 showToast(getString(R.string.import_no_data), Toast.LENGTH_LONG);
                 shouldCloseActivity = true;
             } else if (
-                    (data.getScheme().equals("ihatemoney") || data.getScheme().equals("ihatemoney+http"))
+                    data.getScheme() != null
+                    && (data.getScheme().equals("ihatemoney") || data.getScheme().equals("ihatemoney+http"))
                     && data.getPathSegments().size() >= 1
             ) {
                 // invitation link
@@ -103,6 +106,19 @@ public class NewProjectActivity extends AppCompatActivity implements NewProjectF
                     defaultIhmUrl += data.getPath().replaceAll("/" + defaultProjectId + "/" + defaultProjectPassword + "$", "");
                 }
                 defaultProjectType = ProjectType.IHATEMONEY;
+            } else if (data.getScheme() != null && data.getScheme().equals("spliit")) {
+                // Spliit group link: spliit://<host>[:port]/<base-path...>/<group>
+                defaultProjectType = ProjectType.SPLIIT;
+                StringBuilder base = new StringBuilder("https://").append(data.getHost());
+                if (data.getPort() != -1) {
+                    base.append(":").append(data.getPort());
+                }
+                List<String> segments = data.getPathSegments();
+                for (int i = 0; i < segments.size() - 1; i++) {
+                    base.append("/").append(segments.get(i));
+                }
+                defaultIhmUrl = base.toString();
+                defaultProjectId = segments.isEmpty() ? null : data.getLastPathSegment();
             } else {
                 showToast(getString(R.string.import_bad_url), Toast.LENGTH_LONG);
                 shouldCloseActivity = true;
