@@ -4,8 +4,8 @@
 # The API key lives in the repo secret OPENROUTER_KEY (passed as OPENROUTER__KEY).
 
 [config]
-model = "openrouter/~deepseek/deepseek-v4-flash-latest"
-fallback_models = ["openrouter/deepseek/deepseek-v4.1-flash"]
+model = "openrouter/~deepseek/deepseek-v4.1-flash-latest"
+fallback_models = ["openrouter/deepseek/deepseek-v4-flash"]
 custom_model_max_tokens = 16000
 
 [pr_reviewer]
