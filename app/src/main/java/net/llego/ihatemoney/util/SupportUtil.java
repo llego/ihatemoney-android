@@ -203,35 +203,40 @@ public class SupportUtil {
                     ) &&
                     (dateMin == null || b.getDate().compareTo(dateMin) >= 0) &&
                     (dateMax == null || b.getDate().compareTo(dateMax) <= 0)) {
-                nbBills++;
-                membersNbBills.put(
-                        b.getPayerId(),
-                        membersNbBills.get(b.getPayerId()) + 1
-                );
-                double amount = b.getAmount();
-                membersBalance.put(
-                        b.getPayerId(),
-                        membersBalance.get(b.getPayerId()) + amount
-                );
-                membersPaid.put(
-                        b.getPayerId(),
-                        membersPaid.get(b.getPayerId()) + amount
-                );
+                // An expense can outlive its payer (e.g. a Spliit participant
+                // removed from the group); skip it instead of crashing on a
+                // missing map entry.
+                Integer payerBills = membersNbBills.get(b.getPayerId());
+                Double payerBalance = membersBalance.get(b.getPayerId());
+                Double payerPaid = membersPaid.get(b.getPayerId());
+                if (payerBills == null || payerBalance == null || payerPaid == null) {
+                    continue;
+                }
                 double nbOwerShares = 0.0;
                 for (DBBillOwer bo : b.getBillOwers()) {
-                    nbOwerShares += membersWeight.get(bo.getMemberId());
+                    Double owerWeight = membersWeight.get(bo.getMemberId());
+                    if (owerWeight != null) {
+                        nbOwerShares += owerWeight;
+                    }
                 }
+                if (nbOwerShares <= 0) {
+                    continue;
+                }
+                nbBills++;
+                membersNbBills.put(b.getPayerId(), payerBills + 1);
+                double amount = b.getAmount();
+                membersBalance.put(b.getPayerId(), payerBalance + amount);
+                membersPaid.put(b.getPayerId(), payerPaid + amount);
                 for (DBBillOwer bo : b.getBillOwers()) {
-                    double owerWeight = membersWeight.get(bo.getMemberId());
-                    double spent = amount/nbOwerShares*owerWeight;
-                    membersBalance.put(
-                            bo.getMemberId(),
-                            membersBalance.get(bo.getMemberId()) - spent
-                    );
-                    membersSpent.put(
-                            bo.getMemberId(),
-                            membersSpent.get(bo.getMemberId()) + spent
-                    );
+                    Double owerWeight = membersWeight.get(bo.getMemberId());
+                    Double owerBalance = membersBalance.get(bo.getMemberId());
+                    Double owerSpent = membersSpent.get(bo.getMemberId());
+                    if (owerWeight == null || owerBalance == null || owerSpent == null) {
+                        continue;
+                    }
+                    double spent = amount / nbOwerShares * owerWeight;
+                    membersBalance.put(bo.getMemberId(), owerBalance - spent);
+                    membersSpent.put(bo.getMemberId(), owerSpent + spent);
                 }
             }
         }
