@@ -31,10 +31,10 @@
     <string name="ihm_setup_summary">Connect to IHateMoney to share expenses. Changes are saved on this device, even when offline.</string>
     <string name="ihm_no_projects">Add your IHateMoney project to start sharing expenses.</string>
     <string name="spliit_setup_summary">Join a Spliit group to read its expenses. Spliit is read-only in this app: changes are saved on the Spliit web app.</string>
-    <string name="spliit_read_only">Spliit group (read-only)</string>
+    <string name="spliit_join_title">Add Spliit group</string>
+    <string name="spliit_join_hint">Spliit group link</string>
+    <string name="spliit_join_helper">Paste the link shared from Spliit, or scan its QR code.</string>
+    <string name="spliit_join_invalid">Enter a valid Spliit group link.</string>
+    <string name="spliit_join_button">Add group</string>
     <string name="spliit_read_only_hint">This Spliit group is read-only. Edit expenses on the Spliit web app.</string>
-    <string name="spliit_join_url">Spliit group URL (or group ID)</string>
-    <string name="spliit_join_url_long">Full Spliit group URL, e.g. https://spliit.app/groups/abc123</string>
-    <string name="spliit_error_not_found">Spliit group not found. Check the group URL.</string>
-    <string name="spliit_error_invalid_url">Enter a valid Spliit group URL or group ID.</string>
 </resources>

@@ -3,26 +3,31 @@ package net.llego.ihatemoney.android.activity;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
 import com.budiyev.android.codescanner.CodeScanner;
 import com.budiyev.android.codescanner.CodeScannerView;
 import com.budiyev.android.codescanner.DecodeCallback;
+import com.budiyev.android.codescanner.ErrorCallback;
 import com.google.zxing.Result;
 
 import net.llego.ihatemoney.R;
 
 public class QrCodeScannerActivity extends AppCompatActivity {
     private CodeScanner mCodeScanner;
+    private CodeScannerView mScannerView;
 
     private static final String TAG = QrCodeScannerActivity.class.getSimpleName();
 
@@ -33,11 +38,29 @@ public class QrCodeScannerActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle state) {
         super.onCreate(state);
-        ActivityCompat.requestPermissions(this, new String[]{ Manifest.permission.CAMERA }, PERMISSION_CAMERA);
-
         setContentView(R.layout.activity_code_scanner);
-        CodeScannerView scannerView = findViewById(R.id.scanner_view);
-        mCodeScanner = new CodeScanner(this, scannerView);
+        mScannerView = findViewById(R.id.scanner_view);
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA)
+                == PackageManager.PERMISSION_GRANTED) {
+            initScanner();
+        } else {
+            ActivityCompat.requestPermissions(this,
+                    new String[]{Manifest.permission.CAMERA}, PERMISSION_CAMERA);
+        }
+    }
+
+    /**
+     * Create the scanner only once the camera permission is granted. The
+     * library starts a camera thread on its first preview; doing that before
+     * the permission result makes {@code Camera.open} throw and, without an
+     * error callback, crash the process.
+     */
+    private void initScanner() {
+        if (mCodeScanner != null || mScannerView == null) {
+            return;
+        }
+        mCodeScanner = new CodeScanner(this, mScannerView);
         mCodeScanner.setDecodeCallback(new DecodeCallback() {
             @Override
             public void onDecoded(@NonNull final Result result) {
@@ -49,7 +72,21 @@ public class QrCodeScannerActivity extends AppCompatActivity {
                 });
             }
         });
-        scannerView.setOnClickListener(new View.OnClickListener() {
+        mCodeScanner.setErrorCallback(new ErrorCallback() {
+            @Override
+            public void onError(@NonNull Throwable thrown) {
+                Log.e(TAG, "Camera error", thrown);
+                runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        Toast.makeText(QrCodeScannerActivity.this,
+                                R.string.camera_unavailable, Toast.LENGTH_LONG).show();
+                        finish();
+                    }
+                });
+            }
+        });
+        mScannerView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 mCodeScanner.startPreview();
@@ -58,15 +95,38 @@ public class QrCodeScannerActivity extends AppCompatActivity {
     }
 
     @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode != PERMISSION_CAMERA) {
+            return;
+        }
+        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            initScanner();
+            if (mCodeScanner != null) {
+                mCodeScanner.startPreview();
+            }
+        } else {
+            Toast.makeText(this, R.string.camera_permission_required, Toast.LENGTH_LONG).show();
+            finish();
+        }
+    }
+
+    @Override
     public void onResume() {
         super.onResume();
-        mCodeScanner.startPreview();
+        if (mCodeScanner != null && ContextCompat.checkSelfPermission(this,
+                Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            mCodeScanner.startPreview();
+        }
         if (BillsListViewActivity.DEBUG) { Log.d(TAG, "[Scanner onResume]"); }
     }
 
     @Override
     public void onPause() {
-        mCodeScanner.releaseResources();
+        if (mCodeScanner != null) {
+            mCodeScanner.releaseResources();
+        }
         if (BillsListViewActivity.DEBUG) { Log.d(TAG, "[Scanner onPause]"); }
         super.onPause();
     }

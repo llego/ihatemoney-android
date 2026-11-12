@@ -77,10 +77,8 @@
     <string name="new_project_where">Var?</string>
     <string name="where_local">Bara på min telefon (lokalt)</string>
     <string name="where_ihm">IHateMoney-server</string>
-    <string name="where_spliit">Spliit-grupp</string>
     <string name="where_local_short">Lokalt</string>
     <string name="where_ihm_short">IHateMoney</string>
-    <string name="where_spliit_short">Spliit</string>
     <string name="new_project_scan">Skanna en IHateMoney for Android-QR-kod</string>
     <string name="todo_join">Anslut till ett befintligt projekt</string>
     <string name="todo_join_label">Anslut</string>
@@ -159,6 +157,8 @@
     <string name="drawer_last_sync_text">Senast synkroniserat: %1$02d:%2$02d</string>
     <string name="scan_qrcode_tooltip">Skanna en Cospend/IHateMoney-QR-kod</string>
     <string name="scan_qrcode">Skanna QR-kod</string>
+    <string name="camera_permission_required">Kameraåtkomst krävs för att skanna en QR-kod.</string>
+    <string name="camera_unavailable">Kameran är inte tillgänglig. Ange länken manuellt.</string>
     <string name="import_tooltip">Importera från CSV-fil</string>
     <string name="import_error_owers">Felaktig CSV-fil: ogiltiga deltagare på rad %1$d</string>
     <string name="import_error_date">Felaktig CSV-fil: ogiltigt datum på rad %1$d</string>
@@ -275,7 +275,9 @@
     <string name="manage_accounts">Hantera konton</string>
     <string name="no_projects_title">Inga projekt</string>
     <string name="no_projects_text">Du har inga projekt ännu. Lägg till eller anslut till ett IHateMoney-projekt, eller skapa ett lokalt projekt.</string>
-    <string name="add_project_choice">Lägg till projekt</string>
+    <string name="add_project_choice">Vad vill du lägga till?</string>
+    <string name="add_project_ihatemoney">IHateMoney- eller lokalt projekt</string>
+    <string name="add_project_spliit">Spliit-grupp (skrivskyddad)</string>
     <string name="no_members_title">Inga medlemmar</string>
     <string name="no_members_text">Projektet har inga medlemmar. Lägg till minst en medlem för att skapa utgifter, gärna två eller fler.</string>
     <string name="no_bills_title">Inga utgifter</string>

@@ -521,12 +521,8 @@ public class BillsListViewActivity
     }
 
     private void setupEmptyStateButtons() {
-        binding.mainContentView.buttonNoProjectsConfigureManually.setOnClickListener((view) -> {
-            Intent newProjectIntent = new Intent(getApplicationContext(), NewProjectActivity.class);
-            newProjectIntent.putExtra(NewProjectFragment.PARAM_DEFAULT_IHM_URL, "https://ihatemoney.org");
-            newProjectIntent.putExtra(NewProjectFragment.PARAM_DEFAULT_NC_URL, "https://mynextcloud.org");
-            addProjectLauncher.launch(newProjectIntent);
-        });
+        binding.mainContentView.buttonNoProjectsConfigureManually.setOnClickListener((view) ->
+                addProject());
 
         binding.mainContentView.buttonNoMembersAddMember.setOnClickListener((view) -> {
             final SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
@@ -634,6 +630,23 @@ public class BillsListViewActivity
     /* --- End project options --- */
 
     private void addProject() {
+        new ThemedMaterialAlertDialogBuilder(this)
+                .setTitle(R.string.add_project_choice)
+                .setItems(new CharSequence[]{
+                        getString(R.string.add_project_ihatemoney),
+                        getString(R.string.add_project_spliit)
+                }, (dialog, which) -> {
+                    if (which == 0) {
+                        launchNewProject();
+                    } else {
+                        addProjectLauncher.launch(
+                                new Intent(getApplicationContext(), SpliitJoinActivity.class));
+                    }
+                })
+                .show();
+    }
+
+    private void launchNewProject() {
         String defaultIhmUrl = "https://ihatemoney.org";
         Intent newProjectIntent = new Intent(getApplicationContext(), NewProjectActivity.class);
         List<DBProject> projects = db.getProjects();

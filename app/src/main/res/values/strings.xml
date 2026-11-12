@@ -78,10 +78,8 @@
     <string name="new_project_where">Where?</string>
     <string name="where_local">Just my phone (local)</string>
     <string name="where_ihm">IHateMoney server</string>
-    <string name="where_spliit">Spliit group</string>
     <string name="where_local_short">Local</string>
     <string name="where_ihm_short">IHateMoney</string>
-    <string name="where_spliit_short">Spliit</string>
     <string name="new_project_scan">Scan a IHateMoney for Android QRCode</string>
     <string name="todo_join">Join an existing project</string>
     <string name="todo_join_label">Join</string>
@@ -160,6 +158,8 @@
     <string name="drawer_last_sync_text">Last sync: %1$02d:%2$02d</string>
     <string name="scan_qrcode_tooltip">Scan a Cospend/IHateMoney QRCode</string>
     <string name="scan_qrcode">Scan QR code</string>
+    <string name="camera_permission_required">Camera access is required to scan a QR code.</string>
+    <string name="camera_unavailable">Camera unavailable. Enter the link manually.</string>
     <string name="import_tooltip">Import from CSV file</string>
     <string name="import_error_owers">Malformed CSV, bad owers on line %1$d</string>
     <string name="import_error_date">Malformed CSV, bad date on line %1$d</string>
@@ -282,7 +282,9 @@
     <!-- Bills list corner cases -->
     <string name="no_projects_title">No Projects</string>
     <string name="no_projects_text">You don\'t have any projects yet. Add or join an IHateMoney project, or create a local project.</string>
-    <string name="add_project_choice">Add project</string>
+    <string name="add_project_choice">What do you want to add?</string>
+    <string name="add_project_ihatemoney">IHateMoney or local project</string>
+    <string name="add_project_spliit">Spliit group (read-only)</string>
     <string name="no_members_title">No Members</string>
     <string name="no_members_text">This project doesn\'t have any members. In order to create expenses, you need to add at least one member (better two or more).</string>
     <string name="no_bills_title">No expenses</string>

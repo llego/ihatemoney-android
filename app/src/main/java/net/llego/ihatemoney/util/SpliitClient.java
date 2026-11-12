@@ -118,7 +118,11 @@ public class SpliitClient {
      * expenses are paginated and fetched page by page.
      */
     public SpliitGroup getGroup(@Nullable CustomCertManager ccm) throws IOException, JSONException {
-        JSONObject group = getGroupDetails(ccm);
+        JSONObject details = getGroupDetails(ccm);
+        JSONObject group = details.optJSONObject("group");
+        if (group == null) {
+            throw new JSONException("Spliit response is missing the group object");
+        }
 
         List<SpliitParticipant> participants = new ArrayList<>();
         JSONArray participantsArray = group.optJSONArray("participants");

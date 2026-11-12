@@ -14,8 +14,6 @@ import net.llego.ihatemoney.R;
 import net.llego.ihatemoney.android.fragment.NewProjectFragment;
 import net.llego.ihatemoney.model.ProjectType;
 
-import java.util.List;
-
 public class NewProjectActivity extends AppCompatActivity implements NewProjectFragment.NewProjectFragmentListener {
 
     protected NewProjectFragment fragment;
@@ -106,23 +104,6 @@ public class NewProjectActivity extends AppCompatActivity implements NewProjectF
                     defaultIhmUrl += data.getPath().replaceAll("/" + defaultProjectId + "/" + defaultProjectPassword + "$", "");
                 }
                 defaultProjectType = ProjectType.IHATEMONEY;
-            } else if (data.getScheme() != null && data.getScheme().equals("spliit")) {
-                // Spliit group link: spliit://<host>[:port]/<base-path...>/<group>;
-                // also accept .../groups/<group>, matching the web URL shape.
-                defaultProjectType = ProjectType.SPLIIT;
-                StringBuilder base = new StringBuilder("https://").append(data.getHost());
-                if (data.getPort() != -1) {
-                    base.append(":").append(data.getPort());
-                }
-                List<String> segments = data.getPathSegments();
-                int baseSegmentCount = segments.size() >= 2
-                        && "groups".equals(segments.get(segments.size() - 2))
-                        ? segments.size() - 2 : segments.size() - 1;
-                for (int i = 0; i < baseSegmentCount; i++) {
-                    base.append("/").append(segments.get(i));
-                }
-                defaultIhmUrl = base.toString();
-                defaultProjectId = segments.isEmpty() ? null : data.getLastPathSegment();
             } else {
                 showToast(getString(R.string.import_bad_url), Toast.LENGTH_LONG);
                 shouldCloseActivity = true;
