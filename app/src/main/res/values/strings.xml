@@ -158,6 +158,8 @@
     <string name="drawer_last_sync_text">Last sync: %1$02d:%2$02d</string>
     <string name="scan_qrcode_tooltip">Scan a Cospend/IHateMoney QRCode</string>
     <string name="scan_qrcode">Scan QR code</string>
+    <string name="camera_permission_required">Camera access is required to scan a QR code.</string>
+    <string name="camera_unavailable">Camera unavailable. Enter the link manually.</string>
     <string name="import_tooltip">Import from CSV file</string>
     <string name="import_error_owers">Malformed CSV, bad owers on line %1$d</string>
     <string name="import_error_date">Malformed CSV, bad date on line %1$d</string>

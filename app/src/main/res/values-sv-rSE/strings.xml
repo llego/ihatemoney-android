@@ -157,6 +157,8 @@
     <string name="drawer_last_sync_text">Senast synkroniserat: %1$02d:%2$02d</string>
     <string name="scan_qrcode_tooltip">Skanna en Cospend/IHateMoney-QR-kod</string>
     <string name="scan_qrcode">Skanna QR-kod</string>
+    <string name="camera_permission_required">Kameraåtkomst krävs för att skanna en QR-kod.</string>
+    <string name="camera_unavailable">Kameran är inte tillgänglig. Ange länken manuellt.</string>
     <string name="import_tooltip">Importera från CSV-fil</string>
     <string name="import_error_owers">Felaktig CSV-fil: ogiltiga deltagare på rad %1$d</string>
     <string name="import_error_date">Felaktig CSV-fil: ogiltigt datum på rad %1$d</string>
