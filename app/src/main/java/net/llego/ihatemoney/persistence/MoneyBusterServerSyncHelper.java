@@ -1442,7 +1442,7 @@ public class MoneyBusterServerSyncHelper {
         if (project.isReadOnly()) {
             try {
                 SpliitClient client = new SpliitClient(project.getServerUrl(), project.getRemoteId());
-                SpliitClient.SpliitGroup group = client.getGroup(customCertManager);
+                SpliitClient.SpliitGroup group = client.getGroupMetadata(customCertManager);
                 return group.name != null;
             } catch (Exception e) {
                 Log.e(TAG, "Failed to get Spliit group: " + e);
@@ -1562,7 +1562,7 @@ public class MoneyBusterServerSyncHelper {
         protected Boolean doInBackground(Void... voids) {
             try {
                 SpliitClient client = new SpliitClient(project.getServerUrl(), project.getRemoteId());
-                SpliitClient.SpliitGroup group = client.getGroup(customCertManager);
+                SpliitClient.SpliitGroup group = client.getGroupMetadata(customCertManager);
                 project.setName(group.name);
                 project.setCurrencyName(group.currency);
                 name = group.name;

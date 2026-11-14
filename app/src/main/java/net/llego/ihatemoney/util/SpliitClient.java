@@ -19,7 +19,6 @@ import java.net.URLEncoder;
 import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 
 import at.bitfire.cert4android.CustomCertManager;
@@ -115,11 +114,8 @@ public class SpliitClient {
         }
     }
 
-    /**
-     * Fetch the group and all of its expenses. The group is a single tRPC call;
-     * expenses are paginated and fetched page by page.
-     */
-    public SpliitGroup getGroup(@Nullable CustomCertManager ccm) throws IOException, JSONException {
+    /** Fetch group metadata without downloading its expense history, e.g. when joining. */
+    public SpliitGroup getGroupMetadata(@Nullable CustomCertManager ccm) throws IOException, JSONException {
         JSONObject details = getGroupDetails(ccm);
         JSONObject group = details.optJSONObject("group");
         if (group == null) {
@@ -136,36 +132,31 @@ public class SpliitClient {
             }
         }
 
-        List<SpliitExpense> expenses = new ArrayList<>();
-        HashSet<String> expenseIds = new HashSet<>();
-        int cursor = 0;
-        while (true) {
-            JSONObject page = getExpensesPage(cursor, ccm);
-            JSONArray expensesArray = page.getJSONArray("expenses");
-            if (expensesArray != null) {
-                for (int i = 0; i < expensesArray.length(); i++) {
-                    String id = expensesArray.getJSONObject(i).getString("id");
-                    if (!expenseIds.add(id)) throw new JSONException("Spliit pagination changed during sync");
-                    expenses.add(getExpense(id, ccm));
-                }
-            }
-            if (!page.getBoolean("hasMore")) {
-                break;
-            }
-            int nextCursor = page.getInt("nextCursor");
-            if (nextCursor <= cursor) {
-                throw new JSONException("Spliit pagination did not advance");
-            }
-            cursor = nextCursor;
-        }
-
         return new SpliitGroup(
                 group.optString("id", groupId),
                 group.optString("name", ""),
                 group.optString("currency", ""),
                 group.optString("currencyCode", ""),
                 participants,
-                expenses);
+                new ArrayList<>());
+    }
+
+    /** Fetch a complete, validated ID list before loading any expense details. */
+    public SpliitGroup getGroup(@Nullable CustomCertManager ccm) throws IOException, JSONException {
+        SpliitGroup group = getGroupMetadata(ccm);
+        SpliitExpensePagination pagination = new SpliitExpensePagination();
+        try {
+            while (!pagination.isComplete()) {
+                JSONObject page = getExpensesPage(pagination.getCursor(), ccm);
+                pagination.accept(SpliitExpenseCodec.parse(page.toString()));
+            }
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            throw new JSONException(e.getMessage());
+        }
+        List<SpliitExpense> expenses = new ArrayList<>();
+        for (String id : pagination.getExpenseIds()) expenses.add(getExpense(id, ccm));
+        return new SpliitGroup(group.id, group.name, group.currency, group.currencyCode,
+                group.participants, expenses);
     }
 
     private JSONObject getGroupDetails(@Nullable CustomCertManager ccm) throws IOException, JSONException {
