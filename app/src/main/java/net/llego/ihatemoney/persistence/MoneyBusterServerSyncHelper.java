@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
+import android.os.SystemClock;
 import android.util.Log;
 
 import androidx.annotation.Nullable;
@@ -25,6 +26,8 @@ import net.llego.ihatemoney.model.DBMember;
 import net.llego.ihatemoney.model.DBPaymentMode;
 import net.llego.ihatemoney.model.DBProject;
 import net.llego.ihatemoney.model.ProjectType;
+import net.llego.ihatemoney.model.SyncProgress;
+import net.llego.ihatemoney.model.SyncProgress.Stage;
 import net.llego.ihatemoney.util.ICallback;
 import net.llego.ihatemoney.util.IProjectCreationCallback;
 import net.llego.ihatemoney.util.VersatileProjectSyncClient;
@@ -41,6 +44,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicLong;
 
 import at.bitfire.cert4android.CustomCertManager;
 
@@ -54,6 +58,7 @@ public class MoneyBusterServerSyncHelper {
 
     public static final String BROADCAST_PROJECT_SYNC_FAILED = "net.llego.ihatemoney.broadcast.project_sync_failed";
     public static final String BROADCAST_PROJECT_SYNCED = "net.llego.ihatemoney.broadcast.project_synced";
+    public static final String BROADCAST_SYNC_PROGRESS = "net.llego.ihatemoney.broadcast.sync_progress";
     public static final String BROADCAST_SYNC_PROJECT = "net.llego.ihatemoney.broadcast.sync_project";
     public static final String BROADCAST_NETWORK_AVAILABLE = "net.llego.ihatemoney.broadcast.network_available";
     public static final String BROADCAST_NETWORK_UNAVAILABLE = "net.llego.ihatemoney.broadcast.network_unavailable";
@@ -91,6 +96,8 @@ public class MoneyBusterServerSyncHelper {
 
     // current state of the synchronization
     private boolean syncActive = false;
+    private final SyncProgressTracker progressTracker = new SyncProgressTracker();
+    private final AtomicLong syncOperations = new AtomicLong();
     private static final List<Long> projectIdsToSync = new ArrayList<>();
 
     // list of callbacks for both parts of synchronziation
@@ -120,6 +127,22 @@ public class MoneyBusterServerSyncHelper {
 
     public CustomCertManager getCustomCertManager() {
         return customCertManager;
+    }
+
+    public @Nullable SyncProgress getSyncProgress(long projectId) {
+        return progressTracker.get(projectId);
+    }
+
+    private void reportProgress(long operationId, long projectId, Stage stage, int completed, int total) {
+        if (progressTracker.update(operationId, new SyncProgress(projectId, stage, completed, total), SystemClock.elapsedRealtime())) {
+            notifyProgressChanged(projectId);
+        }
+    }
+
+    private void notifyProgressChanged(long projectId) {
+        Intent intent = new Intent(BROADCAST_SYNC_PROGRESS).setPackage(appContext.getPackageName());
+        intent.putExtra(BillsListViewActivity.BROADCAST_PROJECT_ID, projectId);
+        appContext.sendBroadcast(intent);
     }
 
     /**
@@ -177,6 +200,10 @@ public class MoneyBusterServerSyncHelper {
             if (!projectIdsToSync.contains(projId)) {
                 projectIdsToSync.add(projId);
             }
+            if (networkConnected && progressTracker.queueIfIdle(
+                    new SyncProgress(projId, Stage.QUEUED, 0, SyncProgress.UNKNOWN_TOTAL), SystemClock.elapsedRealtime())) {
+                notifyProgressChanged(projId);
+            }
             for (ICallback callback : callbacksPush) {
                 callback.onScheduled();
             }
@@ -206,6 +233,7 @@ public class MoneyBusterServerSyncHelper {
      * Synchronization consists of two parts: pushLocalChanges and pullRemoteChanges.
      */
     public class SyncTask extends AsyncTask<Void, Void, Boolean> {
+        private final long operationId = syncOperations.incrementAndGet();
         private final boolean onlyLocalChanges;
         private final DBProject project;
         private final List<ICallback> callbacks = new ArrayList<>();
@@ -237,8 +265,13 @@ public class MoneyBusterServerSyncHelper {
             syncActive = true;
         }
 
+        private void reportProgress(Stage stage, int completed, int total) {
+            MoneyBusterServerSyncHelper.this.reportProgress(operationId, project.getId(), stage, completed, total);
+        }
+
         @Override
         protected Boolean doInBackground(Void... voids) {
+            reportProgress(Stage.PREPARING, 0, SyncProgress.UNKNOWN_TOTAL);
             Log.i(getClass().getSimpleName(), "STARTING SYNCHRONIZATION");
 
             if (project.isReadOnly()) {
@@ -248,6 +281,7 @@ public class MoneyBusterServerSyncHelper {
 
             client = createVersatileProjectSyncClient();
             //dbHelper.debugPrintFullDB();
+            reportProgress(Stage.UPLOADING, 0, SyncProgress.UNKNOWN_TOTAL);
             boolean status = pushLocalChanges();
             if (status && !onlyLocalChanges) {
                 status = pullRemoteChanges();
@@ -456,6 +490,7 @@ public class MoneyBusterServerSyncHelper {
          */
         private boolean pullRemoteChanges() {
             Log.d(TAG, "pullRemoteChanges(" + project + ")");
+            reportProgress(Stage.PROJECT, 0, SyncProgress.UNKNOWN_TOTAL);
             SharedPreferences pref = PreferenceManager.getDefaultSharedPreferences(appContext);
             String lastETag = null;
             long lastModified = 0;
@@ -691,6 +726,7 @@ public class MoneyBusterServerSyncHelper {
                 }
 
                 // get bills
+                reportProgress(Stage.DOWNLOADING, 0, SyncProgress.UNKNOWN_TOTAL);
                 ServerResponse.BillsResponse billsResponse = client.getBills(customCertManager, project);
                 List<DBBill> remoteBills;
                 List<Long> remoteAllBillIds = new ArrayList<>();
@@ -717,6 +753,7 @@ public class MoneyBusterServerSyncHelper {
 
         private void applyRemoteBills(List<DBBill> remoteBills, List<Long> remoteAllBillIds,
                                       Map<Long, DBMember> remoteMembersByRemoteId, long serverSyncTimestamp) {
+            reportProgress(Stage.SAVING, 0, remoteBills.size());
             // All network requests are complete. Commit reconciliation as one disk transaction,
             // rather than fsyncing once for every expense and participant row.
             android.database.sqlite.SQLiteDatabase database = dbHelper.getWritableDatabase();
@@ -733,7 +770,9 @@ public class MoneyBusterServerSyncHelper {
                 }
 
                 // add, update or delete DB bills
+                int processedExpenses = 0;
                 for (DBBill remoteBill : remoteBills) {
+                    reportProgress(Stage.SAVING, processedExpenses++, remoteBills.size());
                     // add if local does not exist
                     if (!localBillsByRemoteId.containsKey(remoteBill.getRemoteId())) {
                         dbHelper.addBill(remoteBill);
@@ -828,6 +867,7 @@ public class MoneyBusterServerSyncHelper {
                         null, null, null,
                         null
                 );
+                reportProgress(Stage.SAVING, remoteBills.size(), remoteBills.size());
                 database.setTransactionSuccessful();
             } finally {
                 database.endTransaction();
@@ -843,11 +883,13 @@ public class MoneyBusterServerSyncHelper {
             Log.d(TAG, "pullSpliitGroup(" + project + ")");
             try {
                 SpliitClient spliitClient = new SpliitClient(project.getServerUrl(), project.getRemoteId());
-                SpliitClient.SpliitGroup group = spliitClient.getGroup(customCertManager);
-                if (new SpliitExpenseSync(dbHelper, spliitClient, customCertManager).push(project, group)) {
-                    group = spliitClient.getGroup(customCertManager);
+                SpliitClient.SpliitGroup group = spliitClient.getGroup(customCertManager, this::reportProgress);
+                if (new SpliitExpenseSync(dbHelper, spliitClient, customCertManager,
+                        this::reportProgress).push(project, group)) {
+                    group = spliitClient.getGroup(customCertManager, this::reportProgress);
                 }
 
+                reportProgress(Stage.SAVING, 0, group.expenses.size());
                 android.database.sqlite.SQLiteDatabase database = dbHelper.getWritableDatabase();
                 database.beginTransaction();
                 try {
@@ -939,7 +981,9 @@ public class MoneyBusterServerSyncHelper {
                     }
                 }
                 Map<String, SpliitClient.SpliitExpense> remoteBillsByRemoteId = new HashMap<>();
+                int processedExpenses = 0;
                 for (SpliitClient.SpliitExpense expense : group.expenses) {
+                    reportProgress(Stage.SAVING, processedExpenses++, group.expenses.size());
                     remoteBillsByRemoteId.put(expense.id, expense);
                     DBBill localBill = localBillsByRemoteId.get(expense.id);
                     if (localBill == null) {
@@ -965,6 +1009,7 @@ public class MoneyBusterServerSyncHelper {
                         System.currentTimeMillis() / 1000,
                         null, null, null, null
                 );
+                reportProgress(Stage.SAVING, group.expenses.size(), group.expenses.size());
         }
 
         private void addSpliitBill(SpliitClient.SpliitExpense expense,
@@ -1043,6 +1088,7 @@ public class MoneyBusterServerSyncHelper {
         @Override
         protected void onPostExecute(Boolean status) {
             super.onPostExecute(status);
+            if (progressTracker.clear(project.getId(), operationId)) notifyProgressChanged(project.getId());
             if (!status) {
                 String errorString = "";
                 for (String errorMessage : errorMessages) {
@@ -1066,6 +1112,7 @@ public class MoneyBusterServerSyncHelper {
                 appContext.sendBroadcast(intent);
             } else {
                 Intent intent = new Intent(BROADCAST_PROJECT_SYNCED);
+                intent.putExtra(BillsListViewActivity.BROADCAST_PROJECT_ID, project.getId());
                 intent.putExtra(BillsListViewActivity.BROADCAST_EXTRA_PARAM, project.getName());
                 appContext.sendBroadcast(intent);
                 // NOTIFICATION

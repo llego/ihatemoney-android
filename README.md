@@ -12,6 +12,7 @@ IHateMoney for Android is **completely vibe-coded**: every change is produced by
 - Reorganized the sidebar and renamed everything to "expense" consistently.
 - Removed receipt QR scanning and the redundant Manage-project chooser.
 - Fixed IHateMoney expense ordering and optimized synchronization.
+- Visible per-project sync phases/counts for IHateMoney and Spliit, with pull-to-refresh available on empty remote projects too.
 - Full Swedish translations (plus a few locale fixes elsewhere).
 - Cleaned up unused code/strings and improved naming and layout details.
 

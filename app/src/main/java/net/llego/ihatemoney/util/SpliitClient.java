@@ -5,6 +5,9 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
+import net.llego.ihatemoney.model.SyncProgress;
+import net.llego.ihatemoney.model.SyncProgress.Stage;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -43,6 +46,10 @@ public class SpliitClient {
 
     private final String baseUrl;
     private final String groupId;
+
+    public interface ProgressListener {
+        void onProgress(Stage stage, int completed, int total);
+    }
 
     public SpliitClient(String baseUrl, String groupId) {
         this.baseUrl = baseUrl.replaceAll("/+$", "");
@@ -143,18 +150,31 @@ public class SpliitClient {
 
     /** Fetch a complete, validated ID list before loading any expense details. */
     public SpliitGroup getGroup(@Nullable CustomCertManager ccm) throws IOException, JSONException {
+        return getGroup(ccm, (stage, completed, total) -> { });
+    }
+
+    public SpliitGroup getGroup(@Nullable CustomCertManager ccm, ProgressListener progress)
+            throws IOException, JSONException {
+        progress.onProgress(Stage.PROJECT, 0, SyncProgress.UNKNOWN_TOTAL);
         SpliitGroup group = getGroupMetadata(ccm);
         SpliitExpensePagination pagination = new SpliitExpensePagination();
+        progress.onProgress(Stage.LISTING, 0, SyncProgress.UNKNOWN_TOTAL);
         try {
             while (!pagination.isComplete()) {
                 JSONObject page = getExpensesPage(pagination.getCursor(), ccm);
                 pagination.accept(SpliitExpenseCodec.parse(page.toString()));
+                progress.onProgress(Stage.LISTING, pagination.getDiscoveredCount(), SyncProgress.UNKNOWN_TOTAL);
             }
         } catch (IllegalStateException | IllegalArgumentException e) {
             throw new JSONException(e.getMessage());
         }
         List<SpliitExpense> expenses = new ArrayList<>();
-        for (String id : pagination.getExpenseIds()) expenses.add(getExpense(id, ccm));
+        List<String> ids = pagination.getExpenseIds();
+        progress.onProgress(Stage.DOWNLOADING, 0, ids.size());
+        for (String id : ids) {
+            expenses.add(getExpense(id, ccm));
+            progress.onProgress(Stage.DOWNLOADING, expenses.size(), ids.size());
+        }
         return new SpliitGroup(group.id, group.name, group.currency, group.currencyCode,
                 group.participants, expenses);
     }

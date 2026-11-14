@@ -52,4 +52,16 @@
     <string name="spliit_editor_stale">This expense changed during editing. Your draft is still here; copy it before reopening the latest version.</string>
     <string name="spliit_sync_scope">Create, edit and delete evenly split expenses. Advanced splits, recurring expenses, currency conversions, participants and group settings are managed on Spliit.</string>
     <string name="spliit_unknown_participant">Unknown participant</string>
+    <string name="sync_progress_queued">Waiting for another sync…</string>
+    <string name="sync_progress_preparing">Starting sync…</string>
+    <string name="sync_progress_project">Downloading project and participants…</string>
+    <string name="sync_progress_listing">Finding expenses…</string>
+    <string name="sync_progress_downloading">Downloading expenses…</string>
+    <string name="sync_progress_uploading">Uploading local changes…</string>
+    <string name="sync_progress_saving">Saving expenses on this device…</string>
+    <string name="sync_progress_count">%1$s %2$d of %3$d</string>
+    <plurals name="sync_progress_found">
+        <item quantity="one">%1$s %2$d found</item>
+        <item quantity="other">%1$s %2$d found</item>
+    </plurals>
 </resources>

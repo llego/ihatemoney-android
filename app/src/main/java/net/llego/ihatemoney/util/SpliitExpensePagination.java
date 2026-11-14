@@ -24,6 +24,7 @@ public final class SpliitExpensePagination {
 
     public int getCursor() { return cursor; }
     public boolean isComplete() { return complete; }
+    public int getDiscoveredCount() { return expenses.size(); }
 
     public void accept(JsonObject page) {
         if (complete) throw new IllegalStateException("Spliit pagination already completed");

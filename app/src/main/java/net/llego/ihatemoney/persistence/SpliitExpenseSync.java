@@ -5,11 +5,13 @@ import com.google.gson.JsonObject;
 import net.llego.ihatemoney.model.DBBill;
 import net.llego.ihatemoney.model.DBMember;
 import net.llego.ihatemoney.model.DBProject;
+import net.llego.ihatemoney.model.SyncProgress.Stage;
 import net.llego.ihatemoney.util.SpliitClient;
 import net.llego.ihatemoney.util.SpliitExpenseCodec;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
 import java.util.UUID;
 
 import at.bitfire.cert4android.CustomCertManager;
@@ -20,13 +22,15 @@ final class SpliitExpenseSync {
     private final SpliitSyncStore store;
     private final SpliitClient client;
     private final CustomCertManager certificates;
+    private final SpliitClient.ProgressListener progress;
 
     SpliitExpenseSync(MoneyBusterSQLiteOpenHelper db, SpliitClient client,
-                      CustomCertManager certificates) {
+                      CustomCertManager certificates, SpliitClient.ProgressListener progress) {
         this.db = db;
         this.store = new SpliitSyncStore(db);
         this.client = client;
         this.certificates = certificates;
+        this.progress = progress;
     }
 
     boolean push(DBProject project, SpliitClient.SpliitGroup group) throws Exception {
@@ -40,7 +44,13 @@ final class SpliitExpenseSync {
             }
         }
         boolean changed = false;
-        for (DBBill snapshot : db.getBillsOfProject(project.getId())) {
+        List<DBBill> pending = db.getBillsOfProject(project.getId());
+        pending.removeIf(bill -> bill.getState() == DBBill.STATE_OK
+                && store.get(bill.getId(), SpliitSyncStore.ATTEMPT) == null);
+        int processed = 0;
+        progress.onProgress(Stage.UPLOADING, 0, pending.size());
+        for (DBBill snapshot : pending) {
+            progress.onProgress(Stage.UPLOADING, processed++, pending.size());
             DBBill bill = db.getBill(snapshot.getId());
             if (bill == null || store.get(bill.getId(), SpliitSyncStore.CONFLICT) != null) continue;
             String baseline = store.get(bill.getId(), SpliitSyncStore.BASELINE);
@@ -104,6 +114,7 @@ final class SpliitExpenseSync {
                 changed = true;
             }
         }
+        progress.onProgress(Stage.UPLOADING, pending.size(), pending.size());
         return changed;
     }
 
