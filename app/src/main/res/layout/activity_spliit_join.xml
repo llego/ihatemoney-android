@@ -72,7 +72,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="16dp"
-                android:text="@string/spliit_read_only_hint"
+                android:text="@string/spliit_sync_scope"
                 android:textAppearance="?attr/textAppearanceBodyMedium"
                 android:textColor="@color/fg_default_low" />
         </LinearLayout>

@@ -42,7 +42,7 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
 
     private static final String TAG = MoneyBusterSQLiteOpenHelper.class.getSimpleName();
 
-    private static final int database_version = 22;
+    private static final int database_version = 23;
     private static final String database_name = "IHATEMONEY";
 
     private static final String table_members = "MEMBERS";
@@ -261,7 +261,8 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
                 key_repeat + " TEXT, " +
                 key_comment + " TEXT DEFAULT \"\", " +
                 key_payment_mode_id + " INTEGER DEFAULT 0, " +
-                key_creation_date + " TEXT NOT NULL DEFAULT '')"
+                key_creation_date + " TEXT NOT NULL DEFAULT '', " +
+                SpliitSyncStore.COLUMNS + ")"
         );
     }
 
@@ -461,6 +462,9 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
             // the numeric REMOTEID column. IHateMoney rows keep REMOTEID.
             db.execSQL("ALTER TABLE " + table_members + " ADD COLUMN " + key_remoteIdStr + " TEXT");
             db.execSQL("ALTER TABLE " + table_bills + " ADD COLUMN " + key_remoteIdStr + " TEXT");
+        }
+        if (oldVersion < 23) {
+            for (String sql : SpliitSyncStore.MIGRATIONS) db.execSQL(sql);
         }
     }
 

@@ -242,7 +242,7 @@ public class MoneyBusterServerSyncHelper {
             Log.i(getClass().getSimpleName(), "STARTING SYNCHRONIZATION");
 
             if (project.isReadOnly()) {
-                // Spliit is read-only: pull the group and never push local changes.
+                // Group settings are read-only; expenses have their own string-ID sync path.
                 return pullSpliitGroup();
             }
 
@@ -837,15 +837,35 @@ public class MoneyBusterServerSyncHelper {
         }
 
         /**
-         * Pull a Spliit group read-only. Spliit has no auth and no push, so the
-         * local cache is reconciled against the remote group and never uploaded.
+         * Sync Spliit expenses, then reconcile clean rows against a complete remote snapshot.
          */
         private boolean pullSpliitGroup() {
             Log.d(TAG, "pullSpliitGroup(" + project + ")");
             try {
                 SpliitClient spliitClient = new SpliitClient(project.getServerUrl(), project.getRemoteId());
                 SpliitClient.SpliitGroup group = spliitClient.getGroup(customCertManager);
+                if (new SpliitExpenseSync(dbHelper, spliitClient, customCertManager).push(project, group)) {
+                    group = spliitClient.getGroup(customCertManager);
+                }
 
+                android.database.sqlite.SQLiteDatabase database = dbHelper.getWritableDatabase();
+                database.beginTransaction();
+                try {
+                    reconcileSpliitGroup(group);
+                    database.setTransactionSuccessful();
+                } finally {
+                    database.endTransaction();
+                }
+                return true;
+            } catch (Exception e) {
+                Log.e(TAG, "Spliit sync failed", e);
+                exceptions.add(e);
+                errorMessages.add(appContext.getString(R.string.spliit_sync_failed));
+                return false;
+            }
+        }
+
+        private void reconcileSpliitGroup(SpliitClient.SpliitGroup group) {
                 // Keep the project name/currency in sync with the group.
                 if (group.name != null && !group.name.isEmpty() && !group.name.equals(project.getName())) {
                     project.setName(group.name);
@@ -924,14 +944,15 @@ public class MoneyBusterServerSyncHelper {
                     DBBill localBill = localBillsByRemoteId.get(expense.id);
                     if (localBill == null) {
                         addSpliitBill(expense, remoteMembersByRemoteId);
-                    } else {
+                    } else if (localBill.getState() == DBBill.STATE_OK) {
                         updateSpliitBill(localBill, expense, remoteMembersByRemoteId);
                     }
                 }
 
                 // Delete local expenses that no longer exist remotely.
                 for (DBBill localBill : localBillsByRemoteId.values()) {
-                    if (!remoteBillsByRemoteId.containsKey(localBill.getRemoteIdStr())) {
+                    if (localBill.getState() == DBBill.STATE_OK
+                            && !remoteBillsByRemoteId.containsKey(localBill.getRemoteIdStr())) {
                         dbHelper.deleteBill(localBill.getId());
                         nbPulledDeletedBills++;
                         deletedBillsDialogText.append("\uD83D\uDDD1 ").append(localBill.getWhat()).append('\n');
@@ -944,14 +965,6 @@ public class MoneyBusterServerSyncHelper {
                         System.currentTimeMillis() / 1000,
                         null, null, null, null
                 );
-                return true;
-            } catch (Exception e) {
-                // SpliitClient declares IOException/JSONException, but a malformed
-                // response or bad URL can also surface as a runtime exception.
-                Log.e(TAG, "Exception", e);
-                exceptions.add(e);
-                return false;
-            }
         }
 
         private void addSpliitBill(SpliitClient.SpliitExpense expense,
@@ -975,13 +988,16 @@ public class MoneyBusterServerSyncHelper {
                     newBill.getBillOwers().add(new DBBillOwer(0, 0, ower.getId()));
                 }
             }
-            dbHelper.addBill(newBill);
+            long billId = dbHelper.addBill(newBill);
+            new SpliitSyncStore(dbHelper).put(billId, SpliitSyncStore.BASELINE, expense.raw);
             nbPulledNewBills++;
             newBillsDialogText.append("+ ").append(expense.title).append('\n');
         }
 
         private void updateSpliitBill(DBBill localBill, SpliitClient.SpliitExpense expense,
-                                      Map<String, DBMember> remoteMembersByRemoteId) {
+                                       Map<String, DBMember> remoteMembersByRemoteId) {
+            new SpliitSyncStore(dbHelper).put(localBill.getId(), SpliitSyncStore.BASELINE, expense.raw);
+            dbHelper.updateBillCreationDate(localBill.getId(), expense.createdAt);
             DBMember payer = remoteMembersByRemoteId.get(expense.paidBy);
             long payerId = payer != null ? payer.getId() : localBill.getPayerId();
             double amount = expense.amount / 100.0;

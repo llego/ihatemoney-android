@@ -85,6 +85,8 @@ import net.llego.ihatemoney.model.ProjectType;
 import net.llego.ihatemoney.persistence.LoadBillsListTask;
 import net.llego.ihatemoney.persistence.MoneyBusterSQLiteOpenHelper;
 import net.llego.ihatemoney.persistence.MoneyBusterServerSyncHelper;
+import net.llego.ihatemoney.persistence.SpliitSyncStore;
+import net.llego.ihatemoney.android.dialogs.SpliitConflictDialogs;
 import net.llego.ihatemoney.service.SyncWorker;
 import net.llego.ihatemoney.theme.ThemeUtils;
 import net.llego.ihatemoney.theme.ThemedActivity;
@@ -159,8 +161,9 @@ public class BillsListViewActivity
     MaterialCardView homeToolbar;
     AppBarLayout appBar;
     private EmptyStateController emptyState;
-    /** True when the selected project is a read-only Spliit group. */
+    /** Project-level expense capability; individual Spliit expenses have additional safeguards. */
     private boolean readOnly = false;
+    private SpliitConflictDialogs spliitConflictDialogs;
 
     private DrawerLayoutBinding binding;
 
@@ -364,6 +367,7 @@ public class BillsListViewActivity
         registerBroadcastReceiver();
 
         activityVisible = true;
+        showSpliitConflicts();
     }
 
     @Override
@@ -691,8 +695,7 @@ public class BillsListViewActivity
             searchText.setText(getString(R.string.action_search_in_project, proj.getName()));
         }
 
-        // Spliit groups are read-only: hide the add-expense action.
-        readOnly = proj.isReadOnly();
+        readOnly = !proj.canEditExpenses();
         if (readOnly) {
             fabAddBill.setVisibility(View.GONE);
         } else if (searchView == null || searchView.isIconified()) {
@@ -871,6 +874,15 @@ public class BillsListViewActivity
             public int getSwipeDirs(RecyclerView recyclerView, RecyclerView.ViewHolder viewHolder) {
                 if (readOnly) return 0;
                 if (viewHolder instanceof ItemAdapter.SectionViewHolder) return 0;
+                int position = viewHolder.getBindingAdapterPosition();
+                if (position == RecyclerView.NO_POSITION) return 0;
+                Object item = adapter.getItem(position);
+                if (item instanceof DBBill) {
+                    DBBill expense = (DBBill) item;
+                    DBProject group = db.getProject(expense.getProjectId());
+                    if (group.isReadOnly() && !new SpliitSyncStore(db)
+                            .canEdit(expense)) return 0;
+                }
                 return super.getSwipeDirs(recyclerView, viewHolder);
             }
 
@@ -888,7 +900,8 @@ public class BillsListViewActivity
                         final DBBill dbBill = db.getBill(bill.getId());
                         // check if we can delete bills in this project
                         final DBProject project = db.getProject(dbBill.getProjectId());
-                        if (project.isDeletionDisabled()) {
+                        if (project.isDeletionDisabled() || (project.isReadOnly()
+                                && !new SpliitSyncStore(db).canEdit(dbBill))) {
                             showToast(getString(R.string.bill_deletion_is_disabled));
                             refreshLists();
                             return;
@@ -896,7 +909,8 @@ public class BillsListViewActivity
                         // get real original state to potentially restore it
                         final int originalState = dbBill.getState();
 
-                        if (originalState == DBBill.STATE_ADDED) {
+                        final boolean removeImmediately = originalState == DBBill.STATE_ADDED && !project.isReadOnly();
+                        if (removeImmediately) {
                             db.deleteBill(dbBill.getId());
                         } else {
                             db.setBillState(dbBill.getId(), DBBill.STATE_DELETED);
@@ -910,10 +924,24 @@ public class BillsListViewActivity
                                 .setAction(R.string.action_undo, new View.OnClickListener() {
                                     @Override
                                     public void onClick(View v) {
-                                        if (originalState == DBBill.STATE_ADDED) {
-                                            db.addBill(dbBill);
-                                        } else {
-                                            db.setBillState(dbBill.getId(), originalState);
+                                        android.database.sqlite.SQLiteDatabase database = db.getWritableDatabase();
+                                        database.beginTransaction();
+                                        try {
+                                            if (project.isReadOnly() && (db.getBill(dbBill.getId()) == null
+                                                    || new SpliitSyncStore(db)
+                                                    .get(dbBill.getId(), SpliitSyncStore.ATTEMPT) != null)) {
+                                                showToast(getString(R.string.spliit_read_only_hint));
+                                                refreshLists();
+                                                return;
+                                            }
+                                            if (removeImmediately) {
+                                                db.addBill(dbBill);
+                                            } else {
+                                                db.setBillState(dbBill.getId(), originalState);
+                                            }
+                                            database.setTransactionSuccessful();
+                                        } finally {
+                                            database.endTransaction();
                                         }
                                         refreshLists();
                                         Snackbar.make(swipeRefreshLayout, R.string.action_bill_restored, Snackbar.LENGTH_SHORT)
@@ -971,6 +999,16 @@ public class BillsListViewActivity
             }
         });
         touchHelper.attachToRecyclerView(listBillItems);
+    }
+
+    private void showSpliitConflicts() {
+        if (spliitConflictDialogs == null) {
+            spliitConflictDialogs = new SpliitConflictDialogs(this, db, () -> {
+                refreshLists();
+                synchronize();
+            });
+        }
+        spliitConflictDialogs.show(PreferenceManager.getDefaultSharedPreferences(this).getLong("selected_project", 0));
     }
 
     private void refreshLists() {
@@ -1416,6 +1454,7 @@ public class BillsListViewActivity
                     break;
                 case MoneyBusterServerSyncHelper.BROADCAST_PROJECT_SYNCED:
                     refreshLists();
+                    showSpliitConflicts();
                     break;
                 case MoneyBusterServerSyncHelper.BROADCAST_SYNC_PROJECT:
                     SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
