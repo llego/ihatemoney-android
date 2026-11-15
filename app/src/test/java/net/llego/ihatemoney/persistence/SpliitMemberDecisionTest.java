@@ -10,6 +10,15 @@ import static org.junit.Assert.*;
 
 public class SpliitMemberDecisionTest {
     @Test
+    public void failedRenameVerificationPreservesTheObservedRemoteVersion() {
+        com.google.gson.JsonObject conflict = com.google.gson.JsonParser.parseString(
+                SpliitMemberSync.conflictAfterWrite(false, "Server name")).getAsJsonObject();
+        assertEquals("Server name", conflict.get("name").getAsString());
+        assertTrue(com.google.gson.JsonParser.parseString(
+                SpliitMemberSync.conflictAfterWrite(false, null)).getAsJsonObject().get("name").isJsonNull());
+        assertEquals("null", SpliitMemberSync.conflictAfterWrite(true, "Server name"));
+    }
+    @Test
     public void offlineParticipantCanBeRenamedUntilAWriteIsClaimed() {
         assertEquals(DBBill.STATE_ADDED,
                 SpliitMemberDecision.renamedState(DBBill.STATE_ADDED, null, null, null, null));

@@ -73,6 +73,7 @@ public final class MemberDialogs {
     }
 
     private void showSpliitMember(DBProject project, DBMember member) {
+        if (!canManage(project)) return;
         SpliitMemberStore store = new SpliitMemberStore(db);
         String conflict = store.get(member.getId(), SpliitMemberStore.CONFLICT);
         if (conflict != null) {
@@ -81,7 +82,13 @@ public final class MemberDialogs {
                 else showToast(R.string.spliit_member_needs_web);
                 return;
             }
-            JsonObject remote = JsonParser.parseString(conflict).getAsJsonObject();
+            JsonObject remote;
+            try {
+                remote = JsonParser.parseString(conflict).getAsJsonObject();
+            } catch (RuntimeException e) {
+                showToast(R.string.spliit_member_needs_web);
+                return;
+            }
             if (!remote.has("name") || remote.get("name").isJsonNull()) {
                 showToast(R.string.spliit_member_needs_web);
                 return;

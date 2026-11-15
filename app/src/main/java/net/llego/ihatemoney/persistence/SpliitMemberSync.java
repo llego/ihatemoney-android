@@ -92,7 +92,8 @@ final class SpliitMemberSync {
                 }
             }
             if (id == null || !snapshot.getName().equals(after.get(id))) {
-                store.put(snapshot.getId(), SpliitMemberStore.CONFLICT, "null");
+                store.put(snapshot.getId(), SpliitMemberStore.CONFLICT,
+                        conflictAfterWrite(create, after.get(id)));
             } else {
                 acknowledge(snapshot, id);
                 changed = true;
@@ -147,5 +148,9 @@ final class SpliitMemberSync {
         if (name == null) value.add("name", com.google.gson.JsonNull.INSTANCE);
         else value.addProperty("name", name);
         return value.toString();
+    }
+
+    static String conflictAfterWrite(boolean create, String remoteName) {
+        return create ? "null" : encodeRemote(remoteName);
     }
 }
