@@ -63,15 +63,18 @@ public class SpliitClient {
         public final String currencyCode;
         public final List<SpliitParticipant> participants;
         public final List<SpliitExpense> expenses;
+        /** Complete group metadata, required to preserve settings during participant writes. */
+        public final String raw;
 
         SpliitGroup(String id, String name, String currency, String currencyCode,
-                    List<SpliitParticipant> participants, List<SpliitExpense> expenses) {
+                    List<SpliitParticipant> participants, List<SpliitExpense> expenses, String raw) {
             this.id = id;
             this.name = name;
             this.currency = currency;
             this.currencyCode = currencyCode;
             this.participants = participants;
             this.expenses = expenses;
+            this.raw = raw;
         }
     }
 
@@ -145,7 +148,7 @@ public class SpliitClient {
                 group.optString("currency", ""),
                 group.optString("currencyCode", ""),
                 participants,
-                new ArrayList<>());
+                new ArrayList<>(), group.toString());
     }
 
     /** Fetch a complete, validated ID list before loading any expense details. */
@@ -176,7 +179,7 @@ public class SpliitClient {
             progress.onProgress(Stage.DOWNLOADING, expenses.size(), ids.size());
         }
         return new SpliitGroup(group.id, group.name, group.currency, group.currencyCode,
-                group.participants, expenses);
+                group.participants, expenses, group.raw);
     }
 
     private JSONObject getGroupDetails(@Nullable CustomCertManager ccm) throws IOException, JSONException {
@@ -226,6 +229,12 @@ public class SpliitClient {
                 .put("groupId", groupId).put("expenseId", expenseId)), true, ccm);
     }
 
+    /** This replaces the full group form, not just participants. Callers must recheck first. */
+    public void updateGroup(String form, @Nullable CustomCertManager ccm) throws IOException, JSONException {
+        requestTrpc("groups.update", new JSONObject().put("json", new JSONObject()
+                .put("groupId", groupId).put("groupFormValues", new JSONObject(form))), true, ccm);
+    }
+
     private JSONObject requestTrpc(String procedure, JSONObject input, boolean mutation,
                                    @Nullable CustomCertManager ccm) throws IOException, JSONException {
         String url = baseUrl + "/api/trpc/" + procedure + (mutation ? ""
@@ -256,7 +265,9 @@ public class SpliitClient {
                 throw new IOException("Spliit request failed (" + responseCode + ")");
             }
             JSONObject root = new JSONObject(content);
-            return root.getJSONObject("result").getJSONObject("data").getJSONObject("json");
+            JSONObject data = root.getJSONObject("result").getJSONObject("data");
+            // Mutations returning void use JSON null rather than an object.
+            return data.isNull("json") ? new JSONObject() : data.getJSONObject("json");
         } catch (JSONException e) {
             Log.e(TAG, "Could not parse Spliit response for " + procedure, e);
             throw e;
