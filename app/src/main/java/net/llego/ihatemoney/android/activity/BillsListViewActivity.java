@@ -82,13 +82,11 @@ import net.llego.ihatemoney.model.Item;
 import net.llego.ihatemoney.model.ItemAdapter;
 import net.llego.ihatemoney.model.NavigationAdapter;
 import net.llego.ihatemoney.model.ProjectType;
-import net.llego.ihatemoney.model.SyncProgress;
 import net.llego.ihatemoney.persistence.LoadBillsListTask;
 import net.llego.ihatemoney.persistence.MoneyBusterSQLiteOpenHelper;
 import net.llego.ihatemoney.persistence.MoneyBusterServerSyncHelper;
 import net.llego.ihatemoney.persistence.SpliitSyncStore;
 import net.llego.ihatemoney.android.dialogs.SpliitConflictDialogs;
-import net.llego.ihatemoney.android.ui.SyncProgressController;
 import net.llego.ihatemoney.service.SyncWorker;
 import net.llego.ihatemoney.theme.ThemeUtils;
 import net.llego.ihatemoney.theme.ThemedActivity;
@@ -167,7 +165,7 @@ public class BillsListViewActivity
     private boolean readOnly = false;
     private java.util.Set<Long> nonSwipeableBills = java.util.Collections.emptySet();
     private SpliitConflictDialogs spliitConflictDialogs;
-    private SyncProgressController syncProgressController;
+    private long manualRefreshProjectId;
 
     private DrawerLayoutBinding binding;
 
@@ -234,7 +232,6 @@ public class BillsListViewActivity
         searchText = binding.mainContentView.searchText;
         homeToolbar = binding.mainContentView.homeToolbar;
         appBar = binding.mainContentView.appBar;
-        syncProgressController = new SyncProgressController(binding.mainContentView.syncStatus);
         emptyState = new EmptyStateController(
                 listBillItems,
                 binding.mainContentView.layoutNoProjects,
@@ -346,6 +343,10 @@ public class BillsListViewActivity
     protected void onResume() {
         super.onResume();
         registerBroadcastReceiver();
+        if (manualRefreshProjectId != 0
+                && db.getMoneyBusterServerSyncHelper().getSyncProgress(manualRefreshProjectId) == null) {
+            manualRefreshProjectId = 0;
+        }
         // refresh and sync every time the activity gets visible
         SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
         long selectedProjectId = preferences.getLong("selected_project", 0);
@@ -498,6 +499,8 @@ public class BillsListViewActivity
                     Log.d(TAG, "[onRefresh]");
                 }
                 if (db.getMoneyBusterServerSyncHelper().isSyncPossible()) {
+                    manualRefreshProjectId = PreferenceManager.getDefaultSharedPreferences(getApplicationContext())
+                            .getLong("selected_project", 0);
                     synchronize();
                 } else {
                     swipeRefreshLayout.setRefreshing(false);
@@ -1357,7 +1360,6 @@ public class BillsListViewActivity
         StackTraceElement[] stackTraceElements = Thread.currentThread().getStackTrace();
         if (DEBUG) { Log.d(TAG, "CALLER : " + stackTraceElements[3].getMethodName()); }
         if (db.getMoneyBusterServerSyncHelper().isSyncPossible()) {
-            swipeRefreshLayout.setRefreshing(true);
             SharedPreferences preferences = PreferenceManager.getDefaultSharedPreferences(getApplicationContext());
             long selectedProjectId = preferences.getLong("selected_project", 0);
 
@@ -1370,21 +1372,32 @@ public class BillsListViewActivity
                     db.getMoneyBusterServerSyncHelper().addCallbackPull(syncCallBack);
                     db.getMoneyBusterServerSyncHelper().scheduleSync(false, selectedProjectId);
                 } else {
+                    manualRefreshProjectId = 0;
                     swipeRefreshLayout.setRefreshing(false);
                 }
             } else {
+                manualRefreshProjectId = 0;
                 swipeRefreshLayout.setRefreshing(false);
             }
+        } else {
+            manualRefreshProjectId = 0;
         }
         updateSyncProgress();
     }
 
     private void updateSyncProgress() {
         long projectId = PreferenceManager.getDefaultSharedPreferences(this).getLong("selected_project", 0);
-        // No database reads here: saving a large import holds a transaction on the worker thread.
-        SyncProgress progress = db.getMoneyBusterServerSyncHelper().getSyncProgress(projectId);
-        syncProgressController.show(progress);
-        swipeRefreshLayout.setRefreshing(progress != null);
+        // Background sync is intentionally quiet. The spinner belongs only to a
+        // user-initiated pull-to-refresh for the currently visible project.
+        swipeRefreshLayout.setRefreshing(manualRefreshProjectId != 0 && manualRefreshProjectId == projectId);
+    }
+
+    private void finishManualRefresh(long projectId) {
+        if (manualRefreshProjectId == projectId
+                && db.getMoneyBusterServerSyncHelper().getSyncProgress(projectId) == null) {
+            manualRefreshProjectId = 0;
+        }
+        updateSyncProgress();
     }
 
     private void updateRefreshAvailability() {
@@ -1445,7 +1458,7 @@ public class BillsListViewActivity
                     updateSyncProgress();
                     break;
                 case MoneyBusterServerSyncHelper.BROADCAST_PROJECT_SYNC_FAILED:
-                    updateSyncProgress();
+                    finishManualRefresh(intent.getLongExtra(BROADCAST_PROJECT_ID, 0));
                     String errorMessage = intent.getStringExtra(BROADCAST_ERROR_MESSAGE);
                     long projectId = intent.getLongExtra(BROADCAST_PROJECT_ID, 0);
                     if (projectId != 0) {
@@ -1482,7 +1495,7 @@ public class BillsListViewActivity
                     }
                     break;
                 case MoneyBusterServerSyncHelper.BROADCAST_PROJECT_SYNCED:
-                    updateSyncProgress();
+                    finishManualRefresh(intent.getLongExtra(BROADCAST_PROJECT_ID, 0));
                     refreshLists();
                     showSpliitConflicts();
                     break;
@@ -1497,6 +1510,8 @@ public class BillsListViewActivity
                     updateRefreshAvailability();
                     break;
                 case MoneyBusterServerSyncHelper.BROADCAST_NETWORK_UNAVAILABLE:
+                    manualRefreshProjectId = 0;
+                    updateSyncProgress();
                     swipeRefreshLayout.setEnabled(false);
                     break;
                 case MoneyBusterServerSyncHelper.BROADCAST_AVATAR_UPDATED:
