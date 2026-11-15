@@ -23,6 +23,9 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Collections;
 
 import at.bitfire.cert4android.CustomCertManager;
 
@@ -161,6 +164,13 @@ public class SpliitClient {
 
     public SpliitGroup getGroup(@Nullable CustomCertManager ccm, ProgressListener progress)
             throws IOException, JSONException {
+        return getGroup(ccm, progress, Collections.emptyMap(), Collections.emptySet(), true);
+    }
+
+    /** Reuse verified cached details only after a complete list and validated activity scan. */
+    public SpliitGroup getGroup(@Nullable CustomCertManager ccm, ProgressListener progress,
+                                Map<String, String> cache, Set<String> changed, boolean fullAudit)
+            throws IOException, JSONException {
         progress.onProgress(Stage.PROJECT, 0, SyncProgress.UNKNOWN_TOTAL);
         SpliitGroup group = getGroupMetadata(ccm);
         SpliitExpensePagination pagination = new SpliitExpensePagination();
@@ -176,13 +186,43 @@ public class SpliitClient {
         }
         List<SpliitExpense> expenses = new ArrayList<>();
         List<String> ids = pagination.getExpenseIds();
-        progress.onProgress(Stage.DOWNLOADING, 0, ids.size());
+        int total = 0;
+        for (String id : ids) if (fullAudit || changed.contains(id) || !cache.containsKey(id)) total++;
+        int downloaded = 0;
+        progress.onProgress(Stage.DOWNLOADING, 0, total);
         for (String id : ids) {
-            expenses.add(getExpense(id, ccm));
-            progress.onProgress(Stage.DOWNLOADING, expenses.size(), ids.size());
+            SpliitExpense expense = null;
+            if (!fullAudit && !changed.contains(id) && cache.containsKey(id)) {
+                try {
+                    JSONObject raw = new JSONObject(cache.get(id));
+                    if (id.equals(raw.getString("id")) && groupId.equals(raw.getString("groupId"))) {
+                        expense = parseExpense(raw);
+                    }
+                } catch (JSONException | RuntimeException ignored) { /* Download invalid cached details. */ }
+            }
+            if (expense == null) {
+                expense = getExpense(id, ccm);
+                progress.onProgress(Stage.DOWNLOADING, ++downloaded, total);
+            }
+            expenses.add(expense);
         }
         return new SpliitGroup(group.id, group.name, group.currency, group.currencyCode,
                 group.participants, expenses, group.raw);
+    }
+
+    public SpliitActivityWindow getActivityWindow(@Nullable String marker, @Nullable CustomCertManager ccm)
+            throws IOException, JSONException {
+        SpliitActivityWindow window = new SpliitActivityWindow(marker);
+        int pages = 0;
+        do {
+            JSONObject input = new JSONObject().put("json", new JSONObject().put("groupId", groupId)
+                    .put("cursor", window.cursor()).put("limit", PAGE_SIZE));
+            JSONObject page = getTrpc("groups.activities.list", input, ccm);
+            window.accept(SpliitExpenseCodec.parse(page.toString()));
+            // A missing marker needs only the newest ID for the next checkpoint.
+            if (marker == null || ++pages >= 100) break;
+        } while (!window.complete());
+        return window;
     }
 
     private JSONObject getGroupDetails(@Nullable CustomCertManager ccm) throws IOException, JSONException {

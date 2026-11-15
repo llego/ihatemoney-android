@@ -28,6 +28,8 @@ import net.llego.ihatemoney.model.DBProject;
 import net.llego.ihatemoney.model.ProjectType;
 import net.llego.ihatemoney.model.SyncProgress;
 import net.llego.ihatemoney.model.SyncProgress.Stage;
+import net.llego.ihatemoney.util.SpliitActivityWindow;
+import net.llego.ihatemoney.util.SpliitIncrementalPolicy;
 import net.llego.ihatemoney.util.ICallback;
 import net.llego.ihatemoney.util.IProjectCreationCallback;
 import net.llego.ihatemoney.util.VersatileProjectSyncClient;
@@ -884,10 +886,25 @@ public class MoneyBusterServerSyncHelper {
             try {
                 SpliitClient spliitClient = new SpliitClient(project.getServerUrl(), project.getRemoteId());
                 new SpliitMemberSync(dbHelper, spliitClient, customCertManager).push(project);
-                SpliitClient.SpliitGroup group = spliitClient.getGroup(customCertManager, this::reportProgress);
+                String checkpointKey = "spliit_activity_" + project.getId();
+                String auditKey = "spliit_audit_" + project.getId();
+                SpliitActivityWindow window = null;
+                try {
+                    window = spliitClient.getActivityWindow(preferences.getString(checkpointKey, null), customCertManager);
+                } catch (Exception e) {
+                    Log.w(TAG, "Activity history unavailable; using full Spliit audit", e);
+                }
+                long now = System.currentTimeMillis();
+                boolean fullAudit = SpliitIncrementalPolicy.fullAudit(now,
+                        preferences.getLong(auditKey, 0), window != null && window.usable());
+                java.util.Set<String> changed = window != null && window.usable()
+                        ? window.changed() : java.util.Collections.emptySet();
+                SpliitClient.SpliitGroup group = spliitClient.getGroup(customCertManager, this::reportProgress,
+                        spliitExpenseCache(), changed, fullAudit);
                 if (new SpliitExpenseSync(dbHelper, spliitClient, customCertManager,
                         this::reportProgress).push(project, group)) {
-                    group = spliitClient.getGroup(customCertManager, this::reportProgress);
+                    group = spliitClient.getGroup(customCertManager, this::reportProgress,
+                            spliitExpenseCache(), changed, fullAudit);
                 }
 
                 reportProgress(Stage.SAVING, 0, group.expenses.size());
@@ -899,6 +916,11 @@ public class MoneyBusterServerSyncHelper {
                 } finally {
                     database.endTransaction();
                 }
+                // Never advance a checkpoint for a failed or incomplete reconciliation.
+                SharedPreferences.Editor checkpoint = preferences.edit();
+                if (window != null && window.newest() != null) checkpoint.putString(checkpointKey, window.newest());
+                if (fullAudit) checkpoint.putLong(auditKey, now);
+                checkpoint.apply();
                 return true;
             } catch (Exception e) {
                 Log.e(TAG, "Spliit sync failed", e);
@@ -911,6 +933,19 @@ public class MoneyBusterServerSyncHelper {
                 }
                 return false;
             }
+        }
+
+        private Map<String, String> spliitExpenseCache() {
+            Map<String, String> cache = new HashMap<>();
+            SpliitSyncStore store = new SpliitSyncStore(dbHelper);
+            for (DBBill bill : dbHelper.getBillsOfProject(project.getId())) {
+                if (bill.getRemoteIdStr() == null || bill.getState() != DBBill.STATE_OK
+                        || store.get(bill.getId(), SpliitSyncStore.ATTEMPT) != null
+                        || store.get(bill.getId(), SpliitSyncStore.CONFLICT) != null) continue;
+                String baseline = store.get(bill.getId(), SpliitSyncStore.BASELINE);
+                if (baseline != null) cache.put(bill.getRemoteIdStr(), baseline);
+            }
+            return cache;
         }
 
         private void reconcileSpliitGroup(SpliitClient.SpliitGroup group) {
