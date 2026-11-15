@@ -35,6 +35,14 @@ final class SpliitMemberSync {
 
     List<String> invalidMembers() { return new ArrayList<>(invalidMembers); }
 
+    List<String> conflictedMembers(long projectId) {
+        List<String> names = new ArrayList<>();
+        for (DBMember member : db.getMembersOfProject(projectId, null)) {
+            if (store.get(member.getId(), SpliitMemberStore.CONFLICT) != null) names.add(member.getName());
+        }
+        return names;
+    }
+
     boolean push(DBProject project) throws Exception {
         boolean changed = false;
         for (DBMember snapshot : db.getMembersOfProject(project.getId(), null)) {

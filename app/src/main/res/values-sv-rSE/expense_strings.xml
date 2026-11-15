@@ -58,6 +58,7 @@
     <string name="spliit_member_needs_web">Kontrollera deltagaren på Spliit innan du löser den väntande ändringen.</string>
     <string name="spliit_member_invalid_name">Ange ett deltagarnamn med 2–50 tecken.</string>
     <string name="spliit_invalid_pending_members">Kunde inte synkronisera dessa deltagare: %1$s. Kontrollera deras namn och gruppens deltagargräns. Andra ändringar synkroniserades där det var möjligt.</string>
+    <string name="spliit_pending_member_conflicts">Deltagare behöver din uppmärksamhet: %1$s. Öppna Hantera deltagare för projektet för att granska dem. Utgifter som berör dem kan vänta på synkronisering.</string>
     <string name="spliit_pending_member_cannot_remove">Deltagaren kan inte tas bort medan en utgift hänvisar till personen eller ett synkroniseringsförsök är olöst.</string>
     <string name="spliit_member_stale">Deltagaren har ändrats eller synkroniseras. Uppdatera och försök igen.</string>
     <string name="spliit_member_create_uncertain">Spliit kan ha skapat deltagaren utan att bekräfta det. Kontrollera gruppen på Spliit och synkronisera först igen. Ett nytt försök kan skapa en dubblett.</string>

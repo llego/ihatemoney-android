@@ -12,6 +12,24 @@ import static org.junit.Assert.*;
 
 public class SpliitMemberSchemaTest {
     @Test
+    public void discardingPendingLastPayerDoesNotChangeOtherProjects() throws Exception {
+        try (Connection db = DriverManager.getConnection("jdbc:sqlite::memory:");
+             Statement sql = db.createStatement()) {
+            sql.execute("CREATE TABLE PROJECTS (ID INTEGER PRIMARY KEY, LASTPAYERID INTEGER)");
+            sql.execute("INSERT INTO PROJECTS VALUES (1, 10), (2, 10), (3, 11)");
+            try (PreparedStatement clear = db.prepareStatement(SpliitMemberStore.CLEAR_LAST_PAYER)) {
+                clear.setLong(1, 1);
+                clear.setLong(2, 10);
+                assertEquals(1, clear.executeUpdate());
+            }
+            try (ResultSet rows = sql.executeQuery("SELECT LASTPAYERID FROM PROJECTS ORDER BY ID")) {
+                assertTrue(rows.next()); assertNull(rows.getObject(1));
+                assertTrue(rows.next()); assertEquals(10, rows.getInt(1));
+                assertTrue(rows.next()); assertEquals(11, rows.getInt(1));
+            }
+        }
+    }
+    @Test
     public void linkingParticipantsPreservesSplitsWithoutDuplicateOwers() throws Exception {
         try (Connection db = DriverManager.getConnection("jdbc:sqlite::memory:");
              Statement sql = db.createStatement()) {

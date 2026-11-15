@@ -29,6 +29,7 @@ public final class SpliitGroupForm {
         }
         JsonArray participants = new JsonArray();
         for (JsonElement value : group.getAsJsonArray("participants")) {
+            if (!value.isJsonObject()) throw new IllegalArgumentException("Invalid participant");
             JsonObject participant = value.getAsJsonObject();
             if (!participant.has("id") || participant.get("id").isJsonNull()
                     || !participant.has("name") || participant.get("name").isJsonNull()) {
@@ -58,8 +59,8 @@ public final class SpliitGroupForm {
 
     /** Rename exactly one existing participant; never reconstruct the list from local rows. */
     public static JsonObject rename(String snapshot, String id, String name) {
-        validateName(name);
         JsonObject form = fromSnapshot(snapshot);
+        validateName(name);
         JsonArray participants = form.getAsJsonArray("participants");
         JsonObject found = null;
         for (JsonElement value : participants) {

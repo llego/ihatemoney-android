@@ -25,6 +25,7 @@ public final class SpliitMemberStore {
     };
     static final String REMOVE_DUPLICATE_OWERS = "DELETE FROM BILLOWERS WHERE MEMBERID = ? AND EXISTS "
             + "(SELECT 1 FROM BILLOWERS AS existing WHERE existing.BILLID = BILLOWERS.BILLID AND existing.MEMBERID = ?)";
+    static final String CLEAR_LAST_PAYER = "UPDATE PROJECTS SET LASTPAYERID = NULL WHERE ID = ? AND LASTPAYERID = ?";
 
     private final MoneyBusterSQLiteOpenHelper db;
 
@@ -105,6 +106,7 @@ public final class SpliitMemberStore {
                     || get(current.getId(), ATTEMPT) != null || get(current.getId(), CONFLICT) != null
                     || !db.getBillsOfMember(current.getId()).isEmpty()
                     || !db.getBillowersOfMember(current.getId()).isEmpty()) return false;
+            database.execSQL(CLEAR_LAST_PAYER, new Object[]{current.getProjectId(), current.getId()});
             db.deleteMember(current.getId());
             database.setTransactionSuccessful();
             return true;

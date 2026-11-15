@@ -91,4 +91,12 @@ public class SpliitGroupFormTest {
         assertEquals("Renamed", SpliitGroupForm.rename(group.toString(), "id0", "Renamed")
                 .getAsJsonArray("participants").get(0).getAsJsonObject().get("name").getAsString());
     }
+
+    @Test
+    public void malformedParticipantsAreNotClassifiedAsEditableLocalErrors() {
+        String malformed = GROUP.replace("{\"id\":\"a\",\"name\":\"Alice\"}", "null");
+        IllegalArgumentException invalid = assertThrows(IllegalArgumentException.class,
+                () -> SpliitGroupForm.rename(malformed, "a", "A"));
+        assertFalse(invalid instanceof SpliitGroupForm.MemberValidationException);
+    }
 }

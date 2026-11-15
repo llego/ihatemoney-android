@@ -922,9 +922,17 @@ public class MoneyBusterServerSyncHelper {
                 if (window != null && window.newest() != null) checkpoint.putString(checkpointKey, window.newest());
                 if (fullAudit) checkpoint.putLong(auditKey, now);
                 checkpoint.apply();
-                if (!memberSync.invalidMembers().isEmpty()) {
+                List<String> invalidMembers = memberSync.invalidMembers();
+                List<String> conflictedMembers = memberSync.conflictedMembers(project.getId());
+                if (!invalidMembers.isEmpty()) {
                     errorMessages.add(appContext.getString(R.string.spliit_invalid_pending_members,
-                            android.text.TextUtils.join(", ", memberSync.invalidMembers())));
+                            android.text.TextUtils.join(", ", invalidMembers)));
+                }
+                if (!conflictedMembers.isEmpty()) {
+                    errorMessages.add(appContext.getString(R.string.spliit_pending_member_conflicts,
+                            android.text.TextUtils.join(", ", conflictedMembers)));
+                }
+                if (!errorMessages.isEmpty()) {
                     return false;
                 }
                 return true;
