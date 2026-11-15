@@ -131,6 +131,9 @@ public class SpliitClient {
         if (group == null) {
             throw new JSONException("Spliit response is missing the group object");
         }
+        if (!groupId.equals(group.optString("id", ""))) {
+            throw new JSONException("Spliit returned a different group");
+        }
 
         List<SpliitParticipant> participants = new ArrayList<>();
         JSONArray participantsArray = group.getJSONArray("participants");
@@ -267,6 +270,7 @@ public class SpliitClient {
             JSONObject root = new JSONObject(content);
             JSONObject data = root.getJSONObject("result").getJSONObject("data");
             // Mutations returning void use JSON null rather than an object.
+            if (!data.has("json")) throw new JSONException("Spliit response is missing its result");
             return data.isNull("json") ? new JSONObject() : data.getJSONObject("json");
         } catch (JSONException e) {
             Log.e(TAG, "Could not parse Spliit response for " + procedure, e);
