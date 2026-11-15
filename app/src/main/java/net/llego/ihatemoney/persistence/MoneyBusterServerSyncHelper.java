@@ -883,6 +883,7 @@ public class MoneyBusterServerSyncHelper {
             Log.d(TAG, "pullSpliitGroup(" + project + ")");
             try {
                 SpliitClient spliitClient = new SpliitClient(project.getServerUrl(), project.getRemoteId());
+                new SpliitMemberSync(dbHelper, spliitClient, customCertManager).push(project);
                 SpliitClient.SpliitGroup group = spliitClient.getGroup(customCertManager, this::reportProgress);
                 if (new SpliitExpenseSync(dbHelper, spliitClient, customCertManager,
                         this::reportProgress).push(project, group)) {
