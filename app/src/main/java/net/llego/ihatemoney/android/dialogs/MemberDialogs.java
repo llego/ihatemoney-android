@@ -22,6 +22,9 @@ import net.llego.ihatemoney.model.DBMember;
 import net.llego.ihatemoney.model.DBProject;
 import net.llego.ihatemoney.model.ProjectType;
 import net.llego.ihatemoney.persistence.MoneyBusterSQLiteOpenHelper;
+import net.llego.ihatemoney.persistence.SpliitMemberStore;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import net.llego.ihatemoney.theme.ThemeUtils;
 import net.llego.ihatemoney.theme.ThemedMaterialAlertDialogBuilder;
 
@@ -56,15 +59,114 @@ public final class MemberDialogs {
         List<DBMember> members = db.getMembersOfProject(projectId, null);
         List<String> names = new ArrayList<>();
         for (DBMember member : members) names.add(member.getName());
-        new ThemedMaterialAlertDialogBuilder(activity)
+        ThemedMaterialAlertDialogBuilder builder = new ThemedMaterialAlertDialogBuilder(activity);
+        builder
                 .setTitle(R.string.fab_manage_members)
                 .setItems(names.toArray(new CharSequence[0]), (dialog, which) -> {
-                    showEdit(project, members.get(which).getId());
+                    if (project.getType() == ProjectType.SPLIIT) showSpliitMember(project, members.get(which));
+                    else showEdit(project, members.get(which).getId());
                     dialog.dismiss();
                 })
-                .setNeutralButton(R.string.fab_add_member, (dialog, which) -> showAdd(projectId))
-                .setNegativeButton(R.string.simple_cancel, null)
-                .show();
+                .setNegativeButton(R.string.simple_cancel, null);
+        builder.setNeutralButton(R.string.fab_add_member, (dialog, which) -> showAdd(projectId));
+        builder.show();
+    }
+
+    private void showSpliitMember(DBProject project, DBMember member) {
+        if (!canManage(project)) return;
+        SpliitMemberStore store = new SpliitMemberStore(db);
+        String conflict = store.get(member.getId(), SpliitMemberStore.CONFLICT);
+        if (conflict != null) {
+            if ("null".equals(conflict)) {
+                if (member.getRemoteIdStr() == null) showSpliitLink(project, member, store);
+                else showToast(R.string.spliit_member_needs_web);
+                return;
+            }
+            JsonObject remote;
+            try {
+                remote = JsonParser.parseString(conflict).getAsJsonObject();
+            } catch (RuntimeException e) {
+                showToast(R.string.spliit_member_needs_web);
+                return;
+            }
+            if (!remote.has("name") || remote.get("name").isJsonNull()) {
+                showToast(R.string.spliit_member_needs_web);
+                return;
+            }
+            new ThemedMaterialAlertDialogBuilder(activity)
+                    .setTitle(R.string.spliit_member_conflict_title)
+                    .setMessage(activity.getString(R.string.spliit_member_conflict_message,
+                            member.getName(), remote.get("name").getAsString()))
+                    .setPositiveButton(R.string.spliit_keep_local, (dialog, which) ->
+                            resolveSpliitRename(project, member, store, conflict, true))
+                    .setNegativeButton(R.string.spliit_use_server, (dialog, which) ->
+                            resolveSpliitRename(project, member, store, conflict, false))
+                    .setNeutralButton(R.string.spliit_later, null).show();
+            return;
+        }
+        EditText input = new EditText(new ContextThemeWrapper(activity, R.style.AppTheme));
+        input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
+        input.setText(member.getName());
+        ThemedMaterialAlertDialogBuilder editor = new ThemedMaterialAlertDialogBuilder(activity);
+        editor.setTitle(R.string.edit_member_dialog_title)
+                .setView(input).setPositiveButton(R.string.simple_ok, (dialog, which) -> {
+                    String name = input.getText().toString().trim();
+                    if (name.length() < 2 || name.length() > 50) {
+                        showToast(R.string.spliit_member_invalid_name);
+                    } else if (!name.equals(member.getName())) {
+                        if (store.queueRename(member, name)) {
+                            db.syncIfRemote(project);
+                            listener.onMemberUpdated();
+                        } else showToast(R.string.spliit_member_stale);
+                    }
+                    hideKeyboard(input.getContext());
+                }).setNegativeButton(R.string.simple_cancel, null);
+        if (member.getState() == DBBill.STATE_ADDED && member.getRemoteIdStr() == null) {
+            editor.setNeutralButton(R.string.member_edit_delete, (dialog, which) -> {
+                if (store.discardPending(member)) listener.onMemberDeleted();
+                else showToast(R.string.spliit_pending_member_cannot_remove);
+            });
+        }
+        editor.show();
+    }
+
+    private void showSpliitLink(DBProject project, DBMember pending, SpliitMemberStore store) {
+        List<DBMember> candidates = new ArrayList<>();
+        for (DBMember member : db.getMembersOfProject(project.getId(), null)) {
+            if (member.getRemoteIdStr() != null && member.getName().equals(pending.getName())
+                    && member.getState() == DBBill.STATE_OK) candidates.add(member);
+        }
+        if (candidates.size() != 1) {
+            ThemedMaterialAlertDialogBuilder builder = new ThemedMaterialAlertDialogBuilder(activity);
+            builder.setTitle(R.string.spliit_member_conflict_title)
+                    .setMessage(R.string.spliit_member_create_uncertain)
+                    .setNegativeButton(R.string.spliit_later, null);
+            if (candidates.isEmpty()) builder.setPositiveButton(R.string.spliit_member_retry, (dialog, which) -> {
+                if (store.retryCreatedMember(pending.getId())) {
+                    db.syncIfRemote(project);
+                    listener.onMemberUpdated();
+                } else showToast(R.string.spliit_member_stale);
+            });
+            builder.show();
+            return;
+        }
+        DBMember candidate = candidates.get(0);
+        new ThemedMaterialAlertDialogBuilder(activity).setTitle(R.string.spliit_member_conflict_title)
+                .setMessage(activity.getString(R.string.spliit_member_link_message, candidate.getName()))
+                .setPositiveButton(R.string.spliit_member_link, (dialog, which) -> {
+                    if (store.linkCreatedMember(pending.getId(), candidate.getId(), candidate.getRemoteIdStr())) {
+                        db.syncIfRemote(project);
+                        listener.onMemberUpdated();
+                    } else showToast(R.string.spliit_member_stale);
+                }).setNegativeButton(R.string.spliit_later, null).show();
+    }
+
+    private void resolveSpliitRename(DBProject project, DBMember member, SpliitMemberStore store,
+                                     String conflict, boolean keepLocal) {
+        if (store.resolveRename(member.getId(), conflict, keepLocal)) {
+            db.syncIfRemote(project);
+            listener.onMemberUpdated();
+        } else showToast(R.string.spliit_member_stale);
     }
 
     public void showAdd(long projectId) {
@@ -80,10 +182,18 @@ public final class MemberDialogs {
                 .setView(input)
                 .setPositiveButton(R.string.simple_ok, (dialog, which) -> {
                     String name = input.getText().toString();
+                    if (project.getType() == ProjectType.SPLIIT) name = name.trim();
+                    if (project.getType() == ProjectType.SPLIIT
+                            && (name.length() < 2 || name.length() > 50)) {
+                        showToast(R.string.spliit_member_invalid_name);
+                        hideKeyboard(input.getContext());
+                        return;
+                    }
                     if (!name.equals("")) {
                         List<DBMember> members = db.getMembersOfProject(projectId, null);
                         List<String> names = new ArrayList<>();
-                        for (DBMember member : members) names.add(member.getName());
+                        for (DBMember member : members) names.add(project.getType() == ProjectType.SPLIIT
+                                ? member.getName().trim() : member.getName());
                         if (!names.contains(name)) {
                             db.addMemberAndSync(new DBMember(0, 0, projectId, name,
                                     true, 1, DBBill.STATE_ADDED, null, null, null, null, null));
@@ -194,7 +304,7 @@ public final class MemberDialogs {
     }
 
     private boolean canManage(DBProject project) {
-        if (project.isReadOnly()) {
+        if (project == null || !project.canManageMembers()) {
             return false;
         }
         int access = project.getMyAccessLevel();

@@ -23,6 +23,9 @@ import java.time.Instant;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.Collections;
 
 import at.bitfire.cert4android.CustomCertManager;
 
@@ -63,15 +66,18 @@ public class SpliitClient {
         public final String currencyCode;
         public final List<SpliitParticipant> participants;
         public final List<SpliitExpense> expenses;
+        /** Complete group metadata, required to preserve settings during participant writes. */
+        public final String raw;
 
         SpliitGroup(String id, String name, String currency, String currencyCode,
-                    List<SpliitParticipant> participants, List<SpliitExpense> expenses) {
+                    List<SpliitParticipant> participants, List<SpliitExpense> expenses, String raw) {
             this.id = id;
             this.name = name;
             this.currency = currency;
             this.currencyCode = currencyCode;
             this.participants = participants;
             this.expenses = expenses;
+            this.raw = raw;
         }
     }
 
@@ -128,6 +134,9 @@ public class SpliitClient {
         if (group == null) {
             throw new JSONException("Spliit response is missing the group object");
         }
+        if (!groupId.equals(group.optString("id", ""))) {
+            throw new JSONException("Spliit returned a different group");
+        }
 
         List<SpliitParticipant> participants = new ArrayList<>();
         JSONArray participantsArray = group.getJSONArray("participants");
@@ -145,7 +154,7 @@ public class SpliitClient {
                 group.optString("currency", ""),
                 group.optString("currencyCode", ""),
                 participants,
-                new ArrayList<>());
+                new ArrayList<>(), group.toString());
     }
 
     /** Fetch a complete, validated ID list before loading any expense details. */
@@ -154,6 +163,13 @@ public class SpliitClient {
     }
 
     public SpliitGroup getGroup(@Nullable CustomCertManager ccm, ProgressListener progress)
+            throws IOException, JSONException {
+        return getGroup(ccm, progress, Collections.emptyMap(), Collections.emptySet(), true);
+    }
+
+    /** Reuse verified cached details only after a complete list and validated activity scan. */
+    public SpliitGroup getGroup(@Nullable CustomCertManager ccm, ProgressListener progress,
+                                Map<String, String> cache, Set<String> changed, boolean fullAudit)
             throws IOException, JSONException {
         progress.onProgress(Stage.PROJECT, 0, SyncProgress.UNKNOWN_TOTAL);
         SpliitGroup group = getGroupMetadata(ccm);
@@ -170,13 +186,43 @@ public class SpliitClient {
         }
         List<SpliitExpense> expenses = new ArrayList<>();
         List<String> ids = pagination.getExpenseIds();
-        progress.onProgress(Stage.DOWNLOADING, 0, ids.size());
+        int total = 0;
+        for (String id : ids) if (fullAudit || changed.contains(id) || !cache.containsKey(id)) total++;
+        int downloaded = 0;
+        progress.onProgress(Stage.DOWNLOADING, 0, total);
         for (String id : ids) {
-            expenses.add(getExpense(id, ccm));
-            progress.onProgress(Stage.DOWNLOADING, expenses.size(), ids.size());
+            SpliitExpense expense = null;
+            if (!fullAudit && !changed.contains(id) && cache.containsKey(id)) {
+                try {
+                    JSONObject raw = new JSONObject(cache.get(id));
+                    if (id.equals(raw.getString("id")) && groupId.equals(raw.getString("groupId"))) {
+                        expense = parseExpense(raw);
+                    }
+                } catch (JSONException | RuntimeException ignored) { /* Download invalid cached details. */ }
+            }
+            if (expense == null) {
+                expense = getExpense(id, ccm);
+                progress.onProgress(Stage.DOWNLOADING, ++downloaded, total);
+            }
+            expenses.add(expense);
         }
         return new SpliitGroup(group.id, group.name, group.currency, group.currencyCode,
-                group.participants, expenses);
+                group.participants, expenses, group.raw);
+    }
+
+    public SpliitActivityWindow getActivityWindow(@Nullable String marker, @Nullable CustomCertManager ccm)
+            throws IOException, JSONException {
+        SpliitActivityWindow window = new SpliitActivityWindow(marker);
+        int pages = 0;
+        do {
+            JSONObject input = new JSONObject().put("json", new JSONObject().put("groupId", groupId)
+                    .put("cursor", window.cursor()).put("limit", PAGE_SIZE));
+            JSONObject page = getTrpc("groups.activities.list", input, ccm);
+            window.accept(SpliitExpenseCodec.parse(page.toString()));
+            // A missing marker needs only the newest ID for the next checkpoint.
+            if (marker == null || ++pages >= 100) break;
+        } while (!window.complete());
+        return window;
     }
 
     private JSONObject getGroupDetails(@Nullable CustomCertManager ccm) throws IOException, JSONException {
@@ -226,6 +272,12 @@ public class SpliitClient {
                 .put("groupId", groupId).put("expenseId", expenseId)), true, ccm);
     }
 
+    /** This replaces the full group form, not just participants. Callers must recheck first. */
+    public void updateGroup(String form, @Nullable CustomCertManager ccm) throws IOException, JSONException {
+        requestTrpc("groups.update", new JSONObject().put("json", new JSONObject()
+                .put("groupId", groupId).put("groupFormValues", new JSONObject(form))), true, ccm);
+    }
+
     private JSONObject requestTrpc(String procedure, JSONObject input, boolean mutation,
                                    @Nullable CustomCertManager ccm) throws IOException, JSONException {
         String url = baseUrl + "/api/trpc/" + procedure + (mutation ? ""
@@ -256,7 +308,10 @@ public class SpliitClient {
                 throw new IOException("Spliit request failed (" + responseCode + ")");
             }
             JSONObject root = new JSONObject(content);
-            return root.getJSONObject("result").getJSONObject("data").getJSONObject("json");
+            JSONObject data = root.getJSONObject("result").getJSONObject("data");
+            // Mutations returning void use JSON null rather than an object.
+            if (!data.has("json")) throw new JSONException("Spliit response is missing its result");
+            return data.isNull("json") ? new JSONObject() : data.getJSONObject("json");
         } catch (JSONException e) {
             Log.e(TAG, "Could not parse Spliit response for " + procedure, e);
             throw e;

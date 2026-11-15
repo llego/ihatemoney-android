@@ -42,7 +42,7 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
 
     private static final String TAG = MoneyBusterSQLiteOpenHelper.class.getSimpleName();
 
-    private static final int database_version = 23;
+    private static final int database_version = 24;
     private static final String database_name = "IHATEMONEY";
 
     private static final String table_members = "MEMBERS";
@@ -225,7 +225,7 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
                 key_b + " INTEGER, " +
                 key_nc_userid + " TEXT, " +
                 key_avatar + " TEXT, " +
-                key_state + " INTEGER)");
+                key_state + " INTEGER, " + SpliitMemberStore.COLUMNS + ")");
     }
 
     private void createTableProjects(SQLiteDatabase db, String tableName) {
@@ -465,6 +465,9 @@ public class MoneyBusterSQLiteOpenHelper extends SQLiteOpenHelper {
         }
         if (oldVersion < 23) {
             for (String sql : SpliitSyncStore.MIGRATIONS) db.execSQL(sql);
+        }
+        if (oldVersion < 24) {
+            for (String sql : SpliitMemberStore.MIGRATIONS) db.execSQL(sql);
         }
     }
 

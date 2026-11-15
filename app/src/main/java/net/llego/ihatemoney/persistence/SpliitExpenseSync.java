@@ -3,6 +3,7 @@ package net.llego.ihatemoney.persistence;
 import com.google.gson.JsonObject;
 
 import net.llego.ihatemoney.model.DBBill;
+import net.llego.ihatemoney.model.DBBillOwer;
 import net.llego.ihatemoney.model.DBMember;
 import net.llego.ihatemoney.model.DBProject;
 import net.llego.ihatemoney.model.SyncProgress.Stage;
@@ -76,6 +77,12 @@ final class SpliitExpenseSync {
             SpliitSyncDecision.Action action = SpliitSyncDecision.decide(bill.getState(),
                     bill.getRemoteIdStr(), baseline, current == null ? null : current.raw, attempt);
             if (action == SpliitSyncDecision.Action.SKIP) continue;
+            // Pending creates/edits cannot be projected until all their participants
+            // have remote IDs. Do not prevent other changes or the pull from completing.
+            if ((action == SpliitSyncDecision.Action.ACKNOWLEDGE
+                    || action == SpliitSyncDecision.Action.CREATE
+                    || action == SpliitSyncDecision.Action.UPDATE)
+                    && !hasRemoteParticipants(bill, members)) continue;
             if (action == SpliitSyncDecision.Action.ACKNOWLEDGE) {
                 acknowledge(bill, current, sentAttempt.get("form").toString(), members,
                         sentAttempt.get("state").getAsInt());
@@ -135,6 +142,18 @@ final class SpliitExpenseSync {
         progress.onProgress(Stage.UPLOADING, pending.size(), pending.size());
         if (invalidExpense != null) throw invalidExpense;
         return changed;
+    }
+
+    static boolean hasRemoteParticipants(DBBill bill, Map<Long, DBMember> members) {
+        if (!hasRemoteId(members.get(bill.getPayerId()))) return false;
+        for (DBBillOwer ower : bill.getBillOwers()) {
+            if (!hasRemoteId(members.get(ower.getMemberId()))) return false;
+        }
+        return true;
+    }
+
+    private static boolean hasRemoteId(DBMember member) {
+        return member != null && member.getRemoteIdStr() != null && !member.getRemoteIdStr().isEmpty();
     }
 
     /** Claim the exact local version atomically. Editors refuse writes while a claim exists. */

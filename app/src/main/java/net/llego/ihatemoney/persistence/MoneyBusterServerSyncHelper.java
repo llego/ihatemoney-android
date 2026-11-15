@@ -28,6 +28,8 @@ import net.llego.ihatemoney.model.DBProject;
 import net.llego.ihatemoney.model.ProjectType;
 import net.llego.ihatemoney.model.SyncProgress;
 import net.llego.ihatemoney.model.SyncProgress.Stage;
+import net.llego.ihatemoney.util.SpliitActivityWindow;
+import net.llego.ihatemoney.util.SpliitIncrementalPolicy;
 import net.llego.ihatemoney.util.ICallback;
 import net.llego.ihatemoney.util.IProjectCreationCallback;
 import net.llego.ihatemoney.util.VersatileProjectSyncClient;
@@ -883,10 +885,27 @@ public class MoneyBusterServerSyncHelper {
             Log.d(TAG, "pullSpliitGroup(" + project + ")");
             try {
                 SpliitClient spliitClient = new SpliitClient(project.getServerUrl(), project.getRemoteId());
-                SpliitClient.SpliitGroup group = spliitClient.getGroup(customCertManager, this::reportProgress);
+                SpliitMemberSync memberSync = new SpliitMemberSync(dbHelper, spliitClient, customCertManager);
+                memberSync.push(project);
+                String checkpointKey = "spliit_activity_" + project.getId();
+                String auditKey = "spliit_audit_" + project.getId();
+                SpliitActivityWindow window = null;
+                try {
+                    window = spliitClient.getActivityWindow(preferences.getString(checkpointKey, null), customCertManager);
+                } catch (Exception e) {
+                    Log.w(TAG, "Activity history unavailable; using full Spliit audit", e);
+                }
+                long now = System.currentTimeMillis();
+                boolean fullAudit = SpliitIncrementalPolicy.fullAudit(now,
+                        preferences.getLong(auditKey, 0), window != null && window.usable());
+                java.util.Set<String> changed = window != null && window.usable()
+                        ? window.changed() : java.util.Collections.emptySet();
+                SpliitClient.SpliitGroup group = spliitClient.getGroup(customCertManager, this::reportProgress,
+                        spliitExpenseCache(), changed, fullAudit);
                 if (new SpliitExpenseSync(dbHelper, spliitClient, customCertManager,
                         this::reportProgress).push(project, group)) {
-                    group = spliitClient.getGroup(customCertManager, this::reportProgress);
+                    group = spliitClient.getGroup(customCertManager, this::reportProgress,
+                            spliitExpenseCache(), changed, fullAudit);
                 }
 
                 reportProgress(Stage.SAVING, 0, group.expenses.size());
@@ -897,6 +916,24 @@ public class MoneyBusterServerSyncHelper {
                     database.setTransactionSuccessful();
                 } finally {
                     database.endTransaction();
+                }
+                // Never advance a checkpoint for a failed or incomplete reconciliation.
+                SharedPreferences.Editor checkpoint = preferences.edit();
+                if (window != null && window.newest() != null) checkpoint.putString(checkpointKey, window.newest());
+                if (fullAudit) checkpoint.putLong(auditKey, now);
+                checkpoint.apply();
+                List<String> invalidMembers = memberSync.invalidMembers();
+                List<String> conflictedMembers = memberSync.conflictedMembers(project.getId());
+                if (!invalidMembers.isEmpty()) {
+                    errorMessages.add(appContext.getString(R.string.spliit_invalid_pending_members,
+                            android.text.TextUtils.join(", ", invalidMembers)));
+                }
+                if (!conflictedMembers.isEmpty()) {
+                    errorMessages.add(appContext.getString(R.string.spliit_pending_member_conflicts,
+                            android.text.TextUtils.join(", ", conflictedMembers)));
+                }
+                if (!errorMessages.isEmpty()) {
+                    return false;
                 }
                 return true;
             } catch (Exception e) {
@@ -910,6 +947,19 @@ public class MoneyBusterServerSyncHelper {
                 }
                 return false;
             }
+        }
+
+        private Map<String, String> spliitExpenseCache() {
+            Map<String, String> cache = new HashMap<>();
+            SpliitSyncStore store = new SpliitSyncStore(dbHelper);
+            for (DBBill bill : dbHelper.getBillsOfProject(project.getId())) {
+                if (bill.getRemoteIdStr() == null || bill.getState() != DBBill.STATE_OK
+                        || store.get(bill.getId(), SpliitSyncStore.ATTEMPT) != null
+                        || store.get(bill.getId(), SpliitSyncStore.CONFLICT) != null) continue;
+                String baseline = store.get(bill.getId(), SpliitSyncStore.BASELINE);
+                if (baseline != null) cache.put(bill.getRemoteIdStr(), baseline);
+            }
+            return cache;
         }
 
         private void reconcileSpliitGroup(SpliitClient.SpliitGroup group) {
@@ -944,6 +994,7 @@ public class MoneyBusterServerSyncHelper {
 
                 // Reconcile members by their string remote id.
                 Map<String, DBMember> remoteMembersByRemoteId = new HashMap<>();
+                SpliitMemberStore memberStore = new SpliitMemberStore(dbHelper);
                 for (SpliitClient.SpliitParticipant participant : group.participants) {
                     DBMember localMember = dbHelper.getMemberByRemoteIdStr(participant.id, project.getId());
                     if (localMember == null) {
@@ -953,14 +1004,22 @@ public class MoneyBusterServerSyncHelper {
                         );
                         newMember.setRemoteIdStr(participant.id);
                         long mid = dbHelper.addMember(newMember);
+                        memberStore.put(mid, SpliitMemberStore.BASELINE, participant.name);
                         remoteMembersByRemoteId.put(participant.id, dbHelper.getMember(mid));
                     } else {
-                        if (participant.name != null && !participant.name.equals(localMember.getName())) {
+                        // A pull must never overwrite a pending local edit, a conflict, or an
+                        // uncertain write. The baseline represents the version last accepted
+                        // locally, not the latest server version observed while dirty.
+                        boolean clean = localMember.getState() == DBBill.STATE_OK
+                                && memberStore.get(localMember.getId(), SpliitMemberStore.ATTEMPT) == null
+                                && memberStore.get(localMember.getId(), SpliitMemberStore.CONFLICT) == null;
+                        if (clean && participant.name != null && !participant.name.equals(localMember.getName())) {
                             dbHelper.updateMember(
                                     localMember.getId(), participant.name, null, null, null,
                                     null, null, null, null, null, null, null
                             );
                         }
+                        if (clean) memberStore.put(localMember.getId(), SpliitMemberStore.BASELINE, participant.name);
                         remoteMembersByRemoteId.put(participant.id, localMember);
                     }
                 }
@@ -971,7 +1030,10 @@ public class MoneyBusterServerSyncHelper {
                         continue;
                     }
                     if (!remoteMembersByRemoteId.containsKey(localMember.getRemoteIdStr())) {
-                        if (dbHelper.getBillsOfMember(localMember.getId()).size() == 0
+                        if (localMember.getState() == DBBill.STATE_OK
+                                && memberStore.get(localMember.getId(), SpliitMemberStore.ATTEMPT) == null
+                                && memberStore.get(localMember.getId(), SpliitMemberStore.CONFLICT) == null
+                                && dbHelper.getBillsOfMember(localMember.getId()).size() == 0
                                 && dbHelper.getBillowersOfMember(localMember.getId()).size() == 0) {
                             dbHelper.deleteMember(localMember.getId());
                         }
