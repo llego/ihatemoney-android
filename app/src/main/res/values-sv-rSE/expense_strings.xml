@@ -57,6 +57,8 @@
     <string name="spliit_member_conflict_message">På den här enheten: %1$s\nPå Spliit: %2$s\n\nVälj vilket namn som ska behållas.</string>
     <string name="spliit_member_needs_web">Kontrollera deltagaren på Spliit innan du löser den väntande ändringen.</string>
     <string name="spliit_member_invalid_name">Ange ett deltagarnamn med 2–50 tecken.</string>
+    <string name="spliit_invalid_pending_members">Kunde inte synkronisera dessa deltagare: %1$s. Kontrollera deras namn och gruppens deltagargräns. Andra ändringar synkroniserades där det var möjligt.</string>
+    <string name="spliit_pending_member_cannot_remove">Deltagaren kan inte tas bort medan en utgift hänvisar till personen eller ett synkroniseringsförsök är olöst.</string>
     <string name="spliit_member_stale">Deltagaren har ändrats eller synkroniseras. Uppdatera och försök igen.</string>
     <string name="spliit_member_create_uncertain">Spliit kan ha skapat deltagaren utan att bekräfta det. Kontrollera gruppen på Spliit och synkronisera först igen. Ett nytt försök kan skapa en dubblett.</string>
     <string name="spliit_member_retry">Försök skapa igen</string>

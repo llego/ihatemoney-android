@@ -1,6 +1,7 @@
 package net.llego.ihatemoney.util;
 
 import com.google.gson.JsonObject;
+import com.google.gson.JsonArray;
 
 import org.junit.Test;
 
@@ -62,4 +63,32 @@ public class SpliitGroupFormTest {
 
     @Test(expected = IllegalArgumentException.class)
     public void refusesShortNames() { SpliitGroupForm.add(GROUP, "A"); }
+
+    @Test
+    public void rejectsLocalValidationErrorsWithoutClassifyingMalformedSnapshotsAsUserErrors() {
+        assertThrows(SpliitGroupForm.MemberValidationException.class, () -> SpliitGroupForm.add(GROUP, "A "));
+        assertThrows(SpliitGroupForm.MemberValidationException.class, () -> SpliitGroupForm.add(GROUP, "Alice"));
+        IllegalArgumentException malformed = assertThrows(IllegalArgumentException.class,
+                () -> SpliitGroupForm.add("{\"name\":\"Trip\",\"participants\":[]}", "Valid"));
+        assertFalse(malformed instanceof SpliitGroupForm.MemberValidationException);
+        assertEquals("Valid", SpliitGroupForm.add(GROUP, "Valid")
+                .getAsJsonArray("participants").get(2).getAsJsonObject().get("name").getAsString());
+    }
+
+    @Test
+    public void fullGroupIsEditableValidationErrorButRenamesStillWork() {
+        JsonObject group = SpliitExpenseCodec.parse(GROUP);
+        JsonArray participants = new JsonArray();
+        for (int index = 0; index < 100; index++) {
+            JsonObject participant = new JsonObject();
+            participant.addProperty("id", "id" + index);
+            participant.addProperty("name", "Person " + index);
+            participants.add(participant);
+        }
+        group.add("participants", participants);
+        assertThrows(SpliitGroupForm.MemberValidationException.class,
+                () -> SpliitGroupForm.add(group.toString(), "New person"));
+        assertEquals("Renamed", SpliitGroupForm.rename(group.toString(), "id0", "Renamed")
+                .getAsJsonArray("participants").get(0).getAsJsonObject().get("name").getAsString());
+    }
 }

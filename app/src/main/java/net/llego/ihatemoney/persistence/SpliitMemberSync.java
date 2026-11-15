@@ -13,6 +13,8 @@ import net.llego.ihatemoney.util.SpliitGroupForm;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.ArrayList;
+import java.util.List;
 
 import at.bitfire.cert4android.CustomCertManager;
 
@@ -22,6 +24,7 @@ final class SpliitMemberSync {
     private final SpliitMemberStore store;
     private final SpliitClient client;
     private final CustomCertManager certificates;
+    private final List<String> invalidMembers = new ArrayList<>();
 
     SpliitMemberSync(MoneyBusterSQLiteOpenHelper db, SpliitClient client, CustomCertManager certificates) {
         this.db = db;
@@ -29,6 +32,8 @@ final class SpliitMemberSync {
         this.client = client;
         this.certificates = certificates;
     }
+
+    List<String> invalidMembers() { return new ArrayList<>(invalidMembers); }
 
     boolean push(DBProject project) throws Exception {
         boolean changed = false;
@@ -52,8 +57,15 @@ final class SpliitMemberSync {
                 acknowledge(snapshot, snapshot.getRemoteIdStr());
                 continue;
             }
-            JsonObject form = create ? SpliitGroupForm.add(group.raw, snapshot.getName())
-                    : SpliitGroupForm.rename(group.raw, snapshot.getRemoteIdStr(), snapshot.getName());
+            JsonObject form;
+            try {
+                form = create ? SpliitGroupForm.add(group.raw, snapshot.getName())
+                        : SpliitGroupForm.rename(group.raw, snapshot.getRemoteIdStr(), snapshot.getName());
+            } catch (SpliitGroupForm.MemberValidationException e) {
+                // Keep the row editable and let other participants and expenses sync.
+                invalidMembers.add(snapshot.getName());
+                continue;
+            }
             // There is no server-side compare-and-swap. This fresh comparison narrows,
             // but cannot eliminate, the race with another client updating the group.
             SpliitClient.SpliitGroup latest = client.getGroupMetadata(certificates);

@@ -885,7 +885,8 @@ public class MoneyBusterServerSyncHelper {
             Log.d(TAG, "pullSpliitGroup(" + project + ")");
             try {
                 SpliitClient spliitClient = new SpliitClient(project.getServerUrl(), project.getRemoteId());
-                new SpliitMemberSync(dbHelper, spliitClient, customCertManager).push(project);
+                SpliitMemberSync memberSync = new SpliitMemberSync(dbHelper, spliitClient, customCertManager);
+                memberSync.push(project);
                 String checkpointKey = "spliit_activity_" + project.getId();
                 String auditKey = "spliit_audit_" + project.getId();
                 SpliitActivityWindow window = null;
@@ -921,6 +922,11 @@ public class MoneyBusterServerSyncHelper {
                 if (window != null && window.newest() != null) checkpoint.putString(checkpointKey, window.newest());
                 if (fullAudit) checkpoint.putLong(auditKey, now);
                 checkpoint.apply();
+                if (!memberSync.invalidMembers().isEmpty()) {
+                    errorMessages.add(appContext.getString(R.string.spliit_invalid_pending_members,
+                            android.text.TextUtils.join(", ", memberSync.invalidMembers())));
+                    return false;
+                }
                 return true;
             } catch (Exception e) {
                 Log.e(TAG, "Spliit sync failed", e);

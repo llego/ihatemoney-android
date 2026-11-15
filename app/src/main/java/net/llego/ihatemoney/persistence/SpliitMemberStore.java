@@ -94,6 +94,25 @@ public final class SpliitMemberStore {
         }
     }
 
+    /** Discard only a never-attempted creation that no local expense refers to. */
+    public boolean discardPending(DBMember expected) {
+        SQLiteDatabase database = db.getWritableDatabase();
+        database.beginTransaction();
+        try {
+            DBMember current = db.getMember(expected.getId());
+            if (current == null || current.getState() != DBBill.STATE_ADDED
+                    || current.getRemoteIdStr() != null || !Objects.equals(current.getName(), expected.getName())
+                    || get(current.getId(), ATTEMPT) != null || get(current.getId(), CONFLICT) != null
+                    || !db.getBillsOfMember(current.getId()).isEmpty()
+                    || !db.getBillowersOfMember(current.getId()).isEmpty()) return false;
+            db.deleteMember(current.getId());
+            database.setTransactionSuccessful();
+            return true;
+        } finally {
+            database.endTransaction();
+        }
+    }
+
     /** Link an uncertain local creation to a server participant explicitly selected by the user. */
     public boolean linkCreatedMember(long pendingId, long importedId, String expectedRemoteId) {
         SQLiteDatabase database = db.getWritableDatabase();

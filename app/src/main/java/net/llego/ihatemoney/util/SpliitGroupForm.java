@@ -11,6 +11,11 @@ import java.util.Set;
 public final class SpliitGroupForm {
     private SpliitGroupForm() { }
 
+    /** An editable local participant cannot be submitted against this group. */
+    public static final class MemberValidationException extends IllegalArgumentException {
+        public MemberValidationException(String message) { super(message); }
+    }
+
     public static JsonObject fromSnapshot(String snapshot) {
         JsonObject group = SpliitExpenseCodec.parse(snapshot);
         JsonObject form = new JsonObject();
@@ -43,7 +48,7 @@ public final class SpliitGroupForm {
         JsonObject form = fromSnapshot(snapshot);
         validateName(name);
         JsonArray participants = form.getAsJsonArray("participants");
-        if (participants.size() >= 100) throw new IllegalArgumentException("Too many participants");
+        if (participants.size() >= 100) throw new MemberValidationException("Too many participants");
         ensureUniqueName(participants, name, null);
         JsonObject participant = new JsonObject();
         participant.addProperty("name", name);
@@ -71,8 +76,8 @@ public final class SpliitGroupForm {
     }
 
     private static void validateName(String name) {
-        if (name == null || name.length() < 2 || name.length() > 50 || name.trim().isEmpty()) {
-            throw new IllegalArgumentException("Invalid participant name");
+        if (name == null || name.length() < 2 || name.length() > 50 || !name.equals(name.trim())) {
+            throw new MemberValidationException("Invalid participant name");
         }
     }
 
@@ -83,7 +88,7 @@ public final class SpliitGroupForm {
             String id = participant.get("id").getAsString();
             if (!ids.add(id)) throw new IllegalArgumentException("Duplicate participant ID");
             if (!id.equals(exceptId) && name.trim().equals(participant.get("name").getAsString().trim())) {
-                throw new IllegalArgumentException("Duplicate participant name");
+                throw new MemberValidationException("Duplicate participant name");
             }
         }
     }

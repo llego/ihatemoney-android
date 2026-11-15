@@ -100,7 +100,8 @@ public final class MemberDialogs {
         EditText input = new EditText(new ContextThemeWrapper(activity, R.style.AppTheme));
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
         input.setText(member.getName());
-        new ThemedMaterialAlertDialogBuilder(activity).setTitle(R.string.edit_member_dialog_title)
+        ThemedMaterialAlertDialogBuilder editor = new ThemedMaterialAlertDialogBuilder(activity);
+        editor.setTitle(R.string.edit_member_dialog_title)
                 .setView(input).setPositiveButton(R.string.simple_ok, (dialog, which) -> {
                     String name = input.getText().toString().trim();
                     if (name.length() < 2 || name.length() > 50) {
@@ -112,7 +113,14 @@ public final class MemberDialogs {
                         } else showToast(R.string.spliit_member_stale);
                     }
                     hideKeyboard(input.getContext());
-                }).setNegativeButton(R.string.simple_cancel, null).show();
+                }).setNegativeButton(R.string.simple_cancel, null);
+        if (member.getState() == DBBill.STATE_ADDED && member.getRemoteIdStr() == null) {
+            editor.setNeutralButton(R.string.member_edit_delete, (dialog, which) -> {
+                if (store.discardPending(member)) listener.onMemberDeleted();
+                else showToast(R.string.spliit_pending_member_cannot_remove);
+            });
+        }
+        editor.show();
     }
 
     private void showSpliitLink(DBProject project, DBMember pending, SpliitMemberStore store) {
