@@ -7,6 +7,11 @@ import org.junit.Test;
 import static org.junit.Assert.*;
 
 public class SpliitGroupFormTest {
+    private static final String GROUP = """
+            {"name":"Trip","information":"notes","currency":"€","currencyCode":"EUR",
+             "participants":[{"id":"a","name":"Alice"},{"id":"b","name":"Bob"}]}
+            """;
+
     @Test
     public void preservesSettingsAndParticipantIds() {
         JsonObject form = SpliitGroupForm.fromSnapshot("""
@@ -34,4 +39,24 @@ public class SpliitGroupFormTest {
     public void refusesSnapshotsMissingSettingsInsteadOfOverwritingThem() {
         SpliitGroupForm.fromSnapshot("{\"name\":\"Trip\",\"participants\":[]}");
     }
+
+    @Test
+    public void additionAndRenamePreserveOtherParticipantsAndSettings() {
+        JsonObject added = SpliitGroupForm.add(GROUP, "Clara");
+        assertEquals(3, added.getAsJsonArray("participants").size());
+        assertFalse(added.getAsJsonArray("participants").get(2).getAsJsonObject().has("id"));
+        JsonObject renamed = SpliitGroupForm.rename(GROUP, "a", "Alicia");
+        assertEquals("Alicia", renamed.getAsJsonArray("participants").get(0).getAsJsonObject().get("name").getAsString());
+        assertEquals("Bob", renamed.getAsJsonArray("participants").get(1).getAsJsonObject().get("name").getAsString());
+        assertEquals("notes", renamed.get("information").getAsString());
+    }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void refusesDuplicateNames() { SpliitGroupForm.add(GROUP, "Alice"); }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void refusesRenamingDeletedMember() { SpliitGroupForm.rename(GROUP, "missing", "Name"); }
+
+    @Test(expected = IllegalArgumentException.class)
+    public void refusesShortNames() { SpliitGroupForm.add(GROUP, "A"); }
 }
