@@ -100,8 +100,8 @@ public class DBProject implements Serializable {
     }
 
     /**
-     * Spliit group settings and participants are read-only. Expense writes use
-     * a separate capability because not all Spliit split types are supported.
+     * Spliit group settings are read-only. Expense and participant management
+     * use separate capabilities; not all Spliit expense types are supported.
      */
     public boolean isReadOnly() {
         return ProjectType.SPLIIT.equals(type);
@@ -109,6 +109,10 @@ public class DBProject implements Serializable {
 
     public boolean canEditExpenses() {
         return true;
+    }
+
+    public boolean canManageMembers() {
+        return !isReadOnly() || ProjectType.SPLIIT.equals(type);
     }
 
     public String getPassword() {

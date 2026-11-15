@@ -56,7 +56,6 @@ public final class SpliitGroupForm {
         validateName(name);
         JsonObject form = fromSnapshot(snapshot);
         JsonArray participants = form.getAsJsonArray("participants");
-        ensureUniqueName(participants, name, id);
         JsonObject found = null;
         for (JsonElement value : participants) {
             JsonObject participant = value.getAsJsonObject();
@@ -66,6 +65,7 @@ public final class SpliitGroupForm {
             }
         }
         if (found == null) throw new IllegalArgumentException("Participant is no longer in group");
+        ensureUniqueName(participants, name, id);
         found.addProperty("name", name);
         return form;
     }
@@ -82,7 +82,7 @@ public final class SpliitGroupForm {
             JsonObject participant = value.getAsJsonObject();
             String id = participant.get("id").getAsString();
             if (!ids.add(id)) throw new IllegalArgumentException("Duplicate participant ID");
-            if (!id.equals(exceptId) && name.equals(participant.get("name").getAsString())) {
+            if (!id.equals(exceptId) && name.trim().equals(participant.get("name").getAsString().trim())) {
                 throw new IllegalArgumentException("Duplicate participant name");
             }
         }

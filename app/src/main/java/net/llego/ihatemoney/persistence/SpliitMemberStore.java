@@ -78,13 +78,14 @@ public final class SpliitMemberStore {
             DBMember current = db.getMember(expected.getId());
             if (current == null || current.getState() != expected.getState()
                     || !Objects.equals(current.getName(), expected.getName())
-                    || !Objects.equals(current.getRemoteIdStr(), expected.getRemoteIdStr())
-                    || current.getRemoteIdStr() == null || get(current.getId(), BASELINE) == null
-                    || get(current.getId(), ATTEMPT) != null || get(current.getId(), CONFLICT) != null) return false;
+                    || !Objects.equals(current.getRemoteIdStr(), expected.getRemoteIdStr())) return false;
+            int state = SpliitMemberDecision.renamedState(current.getState(), current.getRemoteIdStr(),
+                    get(current.getId(), BASELINE), get(current.getId(), ATTEMPT), get(current.getId(), CONFLICT));
+            if (state < 0) return false;
             for (DBMember other : db.getMembersOfProject(current.getProjectId(), null)) {
-                if (other.getId() != current.getId() && name.equals(other.getName())) return false;
+                if (other.getId() != current.getId() && name.equals(other.getName().trim())) return false;
             }
-            db.updateMember(current.getId(), name, null, null, DBBill.STATE_EDITED, null,
+            db.updateMember(current.getId(), name, null, null, state, null,
                     null, null, null, null, null);
             database.setTransactionSuccessful();
             return true;

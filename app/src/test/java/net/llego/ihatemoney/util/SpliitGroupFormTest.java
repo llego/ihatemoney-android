@@ -55,6 +55,9 @@ public class SpliitGroupFormTest {
     public void refusesDuplicateNames() { SpliitGroupForm.add(GROUP, "Alice"); }
 
     @Test(expected = IllegalArgumentException.class)
+    public void refusesWhitespaceVariantOfExistingName() { SpliitGroupForm.add(GROUP, "Alice "); }
+
+    @Test(expected = IllegalArgumentException.class)
     public void refusesRenamingDeletedMember() { SpliitGroupForm.rename(GROUP, "missing", "Name"); }
 
     @Test(expected = IllegalArgumentException.class)

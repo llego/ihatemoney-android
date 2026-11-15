@@ -21,5 +21,10 @@ public class SpliitMemberDependencyTest {
         members = SpliitFixtures.members();
         members.remove(1L);
         assertFalse(SpliitExpenseSync.hasRemoteParticipants(expense, members));
+        members = SpliitFixtures.members();
+        members.get(2L).setRemoteIdStr(null);
+        assertFalse(SpliitExpenseSync.hasRemoteParticipants(expense, members));
+        members.get(2L).setRemoteIdStr("");
+        assertFalse(SpliitExpenseSync.hasRemoteParticipants(expense, members));
     }
 }

@@ -54,7 +54,7 @@ public final class MemberDialogs {
     public void showMembers(long projectId) {
         if (projectId == 0) return;
         DBProject project = db.getProject(projectId);
-        if (project == null || (!project.isReadOnly() && !canManage(project))) return;
+        if (!canManage(project)) return;
 
         List<DBMember> members = db.getMembersOfProject(projectId, null);
         List<String> names = new ArrayList<>();
@@ -102,8 +102,8 @@ public final class MemberDialogs {
         input.setText(member.getName());
         new ThemedMaterialAlertDialogBuilder(activity).setTitle(R.string.edit_member_dialog_title)
                 .setView(input).setPositiveButton(R.string.simple_ok, (dialog, which) -> {
-                    String name = input.getText().toString();
-                    if (name.length() < 2 || name.length() > 50 || name.trim().isEmpty()) {
+                    String name = input.getText().toString().trim();
+                    if (name.length() < 2 || name.length() > 50) {
                         showToast(R.string.spliit_member_invalid_name);
                     } else if (!name.equals(member.getName())) {
                         if (store.queueRename(member, name)) {
@@ -157,7 +157,7 @@ public final class MemberDialogs {
     public void showAdd(long projectId) {
         if (projectId == 0) return;
         DBProject project = db.getProject(projectId);
-        if (project == null || (project.getType() != ProjectType.SPLIIT && !canManage(project))) return;
+        if (!canManage(project)) return;
 
         EditText input = new EditText(new ContextThemeWrapper(activity, R.style.AppTheme));
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
@@ -167,8 +167,9 @@ public final class MemberDialogs {
                 .setView(input)
                 .setPositiveButton(R.string.simple_ok, (dialog, which) -> {
                     String name = input.getText().toString();
+                    if (project.getType() == ProjectType.SPLIIT) name = name.trim();
                     if (project.getType() == ProjectType.SPLIIT
-                            && (name.length() < 2 || name.length() > 50 || name.trim().isEmpty())) {
+                            && (name.length() < 2 || name.length() > 50)) {
                         showToast(R.string.spliit_member_invalid_name);
                         hideKeyboard(input.getContext());
                         return;
@@ -176,7 +177,8 @@ public final class MemberDialogs {
                     if (!name.equals("")) {
                         List<DBMember> members = db.getMembersOfProject(projectId, null);
                         List<String> names = new ArrayList<>();
-                        for (DBMember member : members) names.add(member.getName());
+                        for (DBMember member : members) names.add(project.getType() == ProjectType.SPLIIT
+                                ? member.getName().trim() : member.getName());
                         if (!names.contains(name)) {
                             db.addMemberAndSync(new DBMember(0, 0, projectId, name,
                                     true, 1, DBBill.STATE_ADDED, null, null, null, null, null));
@@ -287,7 +289,7 @@ public final class MemberDialogs {
     }
 
     private boolean canManage(DBProject project) {
-        if (project.isReadOnly()) {
+        if (project == null || !project.canManageMembers()) {
             return false;
         }
         int access = project.getMyAccessLevel();

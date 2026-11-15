@@ -1,6 +1,7 @@
 package net.llego.ihatemoney.persistence;
 
 import org.junit.Test;
+import net.llego.ihatemoney.model.DBBill;
 
 import java.util.Map;
 
@@ -8,6 +9,16 @@ import static net.llego.ihatemoney.persistence.SpliitMemberDecision.Action.*;
 import static org.junit.Assert.*;
 
 public class SpliitMemberDecisionTest {
+    @Test
+    public void offlineParticipantCanBeRenamedUntilAWriteIsClaimed() {
+        assertEquals(DBBill.STATE_ADDED,
+                SpliitMemberDecision.renamedState(DBBill.STATE_ADDED, null, null, null, null));
+        assertEquals(-1, SpliitMemberDecision.renamedState(DBBill.STATE_ADDED, null, null, "attempt", null));
+        assertEquals(-1, SpliitMemberDecision.renamedState(DBBill.STATE_ADDED, null, null, null, "null"));
+        assertEquals(DBBill.STATE_EDITED, SpliitMemberDecision.renamedState(DBBill.STATE_OK, "remote", "Alice", null, null));
+        assertEquals(-1, SpliitMemberDecision.renamedState(DBBill.STATE_OK, "remote", null, null, null));
+        assertEquals(-1, SpliitMemberDecision.renamedState(DBBill.STATE_DELETED, "remote", "Alice", null, null));
+    }
     @Test
     public void renameDoesNotOverwriteAnotherEditOrDeletion() {
         assertEquals(UPDATE, SpliitMemberDecision.rename("Alice", "Alicia", "Alice"));

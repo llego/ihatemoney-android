@@ -145,11 +145,15 @@ final class SpliitExpenseSync {
     }
 
     static boolean hasRemoteParticipants(DBBill bill, Map<Long, DBMember> members) {
-        if (!members.containsKey(bill.getPayerId())) return false;
+        if (!hasRemoteId(members.get(bill.getPayerId()))) return false;
         for (DBBillOwer ower : bill.getBillOwers()) {
-            if (!members.containsKey(ower.getMemberId())) return false;
+            if (!hasRemoteId(members.get(ower.getMemberId()))) return false;
         }
         return true;
+    }
+
+    private static boolean hasRemoteId(DBMember member) {
+        return member != null && member.getRemoteIdStr() != null && !member.getRemoteIdStr().isEmpty();
     }
 
     /** Claim the exact local version atomically. Editors refuse writes while a claim exists. */
