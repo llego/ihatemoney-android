@@ -68,9 +68,7 @@ public final class MemberDialogs {
                     dialog.dismiss();
                 })
                 .setNegativeButton(R.string.simple_cancel, null);
-        if (project.getType() != ProjectType.SPLIIT) {
-            builder.setNeutralButton(R.string.fab_add_member, (dialog, which) -> showAdd(projectId));
-        }
+        builder.setNeutralButton(R.string.fab_add_member, (dialog, which) -> showAdd(projectId));
         builder.show();
     }
 
@@ -78,7 +76,11 @@ public final class MemberDialogs {
         SpliitMemberStore store = new SpliitMemberStore(db);
         String conflict = store.get(member.getId(), SpliitMemberStore.CONFLICT);
         if (conflict != null) {
-            if ("null".equals(conflict)) { showToast(R.string.spliit_member_needs_web); return; }
+            if ("null".equals(conflict)) {
+                if (member.getRemoteIdStr() == null) showSpliitLink(project, member, store);
+                else showToast(R.string.spliit_member_needs_web);
+                return;
+            }
             JsonObject remote = JsonParser.parseString(conflict).getAsJsonObject();
             if (!remote.has("name") || remote.get("name").isJsonNull()) {
                 showToast(R.string.spliit_member_needs_web);
@@ -113,6 +115,37 @@ public final class MemberDialogs {
                 }).setNegativeButton(R.string.simple_cancel, null).show();
     }
 
+    private void showSpliitLink(DBProject project, DBMember pending, SpliitMemberStore store) {
+        List<DBMember> candidates = new ArrayList<>();
+        for (DBMember member : db.getMembersOfProject(project.getId(), null)) {
+            if (member.getRemoteIdStr() != null && member.getName().equals(pending.getName())
+                    && member.getState() == DBBill.STATE_OK) candidates.add(member);
+        }
+        if (candidates.size() != 1) {
+            ThemedMaterialAlertDialogBuilder builder = new ThemedMaterialAlertDialogBuilder(activity);
+            builder.setTitle(R.string.spliit_member_conflict_title)
+                    .setMessage(R.string.spliit_member_create_uncertain)
+                    .setNegativeButton(R.string.spliit_later, null);
+            if (candidates.isEmpty()) builder.setPositiveButton(R.string.spliit_member_retry, (dialog, which) -> {
+                if (store.retryCreatedMember(pending.getId())) {
+                    db.syncIfRemote(project);
+                    listener.onMemberUpdated();
+                } else showToast(R.string.spliit_member_stale);
+            });
+            builder.show();
+            return;
+        }
+        DBMember candidate = candidates.get(0);
+        new ThemedMaterialAlertDialogBuilder(activity).setTitle(R.string.spliit_member_conflict_title)
+                .setMessage(activity.getString(R.string.spliit_member_link_message, candidate.getName()))
+                .setPositiveButton(R.string.spliit_member_link, (dialog, which) -> {
+                    if (store.linkCreatedMember(pending.getId(), candidate.getId(), candidate.getRemoteIdStr())) {
+                        db.syncIfRemote(project);
+                        listener.onMemberUpdated();
+                    } else showToast(R.string.spliit_member_stale);
+                }).setNegativeButton(R.string.spliit_later, null).show();
+    }
+
     private void resolveSpliitRename(DBProject project, DBMember member, SpliitMemberStore store,
                                      String conflict, boolean keepLocal) {
         if (store.resolveRename(member.getId(), conflict, keepLocal)) {
@@ -124,7 +157,7 @@ public final class MemberDialogs {
     public void showAdd(long projectId) {
         if (projectId == 0) return;
         DBProject project = db.getProject(projectId);
-        if (!canManage(project)) return;
+        if (project == null || (project.getType() != ProjectType.SPLIIT && !canManage(project))) return;
 
         EditText input = new EditText(new ContextThemeWrapper(activity, R.style.AppTheme));
         input.setInputType(InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_CAP_SENTENCES);
@@ -134,6 +167,12 @@ public final class MemberDialogs {
                 .setView(input)
                 .setPositiveButton(R.string.simple_ok, (dialog, which) -> {
                     String name = input.getText().toString();
+                    if (project.getType() == ProjectType.SPLIIT
+                            && (name.length() < 2 || name.length() > 50 || name.trim().isEmpty())) {
+                        showToast(R.string.spliit_member_invalid_name);
+                        hideKeyboard(input.getContext());
+                        return;
+                    }
                     if (!name.equals("")) {
                         List<DBMember> members = db.getMembersOfProject(projectId, null);
                         List<String> names = new ArrayList<>();

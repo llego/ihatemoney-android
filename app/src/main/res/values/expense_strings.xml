@@ -58,6 +58,10 @@
     <string name="spliit_member_needs_web">Check this participant on Spliit before resolving the pending change.</string>
     <string name="spliit_member_invalid_name">Use a participant name of 2–50 characters.</string>
     <string name="spliit_member_stale">This participant changed or is syncing. Refresh and try again.</string>
+    <string name="spliit_member_create_uncertain">Spliit may have created this participant without confirming it. Check the group on Spliit and sync again first. Retrying can create a duplicate.</string>
+    <string name="spliit_member_retry">Retry creation</string>
+    <string name="spliit_member_link_message">Spliit has a participant named %1$s. The earlier creation could not be confirmed. Only link them if you have checked that they are the same person; local expense references will be kept.</string>
+    <string name="spliit_member_link">Link participant</string>
     <string name="sync_progress_queued">Waiting for another sync…</string>
     <string name="sync_progress_preparing">Starting sync…</string>
     <string name="sync_progress_project">Downloading project and participants…</string>

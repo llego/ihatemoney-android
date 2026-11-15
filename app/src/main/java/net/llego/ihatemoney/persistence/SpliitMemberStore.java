@@ -23,6 +23,8 @@ public final class SpliitMemberStore {
             "ALTER TABLE MEMBERS ADD COLUMN " + ATTEMPT + " TEXT",
             "ALTER TABLE MEMBERS ADD COLUMN " + CONFLICT + " TEXT"
     };
+    static final String REMOVE_DUPLICATE_OWERS = "DELETE FROM BILLOWERS WHERE MEMBERID = ? AND EXISTS "
+            + "(SELECT 1 FROM BILLOWERS AS existing WHERE existing.BILLID = BILLOWERS.BILLID AND existing.MEMBERID = ?)";
 
     private final MoneyBusterSQLiteOpenHelper db;
 
@@ -84,6 +86,61 @@ public final class SpliitMemberStore {
             }
             db.updateMember(current.getId(), name, null, null, DBBill.STATE_EDITED, null,
                     null, null, null, null, null);
+            database.setTransactionSuccessful();
+            return true;
+        } finally {
+            database.endTransaction();
+        }
+    }
+
+    /** Link an uncertain local creation to a server participant explicitly selected by the user. */
+    public boolean linkCreatedMember(long pendingId, long importedId, String expectedRemoteId) {
+        SQLiteDatabase database = db.getWritableDatabase();
+        database.beginTransaction();
+        try {
+            DBMember pending = db.getMember(pendingId);
+            DBMember imported = db.getMember(importedId);
+            if (pending == null || imported == null || pendingId == importedId
+                    || pending.getProjectId() != imported.getProjectId()
+                    || pending.getRemoteIdStr() != null || pending.getState() != DBBill.STATE_ADDED
+                    || get(pendingId, CONFLICT) == null || expectedRemoteId == null
+                    || !expectedRemoteId.equals(imported.getRemoteIdStr())
+                    || imported.getState() != DBBill.STATE_OK
+                    || get(importedId, ATTEMPT) != null || get(importedId, CONFLICT) != null) return false;
+            // Preserve the pending ID, which local drafts can already refer to. Merge
+            // references to the imported copy, without duplicating split participants.
+            database.execSQL("UPDATE BILLS SET PAYERID = ? WHERE PAYERID = ?", new Object[]{pendingId, importedId});
+            database.execSQL(REMOVE_DUPLICATE_OWERS, new Object[]{importedId, pendingId});
+            database.execSQL("UPDATE BILLOWERS SET MEMBERID = ? WHERE MEMBERID = ?", new Object[]{pendingId, importedId});
+            database.execSQL("UPDATE PROJECTS SET LASTPAYERID = ? WHERE ID = ? AND LASTPAYERID = ?",
+                    new Object[]{pendingId, pending.getProjectId(), importedId});
+            db.updateMember(pendingId, imported.getName(), null, null, DBBill.STATE_OK, null,
+                    expectedRemoteId, null, null, null, null, null);
+            put(pendingId, BASELINE, imported.getName());
+            put(pendingId, ATTEMPT, null);
+            put(pendingId, CONFLICT, null);
+            db.deleteMember(importedId);
+            database.setTransactionSuccessful();
+            return true;
+        } finally {
+            database.endTransaction();
+        }
+    }
+
+    /** Retry only after an explicit warning; a lost server response can mean a duplicate. */
+    public boolean retryCreatedMember(long pendingId) {
+        SQLiteDatabase database = db.getWritableDatabase();
+        database.beginTransaction();
+        try {
+            DBMember pending = db.getMember(pendingId);
+            if (pending == null || pending.getRemoteIdStr() != null
+                    || pending.getState() != DBBill.STATE_ADDED
+                    || !"null".equals(get(pendingId, CONFLICT))) return false;
+            for (DBMember member : db.getMembersOfProject(pending.getProjectId(), null)) {
+                if (member.getRemoteIdStr() != null && member.getName().equals(pending.getName())) return false;
+            }
+            put(pendingId, ATTEMPT, null);
+            put(pendingId, CONFLICT, null);
             database.setTransactionSuccessful();
             return true;
         } finally {

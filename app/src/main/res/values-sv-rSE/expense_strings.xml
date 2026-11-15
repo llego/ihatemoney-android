@@ -58,6 +58,10 @@
     <string name="spliit_member_needs_web">Kontrollera deltagaren på Spliit innan du löser den väntande ändringen.</string>
     <string name="spliit_member_invalid_name">Ange ett deltagarnamn med 2–50 tecken.</string>
     <string name="spliit_member_stale">Deltagaren har ändrats eller synkroniseras. Uppdatera och försök igen.</string>
+    <string name="spliit_member_create_uncertain">Spliit kan ha skapat deltagaren utan att bekräfta det. Kontrollera gruppen på Spliit och synkronisera först igen. Ett nytt försök kan skapa en dubblett.</string>
+    <string name="spliit_member_retry">Försök skapa igen</string>
+    <string name="spliit_member_link_message">Spliit har en deltagare som heter %1$s. Det tidigare skapandet kunde inte bekräftas. Länka bara om du har kontrollerat att det är samma person; lokala utgiftskopplingar behålls.</string>
+    <string name="spliit_member_link">Länka deltagare</string>
     <string name="sync_progress_queued">Väntar på en annan synkronisering…</string>
     <string name="sync_progress_preparing">Startar synkronisering…</string>
     <string name="sync_progress_project">Hämtar projekt och deltagare…</string>
