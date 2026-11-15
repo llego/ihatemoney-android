@@ -53,6 +53,11 @@
     <string name="spliit_editor_stale">Utgiften ändrades under redigeringen. Utkastet finns kvar här; kopiera det innan du öppnar den senaste versionen igen.</string>
     <string name="spliit_sync_scope">Skapa, redigera och ta bort jämnt fördelade utgifter. Avancerade fördelningar, återkommande utgifter, valutaomräkningar, deltagare och gruppinställningar hanteras på Spliit.</string>
     <string name="spliit_unknown_participant">Okänd deltagare</string>
+    <string name="spliit_member_conflict_title">Konflikt vid synkronisering av deltagare</string>
+    <string name="spliit_member_conflict_message">På den här enheten: %1$s\nPå Spliit: %2$s\n\nVälj vilket namn som ska behållas.</string>
+    <string name="spliit_member_needs_web">Kontrollera deltagaren på Spliit innan du löser den väntande ändringen.</string>
+    <string name="spliit_member_invalid_name">Ange ett deltagarnamn med 2–50 tecken.</string>
+    <string name="spliit_member_stale">Deltagaren har ändrats eller synkroniseras. Uppdatera och försök igen.</string>
     <string name="sync_progress_queued">Väntar på en annan synkronisering…</string>
     <string name="sync_progress_preparing">Startar synkronisering…</string>
     <string name="sync_progress_project">Hämtar projekt och deltagare…</string>

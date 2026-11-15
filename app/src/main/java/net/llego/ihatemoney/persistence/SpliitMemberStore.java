@@ -10,6 +10,8 @@ import com.google.gson.JsonParser;
 import net.llego.ihatemoney.model.DBBill;
 import net.llego.ihatemoney.model.DBMember;
 
+import java.util.Objects;
+
 /** Durable participant sync state, stored separately from the user's member fields. */
 public final class SpliitMemberStore {
     public static final String BASELINE = "SPLIITBASELINE";
@@ -59,6 +61,29 @@ public final class SpliitMemberStore {
             put(memberId, BASELINE, remoteName);
             put(memberId, ATTEMPT, null);
             put(memberId, CONFLICT, null);
+            database.setTransactionSuccessful();
+            return true;
+        } finally {
+            database.endTransaction();
+        }
+    }
+
+    /** Claim the version shown in the editor without racing an in-flight sync. */
+    public boolean queueRename(DBMember expected, String name) {
+        SQLiteDatabase database = db.getWritableDatabase();
+        database.beginTransaction();
+        try {
+            DBMember current = db.getMember(expected.getId());
+            if (current == null || current.getState() != expected.getState()
+                    || !Objects.equals(current.getName(), expected.getName())
+                    || !Objects.equals(current.getRemoteIdStr(), expected.getRemoteIdStr())
+                    || current.getRemoteIdStr() == null || get(current.getId(), BASELINE) == null
+                    || get(current.getId(), ATTEMPT) != null || get(current.getId(), CONFLICT) != null) return false;
+            for (DBMember other : db.getMembersOfProject(current.getProjectId(), null)) {
+                if (other.getId() != current.getId() && name.equals(other.getName())) return false;
+            }
+            db.updateMember(current.getId(), name, null, null, DBBill.STATE_EDITED, null,
+                    null, null, null, null, null);
             database.setTransactionSuccessful();
             return true;
         } finally {

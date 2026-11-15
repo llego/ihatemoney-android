@@ -53,6 +53,11 @@
     <string name="spliit_editor_stale">This expense changed during editing. Your draft is still here; copy it before reopening the latest version.</string>
     <string name="spliit_sync_scope">Create, edit and delete evenly split expenses. Advanced splits, recurring expenses, currency conversions, participants and group settings are managed on Spliit.</string>
     <string name="spliit_unknown_participant">Unknown participant</string>
+    <string name="spliit_member_conflict_title">Participant sync conflict</string>
+    <string name="spliit_member_conflict_message">On this device: %1$s\nOn Spliit: %2$s\n\nChoose which name to keep.</string>
+    <string name="spliit_member_needs_web">Check this participant on Spliit before resolving the pending change.</string>
+    <string name="spliit_member_invalid_name">Use a participant name of 2–50 characters.</string>
+    <string name="spliit_member_stale">This participant changed or is syncing. Refresh and try again.</string>
     <string name="sync_progress_queued">Waiting for another sync…</string>
     <string name="sync_progress_preparing">Starting sync…</string>
     <string name="sync_progress_project">Downloading project and participants…</string>
