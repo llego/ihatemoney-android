@@ -38,6 +38,7 @@
     <string name="spliit_join_button">Add group</string>
     <string name="spliit_read_only_hint">This expense cannot be edited here yet. Sync first, resolve any conflict, or edit advanced splits, recurring expenses and currency conversions on Spliit.</string>
     <string name="spliit_sync_failed">Spliit sync did not finish. Pending changes are kept on this device. Retry sync to check the server before uploading again.</string>
+    <string name="spliit_invalid_pending_expense">Could not upload “%1$s”. Edit the expense and check its amount, title, and participants, then sync again. Other pending expenses were processed.</string>
     <string name="spliit_invalid_expense">Use a title of 2–200 characters, notes up to 5000 characters, and a nonzero amount up to 10 million.</string>
     <string name="spliit_conflict_title">Expense sync conflict</string>
     <string name="spliit_conflict_version">%1$s — %2$s\n%3$s\nPaid by: %4$s\nSplit between: %5$s\n%6$s</string>

@@ -165,6 +165,7 @@ public class BillsListViewActivity
     private EmptyStateController emptyState;
     /** Project-level expense capability; individual Spliit expenses have additional safeguards. */
     private boolean readOnly = false;
+    private java.util.Set<Long> nonSwipeableBills = java.util.Collections.emptySet();
     private SpliitConflictDialogs spliitConflictDialogs;
     private SyncProgressController syncProgressController;
 
@@ -888,12 +889,7 @@ public class BillsListViewActivity
                 int position = viewHolder.getBindingAdapterPosition();
                 if (position == RecyclerView.NO_POSITION) return 0;
                 Object item = adapter.getItem(position);
-                if (item instanceof DBBill) {
-                    DBBill expense = (DBBill) item;
-                    DBProject group = db.getProject(expense.getProjectId());
-                    if (group.isReadOnly() && !new SpliitSyncStore(db)
-                            .canEdit(expense)) return 0;
-                }
+                if (item instanceof DBBill && nonSwipeableBills.contains(((DBBill) item).getId())) return 0;
                 return super.getSwipeDirs(recyclerView, viewHolder);
             }
 
@@ -1068,7 +1064,8 @@ public class BillsListViewActivity
 
         LoadBillsListTask.BillsLoadedListener callback = new LoadBillsListTask.BillsLoadedListener() {
             @Override
-            public void onBillsLoaded(List<Item> billItems, boolean showCategory) {
+            public void onBillsLoaded(List<Item> billItems, boolean showCategory, java.util.Set<Long> blockedBills) {
+                nonSwipeableBills = blockedBills;
                 // show help if no members
                 // this needs to be inside the BillsLoader because otherwise the noBillsView
                 // will overwrite the noMembersView (since no members => no bills).

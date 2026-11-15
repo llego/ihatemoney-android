@@ -18,6 +18,15 @@ import at.bitfire.cert4android.CustomCertManager;
 
 /** Expense-only writes. Dirty rows are never reconciled by the pull path. */
 final class SpliitExpenseSync {
+    static final class InvalidExpenseException extends Exception {
+        final String title;
+
+        InvalidExpenseException(DBBill bill, IllegalArgumentException cause) {
+            super("Invalid local expense " + bill.getId(), cause);
+            title = bill.getWhat();
+        }
+    }
+
     private final MoneyBusterSQLiteOpenHelper db;
     private final SpliitSyncStore store;
     private final SpliitClient client;
@@ -44,6 +53,7 @@ final class SpliitExpenseSync {
             }
         }
         boolean changed = false;
+        InvalidExpenseException invalidExpense = null;
         List<DBBill> pending = db.getBillsOfProject(project.getId());
         pending.removeIf(bill -> bill.getState() == DBBill.STATE_OK
                 && store.get(bill.getId(), SpliitSyncStore.ATTEMPT) == null);
@@ -96,7 +106,15 @@ final class SpliitExpenseSync {
                 db.deleteBill(bill.getId());
                 changed = true;
             } else {
-                String form = SpliitExpenseCodec.localForm(bill, baseline, members).toString();
+                String form;
+                try {
+                    form = SpliitExpenseCodec.localForm(bill, baseline, members).toString();
+                } catch (IllegalArgumentException e) {
+                    // Leave the expense editable; a remote conflict would lock it and
+                    // could incorrectly claim that a new expense was deleted remotely.
+                    if (invalidExpense == null) invalidExpense = new InvalidExpenseException(bill, e);
+                    continue;
+                }
                 String id = create ? UUID.randomUUID().toString().replace("-", "").substring(0, 21)
                         : bill.getRemoteIdStr();
                 JsonObject sent = new JsonObject();
@@ -115,6 +133,7 @@ final class SpliitExpenseSync {
             }
         }
         progress.onProgress(Stage.UPLOADING, pending.size(), pending.size());
+        if (invalidExpense != null) throw invalidExpense;
         return changed;
     }
 

@@ -15,12 +15,15 @@ import androidx.core.content.ContextCompat;
 import net.llego.ihatemoney.R;
 import net.llego.ihatemoney.model.Category;
 import net.llego.ihatemoney.model.DBBill;
+import net.llego.ihatemoney.model.DBProject;
 import net.llego.ihatemoney.model.Item;
 
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -31,6 +34,7 @@ public class LoadBillsListTask extends AsyncTask<Void, Void, List<Item>> {
     private final Category category;
     private final CharSequence searchQuery;
     private final long projectId;
+    private final Set<Long> nonSwipeableBills = new HashSet<>();
 
     private SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.ROOT);
     private java.text.DateFormat dateFormat;
@@ -52,6 +56,13 @@ public class LoadBillsListTask extends AsyncTask<Void, Void, List<Item>> {
 
         if (projectId != 0) {
             billList = db.searchBills(searchQuery, projectId);
+            DBProject project = db.getProject(projectId);
+            if (project != null && project.isReadOnly()) {
+                SpliitSyncStore store = new SpliitSyncStore(db);
+                for (DBBill bill : billList) {
+                    if (!store.canEdit(bill)) nonSwipeableBills.add(bill.getId());
+                }
+            }
         } else {
             billList = new ArrayList<>();
         }
@@ -97,10 +108,10 @@ public class LoadBillsListTask extends AsyncTask<Void, Void, List<Item>> {
 
     @Override
     protected void onPostExecute(List<Item> ljItems) {
-        callback.onBillsLoaded(ljItems, category.memberName == null);
+        callback.onBillsLoaded(ljItems, category.memberName == null, nonSwipeableBills);
     }
 
     public interface BillsLoadedListener {
-        void onBillsLoaded(List<Item> ljItems, boolean showCategory);
+        void onBillsLoaded(List<Item> ljItems, boolean showCategory, Set<Long> nonSwipeableBills);
     }
 }

@@ -902,7 +902,12 @@ public class MoneyBusterServerSyncHelper {
             } catch (Exception e) {
                 Log.e(TAG, "Spliit sync failed", e);
                 exceptions.add(e);
-                errorMessages.add(appContext.getString(R.string.spliit_sync_failed));
+                if (e instanceof SpliitExpenseSync.InvalidExpenseException) {
+                    errorMessages.add(appContext.getString(R.string.spliit_invalid_pending_expense,
+                            ((SpliitExpenseSync.InvalidExpenseException) e).title));
+                } else {
+                    errorMessages.add(appContext.getString(R.string.spliit_sync_failed));
+                }
                 return false;
             }
         }
