@@ -13,6 +13,7 @@ import net.llego.ihatemoney.model.DBProject;
 import net.llego.ihatemoney.model.Item;
 import net.llego.ihatemoney.model.ItemAdapter;
 import net.llego.ihatemoney.persistence.MoneyBusterSQLiteOpenHelper;
+import net.llego.ihatemoney.persistence.SpliitSyncStore;
 
 /** Contextual multi-select actions for the expense list (select all / delete). */
 final class MultiSelectActionModeCallback implements ActionMode.Callback {
@@ -64,7 +65,9 @@ final class MultiSelectActionModeCallback implements ActionMode.Callback {
 
                 // check if we can delete bills
                 final DBProject project = db.getProject(bill.getProjectId());
-                if (project.isDeletionDisabled()) {
+                if (project.isDeletionDisabled() || (project.isReadOnly()
+                        && !new SpliitSyncStore(db)
+                        .canEdit(db.getBill(bill.getId())))) {
                     Toast.makeText(activity, R.string.bill_deletion_is_disabled, Toast.LENGTH_SHORT).show();
                     mode.finish();
                     return true;
@@ -75,7 +78,7 @@ final class MultiSelectActionModeCallback implements ActionMode.Callback {
                 // get real original state to potentially restore it
                 final int originalState = dbBill.getState();
 
-                if (originalState == DBBill.STATE_ADDED) {
+                if (originalState == DBBill.STATE_ADDED && !project.isReadOnly()) {
                     db.deleteBill(dbBill.getId());
                 } else {
                     db.setBillState(dbBill.getId(), DBBill.STATE_DELETED);

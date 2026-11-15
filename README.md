@@ -12,13 +12,26 @@ IHateMoney for Android is **completely vibe-coded**: every change is produced by
 - Reorganized the sidebar and renamed everything to "expense" consistently.
 - Removed receipt QR scanning and the redundant Manage-project chooser.
 - Fixed IHateMoney expense ordering and optimized synchronization.
+- Visible per-project sync phases/counts for IHateMoney and Spliit, with pull-to-refresh available on empty remote projects too.
 - Full Swedish translations (plus a few locale fixes elsewhere).
 - Cleaned up unused code/strings and improved naming and layout details.
 
 ## Testing
 
 - **IHateMoney:** tested against a self-hosted [IHateMoney](https://ihatemoney.org) instance.
+- **Spliit:** expense sync has unit coverage; live two-way sync still needs validation against a disposable group.
 - **Nextcloud Cospend:** not tested at all.
+
+## Spliit expense sync
+
+Add an existing group using its shared link. The app can create, edit and delete evenly split expenses, including offline changes. Sync once after upgrading to populate full expense metadata. Participants and group settings remain managed on Spliit.
+
+- Conflicting edits and edit/delete conflicts require a choice: keep the device edit, use Spliit, or decide later. Pending changes survive failed syncs and app restarts.
+- Categories, reimbursements and existing attachments are preserved when editing. Advanced splits, recurring expenses and currency conversions remain read-only; advanced split allocations are not represented by the app’s shared expense model.
+- An interrupted create is checked against the server before retrying. Older servers may ignore client-generated IDs, so an uncertain create requires checking Spliit and confirming any retry rather than risking an automatic duplicate.
+- Spliit does not provide conditional updates: a final pre-write check narrows, but cannot eliminate, simultaneous web/app edit races. Its tRPC interface is not a versioned public API, so server-version compatibility needs testing.
+
+Group links grant access to the group; treat them as secrets.
 
 ## Building
 

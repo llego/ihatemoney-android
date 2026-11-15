@@ -7,6 +7,9 @@ import android.view.View;
  *
  * <p>Exactly one of the list or an empty-state panel is shown. The three panels are:
  * no projects (nothing configured), no members (project exists), and no bills.</p>
+ *
+ * <p>Pass the list itself, not its refresh container: empty panels must remain
+ * inside a visible SwipeRefreshLayout so an initial download can be retried.</p>
  */
 public final class EmptyStateController {
     private final View listView;

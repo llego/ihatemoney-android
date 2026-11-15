@@ -5,6 +5,9 @@ import android.util.Log;
 import androidx.annotation.Nullable;
 import androidx.annotation.WorkerThread;
 
+import net.llego.ihatemoney.model.SyncProgress;
+import net.llego.ihatemoney.model.SyncProgress.Stage;
+
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -13,20 +16,18 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URLEncoder;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
+import java.time.Instant;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
-import java.util.Locale;
-import java.util.TimeZone;
 
 import at.bitfire.cert4android.CustomCertManager;
 
 /**
- * Read-only client for a self-hosted Spliit instance.
+ * tRPC client for a self-hosted Spliit instance.
  *
  * <p>Spliit is a Next.js app that exposes its tRPC procedures as JSON endpoints:
  * {@code GET /api/trpc/<procedure>?input=<urlencoded JSON>}. The response is
@@ -39,13 +40,16 @@ public class SpliitClient {
     private static final String TAG = SpliitClient.class.getSimpleName();
 
     private static final int PAGE_SIZE = 100;
-    private static final String SPLIIT_DATE_FORMAT = "yyyy-MM-dd'T'HH:mm:ss.SSS'Z'";
     private static final int CONNECT_TIMEOUT_MS = 15000;
     private static final int READ_TIMEOUT_MS = 15000;
     private static final String USER_AGENT = "IHateMoney-Android";
 
     private final String baseUrl;
     private final String groupId;
+
+    public interface ProgressListener {
+        void onProgress(Stage stage, int completed, int total);
+    }
 
     public SpliitClient(String baseUrl, String groupId) {
         this.baseUrl = baseUrl.replaceAll("/+$", "");
@@ -95,10 +99,13 @@ public class SpliitClient {
         public final String category;
         public final String splitMode;
         public final boolean isReimbursement;
+        /** Complete detail response, including metadata absent from the list endpoint. */
+        public final String raw;
 
         SpliitExpense(String id, String title, long amount, long expenseDate,
                       String createdAt, String paidBy, List<String> paidFor,
-                      String notes, String category, String splitMode, boolean isReimbursement) {
+                      String notes, String category, String splitMode, boolean isReimbursement,
+                      String raw) {
             this.id = id;
             this.title = title;
             this.amount = amount;
@@ -110,14 +117,12 @@ public class SpliitClient {
             this.category = category;
             this.splitMode = splitMode;
             this.isReimbursement = isReimbursement;
+            this.raw = raw;
         }
     }
 
-    /**
-     * Fetch the group and all of its expenses. The group is a single tRPC call;
-     * expenses are paginated and fetched page by page.
-     */
-    public SpliitGroup getGroup(@Nullable CustomCertManager ccm) throws IOException, JSONException {
+    /** Fetch group metadata without downloading its expense history, e.g. when joining. */
+    public SpliitGroup getGroupMetadata(@Nullable CustomCertManager ccm) throws IOException, JSONException {
         JSONObject details = getGroupDetails(ccm);
         JSONObject group = details.optJSONObject("group");
         if (group == null) {
@@ -125,7 +130,7 @@ public class SpliitClient {
         }
 
         List<SpliitParticipant> participants = new ArrayList<>();
-        JSONArray participantsArray = group.optJSONArray("participants");
+        JSONArray participantsArray = group.getJSONArray("participants");
         if (participantsArray != null) {
             for (int i = 0; i < participantsArray.length(); i++) {
                 JSONObject participant = participantsArray.getJSONObject(i);
@@ -134,34 +139,44 @@ public class SpliitClient {
             }
         }
 
-        List<SpliitExpense> expenses = new ArrayList<>();
-        int cursor = 0;
-        while (true) {
-            JSONObject page = getExpensesPage(cursor, ccm);
-            JSONArray expensesArray = page.optJSONArray("expenses");
-            if (expensesArray != null) {
-                for (int i = 0; i < expensesArray.length(); i++) {
-                    expenses.add(parseExpense(expensesArray.getJSONObject(i)));
-                }
-            }
-            if (!page.optBoolean("hasMore", false)) {
-                break;
-            }
-            int nextCursor = page.optInt("nextCursor", cursor + PAGE_SIZE);
-            if (nextCursor <= cursor) {
-                // Defensive: never loop forever if the server reports hasMore without advancing.
-                break;
-            }
-            cursor = nextCursor;
-        }
-
         return new SpliitGroup(
                 group.optString("id", groupId),
                 group.optString("name", ""),
                 group.optString("currency", ""),
                 group.optString("currencyCode", ""),
                 participants,
-                expenses);
+                new ArrayList<>());
+    }
+
+    /** Fetch a complete, validated ID list before loading any expense details. */
+    public SpliitGroup getGroup(@Nullable CustomCertManager ccm) throws IOException, JSONException {
+        return getGroup(ccm, (stage, completed, total) -> { });
+    }
+
+    public SpliitGroup getGroup(@Nullable CustomCertManager ccm, ProgressListener progress)
+            throws IOException, JSONException {
+        progress.onProgress(Stage.PROJECT, 0, SyncProgress.UNKNOWN_TOTAL);
+        SpliitGroup group = getGroupMetadata(ccm);
+        SpliitExpensePagination pagination = new SpliitExpensePagination();
+        progress.onProgress(Stage.LISTING, 0, SyncProgress.UNKNOWN_TOTAL);
+        try {
+            while (!pagination.isComplete()) {
+                JSONObject page = getExpensesPage(pagination.getCursor(), ccm);
+                pagination.accept(SpliitExpenseCodec.parse(page.toString()));
+                progress.onProgress(Stage.LISTING, pagination.getDiscoveredCount(), SyncProgress.UNKNOWN_TOTAL);
+            }
+        } catch (IllegalStateException | IllegalArgumentException e) {
+            throw new JSONException(e.getMessage());
+        }
+        List<SpliitExpense> expenses = new ArrayList<>();
+        List<String> ids = pagination.getExpenseIds();
+        progress.onProgress(Stage.DOWNLOADING, 0, ids.size());
+        for (String id : ids) {
+            expenses.add(getExpense(id, ccm));
+            progress.onProgress(Stage.DOWNLOADING, expenses.size(), ids.size());
+        }
+        return new SpliitGroup(group.id, group.name, group.currency, group.currencyCode,
+                group.participants, expenses);
     }
 
     private JSONObject getGroupDetails(@Nullable CustomCertManager ccm) throws IOException, JSONException {
@@ -182,23 +197,63 @@ public class SpliitClient {
 
     private JSONObject getTrpc(String procedure, JSONObject input, @Nullable CustomCertManager ccm)
             throws IOException, JSONException {
-        String url = baseUrl + "/api/trpc/" + procedure
-                + "?input=" + URLEncoder.encode(input.toString(), "UTF-8");
+        return requestTrpc(procedure, input, false, ccm);
+    }
+
+    public String saveExpense(String expenseId, boolean create, String form,
+                              @Nullable CustomCertManager ccm) throws IOException, JSONException {
+        JSONObject values = new JSONObject().put("groupId", groupId)
+                .put("expenseId", expenseId).put("expenseFormValues", new JSONObject(form));
+        JSONObject result = requestTrpc("groups.expenses." + (create ? "create" : "update"),
+                new JSONObject().put("json", values), true, ccm);
+        return result.getString("expenseId");
+    }
+
+    public SpliitExpense getExpense(String expenseId, @Nullable CustomCertManager ccm)
+            throws IOException, JSONException {
+        JSONObject input = new JSONObject().put("json", new JSONObject()
+                .put("groupId", groupId).put("expenseId", expenseId));
+        JSONObject raw = getTrpc("groups.expenses.get", input, ccm).getJSONObject("expense");
+        if (!expenseId.equals(raw.getString("id")) || !groupId.equals(raw.getString("groupId"))) {
+            throw new JSONException("Spliit returned an expense from another group");
+        }
+        return parseExpense(raw);
+    }
+
+    public void deleteExpense(String expenseId, @Nullable CustomCertManager ccm)
+            throws IOException, JSONException {
+        requestTrpc("groups.expenses.delete", new JSONObject().put("json", new JSONObject()
+                .put("groupId", groupId).put("expenseId", expenseId)), true, ccm);
+    }
+
+    private JSONObject requestTrpc(String procedure, JSONObject input, boolean mutation,
+                                   @Nullable CustomCertManager ccm) throws IOException, JSONException {
+        String url = baseUrl + "/api/trpc/" + procedure + (mutation ? ""
+                : "?input=" + URLEncoder.encode(input.toString(), "UTF-8"));
         HttpURLConnection connection = null;
         try {
             connection = SupportUtil.getHttpURLConnection(ccm, url);
-            connection.setRequestMethod("GET");
+            connection.setRequestMethod(mutation ? "POST" : "GET");
+            // Never forward a capability-bearing mutation through a redirect.
+            connection.setInstanceFollowRedirects(false);
             connection.setRequestProperty("Accept", "application/json");
             connection.setRequestProperty("User-Agent", USER_AGENT);
             connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
             connection.setReadTimeout(READ_TIMEOUT_MS);
+            if (mutation) {
+                connection.setRequestProperty("Content-Type", "application/json");
+                connection.setDoOutput(true);
+                try (OutputStream output = connection.getOutputStream()) {
+                    output.write(input.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+                }
+            }
 
             int responseCode = connection.getResponseCode();
             InputStream stream = responseCode >= 400
                     ? connection.getErrorStream() : connection.getInputStream();
             String content = readAll(stream);
-            if (responseCode >= 400) {
-                throw new IOException("Spliit request failed (" + responseCode + "): " + content);
+            if (responseCode < 200 || responseCode >= 300) {
+                throw new IOException("Spliit request failed (" + responseCode + ")");
             }
             JSONObject root = new JSONObject(content);
             return root.getJSONObject("result").getJSONObject("data").getJSONObject("json");
@@ -215,28 +270,23 @@ public class SpliitClient {
     private SpliitExpense parseExpense(JSONObject expense) throws JSONException {
         String id = expense.getString("id");
         String title = expense.optString("title", "");
-        long amount = expense.optLong("amount", 0);
-        long expenseDate = parseTimestamp(expense.optString("expenseDate", ""));
+        long amount = expense.getLong("amount");
+        long expenseDate = parseTimestamp(expense.getString("expenseDate"));
         String createdAt = expense.optString("createdAt", "");
 
-        String paidBy = "";
-        JSONObject paidByObject = expense.optJSONObject("paidBy");
-        if (paidByObject != null) {
-            paidBy = paidByObject.optString("id", "");
-        }
+        String paidBy = expense.getJSONObject("paidBy").getString("id");
 
         List<String> paidFor = new ArrayList<>();
-        JSONArray paidForArray = expense.optJSONArray("paidFor");
+        JSONArray paidForArray = expense.getJSONArray("paidFor");
         if (paidForArray != null) {
             for (int i = 0; i < paidForArray.length(); i++) {
                 JSONObject participant = paidForArray.getJSONObject(i).optJSONObject("participant");
-                if (participant != null) {
-                    paidFor.add(participant.optString("id", ""));
-                }
+                paidFor.add(participant != null ? participant.getString("id")
+                        : paidForArray.getJSONObject(i).getString("participantId"));
             }
         }
 
-        String notes = expense.optString("notes", "");
+        String notes = expense.isNull("notes") ? "" : expense.optString("notes", "");
         String category = "";
         JSONObject categoryObject = expense.optJSONObject("category");
         if (categoryObject != null) {
@@ -246,20 +296,14 @@ public class SpliitClient {
         boolean isReimbursement = expense.optBoolean("isReimbursement", false);
 
         return new SpliitExpense(id, title, amount, expenseDate, createdAt,
-                paidBy, paidFor, notes, category, splitMode, isReimbursement);
+                paidBy, paidFor, notes, category, splitMode, isReimbursement, expense.toString());
     }
 
-    private static long parseTimestamp(String isoDate) {
-        if (isoDate == null || isoDate.isEmpty()) {
-            return 0;
-        }
-        SimpleDateFormat sdf = new SimpleDateFormat(SPLIIT_DATE_FORMAT, Locale.ROOT);
-        sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
+    private static long parseTimestamp(String isoDate) throws JSONException {
         try {
-            Date date = sdf.parse(isoDate);
-            return date == null ? 0 : date.getTime() / 1000;
-        } catch (ParseException e) {
-            return 0;
+            return Instant.parse(isoDate).getEpochSecond();
+        } catch (DateTimeParseException e) {
+            throw new JSONException("Invalid Spliit expense date");
         }
     }
 

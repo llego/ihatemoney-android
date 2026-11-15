@@ -56,6 +56,8 @@ import net.llego.ihatemoney.model.DBPaymentMode;
 import net.llego.ihatemoney.model.DBProject;
 import net.llego.ihatemoney.model.ProjectType;
 import net.llego.ihatemoney.persistence.MoneyBusterSQLiteOpenHelper;
+import net.llego.ihatemoney.persistence.SpliitSyncStore;
+import net.llego.ihatemoney.util.SpliitExpenseCodec;
 import net.llego.ihatemoney.theme.ThemeUtils;
 import net.llego.ihatemoney.theme.ThemedFragment;
 import net.llego.ihatemoney.theme.ThemedMaterialAlertDialogBuilder;
@@ -82,6 +84,7 @@ public class EditBillFragment extends ThemedFragment {
     private static final String TAG = EditBillFragment.class.getSimpleName();
     private ProjectType projectType;
     private boolean readOnly = false;
+    private String spliitBaseline;
 
     public interface BillFragmentListener {
         void close();
@@ -447,6 +450,7 @@ public class EditBillFragment extends ThemedFragment {
     }
 
     private void applyReadOnlyState() {
+        binding.editBillForm.spliitReadOnlyNotice.setVisibility(View.VISIBLE);
         fabSaveBill.setVisibility(View.GONE);
         editWhat.setEnabled(false);
         editComment.setEnabled(false);
@@ -570,7 +574,11 @@ public class EditBillFragment extends ThemedFragment {
             billIsDuplicated = savedInstanceState.getBoolean(PARAM_NEWBILL_IS_DUPLICATED, false);
         }
         DBProject project = db.getProject(bill.getProjectId());
-        readOnly = project != null && project.isReadOnly();
+        spliitBaseline = savedInstanceState == null
+                ? new SpliitSyncStore(db).get(bill.getId(), SpliitSyncStore.BASELINE)
+                : savedInstanceState.getString("spliitBaseline");
+        readOnly = project != null && project.isReadOnly()
+                && !new SpliitSyncStore(db).canEdit(bill);
         setHasOptionsMenu(true);
         Log.d(TAG, "BILL on create : " + bill);
 
@@ -581,7 +589,17 @@ public class EditBillFragment extends ThemedFragment {
                 switch (which) {
                     case DialogInterface.BUTTON_POSITIVE:
                         //Yes button clicked
-                        if (db.getBill(bill.getId()).getState() == DBBill.STATE_ADDED) {
+                        if (ProjectType.SPLIIT.equals(projectType)) {
+                            SpliitSyncStore store = new SpliitSyncStore(db);
+                            if (!store.canEdit(db.getBill(bill.getId()))
+                                    || !SpliitExpenseCodec.same(spliitBaseline,
+                                    store.get(bill.getId(), SpliitSyncStore.BASELINE))) {
+                                showToast(getString(R.string.spliit_editor_stale), Toast.LENGTH_LONG);
+                                return;
+                            }
+                        }
+                        if (db.getBill(bill.getId()).getState() == DBBill.STATE_ADDED
+                                && !ProjectType.SPLIIT.equals(projectType)) {
                             db.deleteBill(bill.getId());
                         } else {
                             db.setBillState(bill.getId(), DBBill.STATE_DELETED);
@@ -642,6 +660,7 @@ public class EditBillFragment extends ThemedFragment {
         super.onSaveInstanceState(outState);
         //saveBill(null);
         outState.putSerializable(SAVEDKEY_BILL, bill);
+        outState.putString("spliitBaseline", spliitBaseline);
         outState.putSerializable(SAVEDKEY_PROJECT_TYPE, projectType);
         outState.putBoolean(PARAM_NEWBILL_IS_DUPLICATED, billIsDuplicated);
         Bundle draft = new Bundle();
@@ -701,6 +720,39 @@ public class EditBillFragment extends ThemedFragment {
     }
 
     private void saveBillAsked() {
+        if (!ProjectType.SPLIIT.equals(projectType)) {
+            validateAndSaveBill();
+            return;
+        }
+        android.database.sqlite.SQLiteDatabase database = db.getWritableDatabase();
+        database.beginTransaction();
+        try {
+            String latestBaseline = new SpliitSyncStore(db).get(bill.getId(), SpliitSyncStore.BASELINE);
+            if (!SpliitExpenseCodec.same(spliitBaseline, latestBaseline)) {
+                showToast(getString(R.string.spliit_editor_stale), Toast.LENGTH_LONG);
+                return;
+            }
+            validateAndSaveBill();
+            database.setTransactionSuccessful();
+        } finally {
+            database.endTransaction();
+        }
+    }
+
+    private void validateAndSaveBill() {
+        if (readOnly) return;
+        if (ProjectType.SPLIIT.equals(projectType)) {
+            DBBill latest = bill.getId() == 0 ? bill : db.getBill(bill.getId());
+            if (latest == null || !new SpliitSyncStore(db).canEdit(latest)) {
+                showToast(getString(R.string.spliit_read_only_hint), Toast.LENGTH_LONG);
+                return;
+            }
+            if (getWhat().length() < 2 || getWhat().length() > 200 || getComment().length() > 5000
+                    || Math.round(Math.abs(getAmount()) * 100) == 0 || Math.abs(getAmount()) > 10_000_000) {
+                showToast(getString(R.string.spliit_invalid_expense), Toast.LENGTH_LONG);
+                return;
+            }
+        }
         binding.editBillForm.editWhatWrapper.setError(null);
         binding.editBillForm.editAmountWrapper.setError(null);
         if (getWhat() == null || getWhat().equals("") || getWhat().contains(",")) {
@@ -1250,6 +1302,10 @@ public class EditBillFragment extends ThemedFragment {
             editTimeLayout.setVisibility(View.GONE);
             editRepeatLayout.setVisibility(View.GONE);
             editCommentLayout.setVisibility(View.GONE);
+            editPaymentModeLayout.setVisibility(View.GONE);
+            editCategoryLayout.setVisibility(View.GONE);
+        } else if (ProjectType.SPLIIT.equals(projectType)) {
+            editRepeatLayout.setVisibility(View.GONE);
             editPaymentModeLayout.setVisibility(View.GONE);
             editCategoryLayout.setVisibility(View.GONE);
         } else if (ProjectType.LOCAL.equals(projectType)) {

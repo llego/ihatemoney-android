@@ -9,13 +9,14 @@ import static org.junit.Assert.assertTrue;
 public class DBProjectTest {
 
     @Test
-    public void spliitProjectsAreReadOnly() {
+    public void spliitSettingsAreReadOnlyButExpensesAreWritable() {
         DBProject project = new DBProject(
                 1, "group-id", null, "Group", "https://spliit.example",
                 null, null, ProjectType.SPLIIT, 0L, "€", false,
                 DBProject.ACCESS_LEVEL_UNKNOWN, null);
 
         assertTrue(project.isReadOnly());
+        assertTrue(project.canEditExpenses());
         assertFalse(project.isLocal());
         assertEquals("https://spliit.example/groups/group-id", project.getPublicWebUrl());
         assertEquals(project.getPublicWebUrl(), project.getShareUrl());

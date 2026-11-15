@@ -94,30 +94,31 @@
             </com.google.android.material.card.MaterialCardView>
         </com.google.android.material.appbar.AppBarLayout>
 
-        <FrameLayout
+        <include
+            android:id="@+id/sync_status"
+            layout="@layout/view_sync_progress" />
+
+        <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+            android:id="@+id/swipe_refresh_layout"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
             android:background="@color/bg_normal">
 
-            <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
-                android:id="@+id/swipe_refresh_layout"
+            <FrameLayout
+                android:id="@+id/refresh_content"
                 android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                tools:context="net.llego.ihatemoney.android.activity.BillsListViewActivity"
-                tools:ignore="MergeRootFrame"
-                tools:visibility="visible">
+                android:layout_height="match_parent">
 
                 <androidx.recyclerview.widget.RecyclerView
                     android:id="@+id/list_bill_items"
                     android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
+                    android:layout_height="match_parent"
                     android:background="@color/bg_normal"
                     android:clipToPadding="false"
                     android:paddingBottom="104dp"
                     android:scrollbars="vertical"
                     tools:listitem="@layout/fragment_bills_list_bill_item" />
-
-            </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
             <!-- No projects help -->
             <LinearLayout
@@ -206,7 +207,8 @@
                     android:text="@string/no_bills_text" />
             </LinearLayout>
 
-        </FrameLayout>
+            </FrameLayout>
+        </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     </LinearLayout>
 
