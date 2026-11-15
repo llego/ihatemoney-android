@@ -944,6 +944,7 @@ public class MoneyBusterServerSyncHelper {
 
                 // Reconcile members by their string remote id.
                 Map<String, DBMember> remoteMembersByRemoteId = new HashMap<>();
+                SpliitMemberStore memberStore = new SpliitMemberStore(dbHelper);
                 for (SpliitClient.SpliitParticipant participant : group.participants) {
                     DBMember localMember = dbHelper.getMemberByRemoteIdStr(participant.id, project.getId());
                     if (localMember == null) {
@@ -953,14 +954,22 @@ public class MoneyBusterServerSyncHelper {
                         );
                         newMember.setRemoteIdStr(participant.id);
                         long mid = dbHelper.addMember(newMember);
+                        memberStore.put(mid, SpliitMemberStore.BASELINE, participant.name);
                         remoteMembersByRemoteId.put(participant.id, dbHelper.getMember(mid));
                     } else {
-                        if (participant.name != null && !participant.name.equals(localMember.getName())) {
+                        // A pull must never overwrite a pending local edit, a conflict, or an
+                        // uncertain write. The baseline represents the version last accepted
+                        // locally, not the latest server version observed while dirty.
+                        boolean clean = localMember.getState() == DBBill.STATE_OK
+                                && memberStore.get(localMember.getId(), SpliitMemberStore.ATTEMPT) == null
+                                && memberStore.get(localMember.getId(), SpliitMemberStore.CONFLICT) == null;
+                        if (clean && participant.name != null && !participant.name.equals(localMember.getName())) {
                             dbHelper.updateMember(
                                     localMember.getId(), participant.name, null, null, null,
                                     null, null, null, null, null, null, null
                             );
                         }
+                        if (clean) memberStore.put(localMember.getId(), SpliitMemberStore.BASELINE, participant.name);
                         remoteMembersByRemoteId.put(participant.id, localMember);
                     }
                 }
@@ -971,7 +980,10 @@ public class MoneyBusterServerSyncHelper {
                         continue;
                     }
                     if (!remoteMembersByRemoteId.containsKey(localMember.getRemoteIdStr())) {
-                        if (dbHelper.getBillsOfMember(localMember.getId()).size() == 0
+                        if (localMember.getState() == DBBill.STATE_OK
+                                && memberStore.get(localMember.getId(), SpliitMemberStore.ATTEMPT) == null
+                                && memberStore.get(localMember.getId(), SpliitMemberStore.CONFLICT) == null
+                                && dbHelper.getBillsOfMember(localMember.getId()).size() == 0
                                 && dbHelper.getBillowersOfMember(localMember.getId()).size() == 0) {
                             dbHelper.deleteMember(localMember.getId());
                         }
